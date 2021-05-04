@@ -1,5 +1,5 @@
 ## imap
-Imap tool is used to visualize the hd-map.
+Imap tool is used to visualize the hd-map. This project refers to apollo.
 ```
 data     // hdmap dir
 main.py  // main process
