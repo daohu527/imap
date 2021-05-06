@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import global_var
 import lib.proto_utils as proto_utils
 from modules.map.proto import map_pb2
 
@@ -79,7 +80,7 @@ class Map:
         for p in curve.line_segment.point:
             px.append(float(p.x))
             py.append(float(p.y))
-        ax.plot(px, py, ls='-', c=color_val, alpha=0.5)
+        ax.plot(px, py, ls='-', c=color_val, alpha=0.5, picker=True)
     for curve in lane.right_boundary.curve.segment:
       if curve.HasField('line_segment'):
           px = []
@@ -87,7 +88,7 @@ class Map:
           for p in curve.line_segment.point:
               px.append(float(p.x))
               py.append(float(p.y))
-          ax.plot(px, py, ls='-', c=color_val, alpha=0.5)
+          ax.plot(px, py, ls='-', c=color_val, alpha=0.5, picker=True)
   
   @staticmethod
   def _draw_lane_central(lane, ax, color_val):
@@ -98,7 +99,9 @@ class Map:
         for p in curve.line_segment.point:
           px.append(float(p.x))
           py.append(float(p.y))
-        ax.plot(px, py, ls='-', linewidth=5, c=color_val, alpha=0.5)
+        line2d, = ax.plot(px, py, ls='-', linewidth=5, c=color_val, alpha=0.5, picker=True)
+        global_var.set_artist_value(line2d, lane)
+        global_var.set_element_vaule(lane.id.id, line2d)
         # ax.plot(px, py, 'o-', linewidth=5, c=color_val, alpha=0.5)
   
   @staticmethod
@@ -113,7 +116,7 @@ class Map:
       px.append(px[0])
       py.append(py[0])
 
-    ax.plot(px, py, ls='-', linewidth=2, c=color_val, alpha=0.5)
+    ax.plot(px, py, ls='-', linewidth=2, c=color_val, alpha=0.5, picker=True)
 
   @staticmethod
   def _draw_polygon(polygon, ax, color_val):
@@ -131,4 +134,4 @@ class Map:
     for p in line_segment.point:
       px.append(float(p.x))
       py.append(float(p.y))
-    ax.plot(px, py, 'o-', linewidth=1, c=color_val)
+    ax.plot(px, py, 'o-', linewidth=1, c=color_val, picker=True)

@@ -3,8 +3,9 @@
 import argparse
 import matplotlib.pyplot as plt
 
+import editor
+import global_var
 from map import Map
-from editor import Editor
 
 def draw(hdmap):
     lane_ids = []
@@ -16,20 +17,19 @@ def draw(hdmap):
     hdmap.draw_yields(ax)
 
 def show_map():
-    hdmap = Map()
+    hdmap=Map()
     hdmap.load(args.map)
     draw(hdmap)
+    # max windows
+    manager=plt.get_current_fig_manager()
+    manager.window.showMaximized()
+    # tight layout
+    # todo(zero): why tight layout not work?
+    plt.tight_layout()
     plt.axis('equal')
     plt.show()
 
-def save_map():
-    pass
-
-def load_base_map():
-    pass
-
 def add_editor():
-    editor = Editor()
     fig.canvas.mpl_connect('button_press_event', editor.on_click)
     fig.canvas.mpl_connect('button_press_event', editor.on_press)
     fig.canvas.mpl_connect('button_release_event', editor.on_release)
@@ -47,6 +47,13 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    # Init global var
+    global_var._init()
+
     fig, ax = plt.subplots()
-    show_map()
+
+    # 1. add select
     add_editor()
+
+    # 2. show map
+    show_map()
