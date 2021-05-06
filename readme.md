@@ -27,7 +27,8 @@ After the installation is complete, you can view the map with the following comm
 python main.py -m data/borregas_ave.txt
 ```
 
-The following is the display of the hd-map in `data\borregas_ave.txt`.  
+The following is the display of the hd-map in `data\borregas_ave.txt`.You can click on the lane you want to display more detail info, which will display the current lane's id, as well as the predecessor and successor lane's id in the upper left corner.  
+
 ![map_show](doc/img/map_show.jpg)  
 
 
