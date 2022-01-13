@@ -8,6 +8,15 @@ editor.py  // user interaction
 ```
 
 ## Quick start
+#### dependency
+The following is the tested environment, python3 is also feasible, but I did not test.
+```
+Python      2.7.17
+matplotlib  2.2.5
+protobuf    3.17.3
+```
+If you encounter problems, you can try uninstalling and then reinstalling to ensure that the software version is consistent.
+
 #### Install
 There are 2 ways to install imap.
 1. Install matplotlib and protobuf.
@@ -27,9 +36,9 @@ After the installation is complete, you can view the map with the following comm
 python main.py -m data/borregas_ave.txt
 ```
 
-The following is the display of the hd-map in `data\borregas_ave.txt`.You can click on the lane you want to display more detail info, which will display the current lane's id, as well as the predecessor and successor lane's id in the upper left corner.  
+The following is the display of the hd-map in `data\borregas_ave.txt`.You can click on the lane you want to display more detail info, which will display the current lane's id, as well as the predecessor and successor lane's id in the upper left corner.
 
-![map_show](doc/img/map_show.jpg)  
+![map_show](doc/img/map_show.jpg)
 
 
 ## Todo
