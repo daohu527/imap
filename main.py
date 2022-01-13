@@ -22,8 +22,8 @@ def show_map():
     hdmap.load(args.map)
     draw(hdmap)
     # max windows
-    manager=plt.get_current_fig_manager()
-    manager.window.showMaximized()
+    # manager=plt.get_current_fig_manager()
+    # manager.window.showMaximized()
     # tight layout
     # todo(zero): why tight layout not work?
     plt.tight_layout()
@@ -41,10 +41,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Mapshow is a tool to display hdmap info on a map.",
         prog="mapshow.py")
-    
+
     parser.add_argument(
         "-m", "--map", action="store", type=str, required=True,
-        help="Specify the map file in txt or binary format")    
+        help="Specify the map file in txt or binary format")
 
     args = parser.parse_args()
 
