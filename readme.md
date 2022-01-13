@@ -40,6 +40,12 @@ The following is the display of the hd-map in `data\borregas_ave.txt`.You can cl
 
 ![map_show](doc/img/map_show.jpg)
 
+## Questions
+1. After running the command `python main.py -m data/your_map_file.bin`, nothing display and no errors!!!
+A: Check the permissions of the map file, if the current user does not have permissions, modify the permissions with the following commands.
+```
+sudo chmod 777 data/your_map_file.bin
+```
 
 ## Todo
 1. add argparse.ArgumentParser
