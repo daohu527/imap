@@ -1,5 +1,20 @@
 #!/usr/bin/env python
 
+# Copyright 2021 daohu527 <daohu527@gmail.com>
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
 import global_var
 import lib.proto_utils as proto_utils
 from modules.map.proto import map_pb2
@@ -9,11 +24,11 @@ from matplotlib.patches import Polygon
 class Map:
   def __init__(self):
     self.map_pb = map_pb2.Map()
-  
+
   def load(self, map_file_name):
     res = proto_utils.get_pb_from_file(map_file_name, self.map_pb)
     return res is not None
-  
+
   def save(self, map_output_file):
     proto_utils.write_pb_to_text_file(self.map_pb, map_output_file)
 
@@ -26,7 +41,7 @@ class Map:
         # todo(zero): add option
         # self._draw_lane_boundary(lane, ax, "yellow")
         self._draw_lane_central(lane, ax, 'g')
-  
+
   def draw_junctions(self, ax, junction_ids):
     for junction in self.map_pb.junction:
       if len(junction_ids) == 0 or junction.id.id in junction_ids:
@@ -46,7 +61,7 @@ class Map:
       for stop_line in stop_sign.stop_line:
         for curve in stop_line.segment:
           self._draw_stop_line(curve.line_segment, ax, "tomato")
-  
+
   def draw_yields(self, ax):
     pass
     # for yield_sign in self.map_pb.yield:
@@ -89,7 +104,7 @@ class Map:
               px.append(float(p.x))
               py.append(float(p.y))
           ax.plot(px, py, ls='-', c=color_val, alpha=0.5, picker=True)
-  
+
   @staticmethod
   def _draw_lane_central(lane, ax, color_val):
     for curve in lane.central_curve.segment:
@@ -100,10 +115,11 @@ class Map:
           px.append(float(p.x))
           py.append(float(p.y))
         line2d, = ax.plot(px, py, ls='-', linewidth=5, c=color_val, alpha=0.5, picker=True)
+
+        # add data to global_var
         global_var.set_artist_value(line2d, lane)
         global_var.set_element_vaule(lane.id.id, line2d)
-        # ax.plot(px, py, 'o-', linewidth=5, c=color_val, alpha=0.5)
-  
+
   @staticmethod
   def _draw_polygon_boundary(polygon, ax, color_val):
     px = []
@@ -111,7 +127,7 @@ class Map:
     for point in polygon.point:
       px.append(point.x)
       py.append(point.y)
-    
+
     if px:
       px.append(px[0])
       py.append(py[0])
