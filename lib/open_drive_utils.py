@@ -15,6 +15,7 @@
 # limitations under the License.
 
 
+from operator import length_hint
 from modules.map.proto import map_pb2
 from modules.map.proto import map_road_pb2
 from modules.map.proto import map_lane_pb2
@@ -22,7 +23,8 @@ from modules.map.proto import map_lane_pb2
 import math
 import xml.etree.ElementTree as ET
 
-from lib.common import Vector3d, Point3d
+from lib.common import Vector3d, Point3d, rotate
+from lib.odr_spiral import odr_spiral, odr_arc
 
 GEOMETRY_SKIP_LENGTH = 0.01
 SAMPLING_LENGTH = 1.0
@@ -118,36 +120,54 @@ def parse_geometry_line(geometry, elevation_profile, sample_count, delta_s):
 
   hdg = float(geometry.attrib.get('hdg'))
   s = float(geometry.attrib.get('s'))
+
+  line = []
   for i in range(sample_count):
-    step_s = i * delta_s
-    x = geometry_x + step_s * math.cos(hdg)
-    y = geometry_y + step_s * math.sin(hdg)
+    local_s = i * delta_s
+    x = geometry_x + local_s * math.cos(hdg)
+    y = geometry_y + local_s * math.sin(hdg)
 
     # get elevation
-    cur_s = s + step_s
-    z = get_elevation(cur_s, elevation_profile)
+    absolute_s = s + local_s
+    z = get_elevation(absolute_s, elevation_profile)
 
-    point3d = Point3d(x, y, z, cur_s, hdg)
+    point3d = Point3d(x, y, z, absolute_s, hdg)
     print(point3d)
+    line.append(point3d)
+
+  return line
 
 
 def parse_geometry_spiral(geometry, elevation_profile, sample_count, delta_s):
   geometry_x = float(geometry.attrib.get('x'))
   geometry_y = float(geometry.attrib.get('y'))
-  origin = Vector3d(geometry_x, geometry_y, 0)
 
   hdg = float(geometry.attrib.get('hdg'))
   s = float(geometry.attrib.get('s'))
+  length = float(geometry.attrib.get('length'))
 
   spiral = geometry.find('spiral')
   curvStart = float(spiral.attrib.get('curvStart'))
   curvEnd = float(spiral.attrib.get('curvEnd'))
+  # first derivative of curvature
+  cdot = (curvEnd - curvStart) / length
 
-  # r = a + b*θ
-  # x = r*cosθ = (a + b*θ)*cosθ
-  # y = r*sinθ = (a + b*θ)*sinθ
+  spiral_line = []
   for i in range(sample_count):
-    pass
+    local_s = i * delta_s
+    x, y, _ = odr_spiral(local_s, cdot)
+
+    # get elevation
+    absolute_s = s + local_s
+    z = get_elevation(absolute_s, elevation_profile)
+
+    local3d = Vector3d(x, y, z)
+    # local3d *= transform
+
+    point3d = Point3d(x, y, z, absolute_s, hdg)
+    spiral_line.append(point3d)
+
+  return spiral_line
 
 
 def parse_geometry_arc(geometry, elevation_profile, sample_count, delta_s):
@@ -160,8 +180,22 @@ def parse_geometry_arc(geometry, elevation_profile, sample_count, delta_s):
   arc = geometry.find('arc')
   curvature = float(arc.attrib.get('curvature'))
 
+  arc_line = []
   for i in range(sample_count):
-    pass
+    local_s = i * delta_s
+    x, y = odr_arc(local_s, curvature)
+
+    # get elevation
+    absolute_s = s + local_s
+    z = get_elevation(absolute_s, elevation_profile)
+
+    local3d = Vector3d(x, y, z)
+    # local3d *= transform
+
+    point3d = Point3d(x, y, z, absolute_s, hdg)
+    arc_line.append(point3d)
+
+  return arc_line
 
 
 def parse_geometry_poly3(geometry, elevation_profile, sample_count, delta_s):
@@ -178,8 +212,8 @@ def parse_geometry_poly3(geometry, elevation_profile, sample_count, delta_s):
   d = float(poly3.attrib.get('d'))
 
   for i in range(sample_count):
-    step_s = i * delta_s
-    ds = s + step_s
+    local_s = i * delta_s
+    ds = s + local_s
     # y = a + b*ds + c*ds*ds + d*ds*ds*ds
     pass
 
@@ -230,6 +264,40 @@ def parse_reference_line(plan_view, elevation_profile):
     else:
       print("geometry type not support")
 
+
+def reference_line_add_offset(lanes):
+  for lane_offset in lanes.iter('laneOffset'):
+    s = float(lane_offset.attrib.get('s'))
+    a = float(lane_offset.attrib.get('a'))
+    b = float(lane_offset.attrib.get('b'))
+    c = float(lane_offset.attrib.get('c'))
+    d = float(lane_offset.attrib.get('d'))
+
+    # TODO(zero) : how to calc the length
+    length = 0
+    delta_s = min(length, SAMPLING_LENGTH)
+    for i in range(length):
+      ds = i * delta_s
+      offset = a + b*ds + c*ds**2 + d*ds**3
+
+      absolute_s = s + ds
+      # TODO(zero): Convert coordinates
+
+def parse_lanes(lanes_in_section):
+  for lane in lanes_in_section.iter('lane'):
+    id = lane.attrib.get('id')
+    type = lane.attrib.get('type')
+
+def parse_lane_sections(lanes):
+  for lane_section in lanes.iter('laneSection'):
+    s = float(lane_section.attrib.get('s'))
+    single_side = bool(lane_section.attrib.get('singleSide'))
+    left = lane_section.find("left")
+    right = lane_section.find("right")
+    parse_lanes(left)
+    parse_lanes(right)
+
+
 def parse_road(pb_map, road):
   pb_road = pb_map.road.add()
   road_length = road.attrib.get('length')
@@ -258,6 +326,10 @@ def parse_road(pb_map, road):
       "Road {} has no reference line!".format(pb_road.id.id)
 
   parse_reference_line(plan_view, elevation_profile)
+
+  reference_line_add_offset(lanes)
+
+  parse_lane_sections(lanes)
 
 
 def parse_lane(pb_map, lanes):

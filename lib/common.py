@@ -48,3 +48,7 @@ class Point3d:
   def __str__(self):
     return "Point3d x: {}, y: {}, z: {}, s: {}, heading: {}".format(self.x, \
         self.y, self.z, self.s, self.heading)
+
+
+def rotate():
+  pass

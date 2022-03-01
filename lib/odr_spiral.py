@@ -237,6 +237,25 @@ def odr_spiral(s : float, cDot : float) -> Tuple[float, float, float]:
   return x, y, t
 
 
+def odr_arc(s : float, curv : float) -> Tuple[float, float]:
+  """compute the actual arc
+
+  Args:
+      s (float): run-length along arc
+      curv (float): curvature
+
+  Returns:
+      Tuple[float, float]:
+      resulting x-coordinate in spirals local co-ordinate system [m]
+      resulting y-coordinate in spirals local co-ordinate system [m]
+  """
+  theta = s * curv
+  r = 1 / curv
+  x = r * math.sin(theta)
+  y = r - r * math.cos(theta)
+  return x, y
+
+
 if __name__ == '__main__':
   for s in range(300):
     x, y, t = odr_spiral(s, 0.5)
