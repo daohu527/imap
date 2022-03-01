@@ -47,6 +47,7 @@
 # https://github.com/DLR-TS/odrSpiral/blob/master/src/odrSpiral.c
 
 import math
+from typing import List,Tuple
 
 
 # S(x) for small x
@@ -149,7 +150,7 @@ gd = [ \
 ]
 
 
-def polevl(x : float, coef : list[float], n : int) -> float:
+def polevl(x : float, coef : List[float], n : int) -> float:
   assert(n > 0)
 
   ans = coef[0]
@@ -162,7 +163,7 @@ def polevl(x : float, coef : list[float], n : int) -> float:
   return ans
 
 
-def p1evl(x : float, coef : list[float], n : int) -> float:
+def p1evl(x : float, coef : List[float], n : int) -> float:
   assert(n > 1)
 
   ans = x + coef[0]
@@ -175,7 +176,7 @@ def p1evl(x : float, coef : list[float], n : int) -> float:
   return ans
 
 
-def fresnel(xxa : float) -> tuple[float, float]:
+def fresnel(xxa : float) -> Tuple[float, float]:
   x = math.fabs(xxa)
   x2 = x * x
 
@@ -208,7 +209,7 @@ def fresnel(xxa : float) -> tuple[float, float]:
   return cc, ss
 
 
-def odr_spiral(s : float, cDot : float) -> tuple[float, float, float]:
+def odr_spiral(s : float, cDot : float) -> Tuple[float, float, float]:
   """compute the actual "standard" spiral, starting with curvature 0
 
   Args:
@@ -216,7 +217,7 @@ def odr_spiral(s : float, cDot : float) -> tuple[float, float, float]:
       cDot (float): first derivative of curvature [1/m2]
 
   Returns:
-      tuple[float, float, float]:
+      Tuple[float, float, float]:
       resulting x-coordinate in spirals local co-ordinate system [m]
       resulting y-coordinate in spirals local co-ordinate system [m]
       tangent direction at s [rad]
@@ -238,5 +239,5 @@ def odr_spiral(s : float, cDot : float) -> tuple[float, float, float]:
 
 if __name__ == '__main__':
   for s in range(300):
-    x, y, t = odr_spiral(s, 0.001)
-    print("xyt: {},{},{}".format(x, y, t))
+    x, y, t = odr_spiral(s, 0.5)
+    print("{:10.4f} {:10.4f}".format(x, y))
