@@ -234,3 +234,9 @@ def odr_spiral(s : float, cDot : float) -> tuple[float, float, float]:
   t = s * s * cDot * 0.5
 
   return x, y, t
+
+
+if __name__ == '__main__':
+  for s in range(300):
+    x, y, t = odr_spiral(s, 0.001)
+    print("xyt: {},{},{}".format(x, y, t))
