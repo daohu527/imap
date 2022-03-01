@@ -15,7 +15,6 @@
 # limitations under the License.
 
 
-from operator import length_hint
 from modules.map.proto import map_pb2
 from modules.map.proto import map_road_pb2
 from modules.map.proto import map_lane_pb2
@@ -23,7 +22,7 @@ from modules.map.proto import map_lane_pb2
 import math
 import xml.etree.ElementTree as ET
 
-from lib.common import Vector3d, Point3d, rotate
+from lib.common import Vector3d, Point3d
 from lib.odr_spiral import odr_spiral, odr_arc
 
 GEOMETRY_SKIP_LENGTH = 0.01
@@ -110,8 +109,8 @@ def get_elevation(s, elevation_profile):
       elev = a + b*ds + c*ds*ds + d*ds*ds*ds
       return elev
     i -= 1
-
   return 0.0
+
 
 def get_lateral(s, lateral_profile):
   assert s >= 0, "start s is less then 0"
@@ -132,8 +131,8 @@ def get_lateral(s, lateral_profile):
       elev = a + b*ds + c*ds*ds + d*ds*ds*ds
       return elev
     i -= 1
-
   return 0.0
+
 
 def parse_geometry_line(geometry, elevation_profile, lateral_profile, sample_count, delta_s):
   geometry_x = float(geometry.attrib.get('x'))
@@ -155,11 +154,10 @@ def parse_geometry_line(geometry, elevation_profile, lateral_profile, sample_cou
     point3d = Point3d(x, y, z, absolute_s, hdg)
     print(point3d)
     line.append(point3d)
-
   return line
 
 
-def parse_geometry_spiral(geometry, elevation_profile, lateral_profile, sample_count, delta_s):
+def parse_geometry_spiral(geometry, elevation_profile, sample_count, delta_s):
   geometry_x = float(geometry.attrib.get('x'))
   geometry_y = float(geometry.attrib.get('y'))
 
@@ -187,7 +185,6 @@ def parse_geometry_spiral(geometry, elevation_profile, lateral_profile, sample_c
 
     point3d = Point3d(x, y, z, absolute_s, hdg)
     spiral_line.append(point3d)
-
   return spiral_line
 
 
@@ -215,7 +212,6 @@ def parse_geometry_arc(geometry, elevation_profile, sample_count, delta_s):
 
     point3d = Point3d(x, y, z, absolute_s, hdg)
     arc_line.append(point3d)
-
   return arc_line
 
 
@@ -337,9 +333,13 @@ def reference_line_add_offset(lanes):
       # TODO(zero): Convert coordinates
 
 def parse_lanes(lanes_in_section):
+  if lanes_in_section is None:
+    return
+
   for lane in lanes_in_section.iter('lane'):
     id = lane.attrib.get('id')
-    type = lane.attrib.get('type')
+    lane_type = lane.attrib.get('type')
+    print("lane id: {}, type: {}".format(id, lane_type))
 
 def parse_lane_sections(lanes):
   for lane_section in lanes.iter('laneSection'):
@@ -347,6 +347,7 @@ def parse_lane_sections(lanes):
     single_side = bool(lane_section.attrib.get('singleSide'))
     left = lane_section.find("left")
     right = lane_section.find("right")
+    # Todo(zero): Check if 'left' or 'right' is None
     parse_lanes(left)
     parse_lanes(right)
 
@@ -357,6 +358,7 @@ def parse_road(pb_map, road):
   pb_road.id.id = road.attrib.get('id')
   pb_road.junction_id.id = road.attrib.get('junction')
   if pb_road.junction_id.id != "-1":
+    # Todo(zero): need complete
     pass
 
   # The definition of road type is inconsistent
@@ -469,4 +471,3 @@ def get_map_from_xml_file(filename, pb_map):
     # 2. signals
     parse_signal(pb_map, road)
     # 3. objects
-

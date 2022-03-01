@@ -38,13 +38,6 @@ class Point3d:
     self.s = s
     self.heading = heading
 
-  def __init__(self, vector3d, s, heading):
-    self.x = vector3d.x
-    self.y = vector3d.y
-    self.z = vector3d.z
-    self.s = s
-    self.heading = heading
-
   def __str__(self):
     return "Point3d x: {}, y: {}, z: {}, s: {}, heading: {}".format(self.x, \
         self.y, self.z, self.s, self.heading)
