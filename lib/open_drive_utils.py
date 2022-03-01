@@ -93,7 +93,7 @@ def get_elevation(s, elevation_profile):
 
   elevations = elevation_profile.findall('elevation')
   if elevations is None:
-    return 0
+    return 0.0
 
   i = len(elevations) - 1
   while i >= 0:
@@ -109,70 +109,163 @@ def get_elevation(s, elevation_profile):
       return elev
     i -= 1
 
-  return 0
+  return 0.0
 
-def get_pos(elevation_profile, s, x, z, hdg):
-  y = get_elevation(s, elevation_profile)
-  pos = Vector3d(x, y, z)
-  # pos = euler(0, -(hdg*180/math.pi), 0) * pos
-  return pos
+def get_lateral(s, lateral_profile):
+  assert s >= 0, "start s is less then 0"
+  superelevations = lateral_profile.findall('superelevation')
+  if superelevations is None:
+    return 0.0
 
-def parse_geometry_line(geometry, elevation_profile, sample_count, delta_s):
+  i = len(superelevations) - 1
+  while i >= 0:
+    superelevation = superelevations[i]
+    superelevation_s = float(superelevation.attrib.get('s'))
+    if s >= superelevation_s:
+      a = float(superelevation.attrib.get('a'))
+      b = float(superelevation.attrib.get('b'))
+      c = float(superelevation.attrib.get('c'))
+      d = float(superelevation.attrib.get('d'))
+      ds = s - superelevation_s
+      elev = a + b*ds + c*ds*ds + d*ds*ds*ds
+      return elev
+    i -= 1
+
+  return 0.0
+
+def parse_geometry_line(geometry, elevation_profile, lateral_profile, sample_count, delta_s):
   geometry_x = float(geometry.attrib.get('x'))
   geometry_y = float(geometry.attrib.get('y'))
-  origin = Vector3d(geometry_x, 0.0, geometry_y)
+  origin = Vector3d(geometry_x, geometry_y, 0.0)
 
-  hdg = float(geometry.attrib.get('hdg'))
-  s = float(geometry.attrib.get('s'))
+  heading = float(geometry.attrib.get('hdg'))
+  origin_s = float(geometry.attrib.get('s'))
   for i in range(sample_count):
-    x = i * delta_s
-    cur_s = s + x
-    pos = get_pos(elevation_profile, cur_s, x, 0, hdg)
-    point3d = Point3d(origin + pos, cur_s, hdg)
+    s = i * delta_s
+    cur_s = origin_s + s
+    # roll(rad)
+    roll = get_lateral(cur_s, lateral_profile)
+
+    h = get_elevation(cur_s, elevation_profile)
+    pos = Vector3d(s, 0.0, h)
+    # pos = pos * tranform
+    point3d = Point3d(origin + pos, cur_s, heading)
     print(point3d)
 
-def parse_geometry_spiral(geometry, elevation_profile, sample_count, delta_s):
+def parse_geometry_spiral(geometry, elevation_profile, lateral_profile, sample_count, delta_s):
   geometry_x = float(geometry.attrib.get('x'))
   geometry_y = float(geometry.attrib.get('y'))
-  origin = Vector3d(geometry_x, 0, geometry_y)
+  origin = Vector3d(geometry_x, geometry_y, 0.0)
 
-  hdg = float(geometry.attrib.get('hdg'))
-  s = float(geometry.attrib.get('s'))
+  heading = float(geometry.attrib.get('hdg'))
+  origin_s = float(geometry.attrib.get('s'))
+  spiral = geometry.find('spiral')
+  curv_start = float(spiral.attrib.get('curvStart'))
+  curv_end = float(spiral.attrib.get('curvEnd'))
   for i in range(sample_count):
-    pass
+    s = i * delta_s
+    cur_s = origin_s + s
+    # roll(rad)
+    roll = get_lateral(cur_s, lateral_profile)
+
+    h = get_elevation(cur_s, elevation_profile)
+    pos = Vector3d(s, 0.0, h)
+
 
 def parse_geometry_arc(geometry, elevation_profile, sample_count, delta_s):
   geometry_x = float(geometry.attrib.get('x'))
   geometry_y = float(geometry.attrib.get('y'))
-  origin = Vector3d(geometry_x, 0, geometry_y)
+  origin = Vector3d(geometry_x, geometry_y, 0.0)
 
-  hdg = float(geometry.attrib.get('hdg'))
-  s = float(geometry.attrib.get('s'))
+  heading = float(geometry.attrib.get('hdg'))
+  origin_s = float(geometry.attrib.get('s'))
+  arc = geometry.find('arc')
+  # curvature can't be '0.0'
+  curvature = float(arc.attrib.get('curvature'))
   for i in range(sample_count):
-    pass
+    s = i * delta_s
+    cur_s = origin_s + s
+    # roll(rad)
+    roll = get_lateral(cur_s, lateral_profile)
+
+    h = get_elevation(cur_s, elevation_profile)
+    pos = Vector3d(s, 0.0, h)
 
 def parse_geometry_poly3(geometry, elevation_profile, sample_count, delta_s):
   geometry_x = float(geometry.attrib.get('x'))
   geometry_y = float(geometry.attrib.get('y'))
-  origin = Vector3d(geometry_x, 0, geometry_y)
+  origin = Vector3d(geometry_x, geometry_y, 0.0)
 
-  hdg = float(geometry.attrib.get('hdg'))
-  s = float(geometry.attrib.get('s'))
+  heading = float(geometry.attrib.get('hdg'))
+  origin_s = float(geometry.attrib.get('s'))
+  poly3 = geometry.find('poly3')
+
+  # https://releases.asam.net/OpenDRIVE/1.6.0/ASAM_OpenDRIVE_BS_V1-6-0.html#_coordinate_systems
+  a = float(poly3.attrib.get('a'))
+  b = float(poly3.attrib.get('b'))
+  c = float(poly3.attrib.get('c'))
+  d = float(poly3.attrib.get('d'))
+
+  # TODO(zero)
+  # if a != 0 and b != 0:
+  #   tf_uv2st = arctan(bV/bU)
+  # elif a == 0 and b == 0:
+
   for i in range(sample_count):
-    pass
+    u = i * delta_s
+    cur_s = origin_s + u
+    # roll(rad)
+    roll = get_lateral(cur_s, lateral_profile)
+
+    h = get_elevation(cur_s, elevation_profile)
+    pos = Vector3d(cur_s, 0.0, h)
+    v = a + b*u + c*u*u + d*u*u*u
+    pos = Vector3d(u, v, h)
+
 
 def parse_geometry_param_poly3(geometry, elevation_profile, sample_count, \
     delta_s):
   geometry_x = float(geometry.attrib.get('x'))
   geometry_y = float(geometry.attrib.get('y'))
-  origin = Vector3d(geometry_x, 0, geometry_y)
+  origin = Vector3d(geometry_x, geometry_y, 0.0)
 
-  hdg = float(geometry.attrib.get('hdg'))
-  s = float(geometry.attrib.get('s'))
+  heading = float(geometry.attrib.get('hdg'))
+  origin_s = float(geometry.attrib.get('s'))
+  param_poly3 = geometry.find('paramPoly3')
+
+  # https://releases.asam.net/OpenDRIVE/1.6.0/ASAM_OpenDRIVE_BS_V1-6-0.html#_coordinate_systems
+  aU = float(param_poly3.attrib.get('aU'))
+  bU = float(param_poly3.attrib.get('bU'))
+  cU = float(param_poly3.attrib.get('cU'))
+  dU = float(param_poly3.attrib.get('dU'))
+  aV = float(param_poly3.attrib.get('aV'))
+  bV = float(param_poly3.attrib.get('bV'))
+  cV = float(param_poly3.attrib.get('cV'))
+  dV = float(param_poly3.attrib.get('dV'))
+
+
+  p_range = param_poly3.attrib.get('pRange')
+  if p_range == 'arcLength':
+    pass # [0, @length from <geometry>]
+  elif p_range == 'normalized':
+    pass # [0, 1]
+  else:
+    print("Unknown pRange type")
+
   for i in range(sample_count):
-    pass
+    p = i * delta_s
+    cur_s = origin_s + p
+    # roll(rad)
+    roll = get_lateral(cur_s, lateral_profile)
 
-def parse_reference_line(plan_view, elevation_profile):
+    h = get_elevation(cur_s, elevation_profile)
+
+    u = aU + bU*p + cU*p*p + dU*p*p*p
+    v = aV + bV*p + cV*p*p + dV*p*p*p
+    pos = Vector3d(u, v, h)
+
+
+def parse_reference_line(plan_view, elevation_profile, lateral_profile):
   for geometry in plan_view.iter('geometry'):
     geometry_length = float(geometry.attrib.get('length'))
     if geometry_length < GEOMETRY_SKIP_LENGTH:
@@ -182,7 +275,7 @@ def parse_reference_line(plan_view, elevation_profile):
     sample_count = math.floor(geometry_length/delta_s)
 
     if geometry[0].tag == 'line':
-      parse_geometry_line(geometry, elevation_profile, sample_count, delta_s)
+      parse_geometry_line(geometry, elevation_profile, lateral_profile, sample_count, delta_s)
     elif geometry[0].tag == 'spiral':
       parse_geometry_spiral(geometry, elevation_profile, sample_count, delta_s)
     elif geometry[0].tag == 'arc':
@@ -211,8 +304,10 @@ def parse_road(pb_map, road):
   # child node "type"
   road_speed_limit = parse_road_speed(road)
 
-  # child node "elevationProfile"
+  # Elevation in reference line
   elevation_profile = road.find('elevationProfile')
+  # Superelevation causes a roll in the reference line
+  lateral_profile = road.find('lateralProfile')
 
   # reference line
   lanes = road.find('lanes')
@@ -222,7 +317,7 @@ def parse_road(pb_map, road):
   assert plan_view is not None, \
       "Road {} has no reference line!".format(pb_road.id.id)
 
-  parse_reference_line(plan_view, elevation_profile)
+  parse_reference_line(plan_view, elevation_profile, lateral_profile)
 
 
 def parse_lane(pb_map, lanes):
