@@ -133,30 +133,11 @@ def get_lateral(s, lateral_profile):
       return elev
     i -= 1
 
-<<<<<<< HEAD
   return 0.0
-=======
->>>>>>> 96940ec16077cb299bc20e4693c72c59740161ae
 
 def parse_geometry_line(geometry, elevation_profile, lateral_profile, sample_count, delta_s):
   geometry_x = float(geometry.attrib.get('x'))
   geometry_y = float(geometry.attrib.get('y'))
-<<<<<<< HEAD
-  origin = Vector3d(geometry_x, geometry_y, 0.0)
-
-  heading = float(geometry.attrib.get('hdg'))
-  origin_s = float(geometry.attrib.get('s'))
-  for i in range(sample_count):
-    s = i * delta_s
-    cur_s = origin_s + s
-    # roll(rad)
-    roll = get_lateral(cur_s, lateral_profile)
-
-    h = get_elevation(cur_s, elevation_profile)
-    pos = Vector3d(s, 0.0, h)
-    # pos = pos * tranform
-    point3d = Point3d(origin + pos, cur_s, heading)
-=======
 
   hdg = float(geometry.attrib.get('hdg'))
   s = float(geometry.attrib.get('s'))
@@ -172,7 +153,6 @@ def parse_geometry_line(geometry, elevation_profile, lateral_profile, sample_cou
     z = get_elevation(absolute_s, elevation_profile)
 
     point3d = Point3d(x, y, z, absolute_s, hdg)
->>>>>>> 96940ec16077cb299bc20e4693c72c59740161ae
     print(point3d)
     line.append(point3d)
 
@@ -182,23 +162,6 @@ def parse_geometry_line(geometry, elevation_profile, lateral_profile, sample_cou
 def parse_geometry_spiral(geometry, elevation_profile, lateral_profile, sample_count, delta_s):
   geometry_x = float(geometry.attrib.get('x'))
   geometry_y = float(geometry.attrib.get('y'))
-<<<<<<< HEAD
-  origin = Vector3d(geometry_x, geometry_y, 0.0)
-
-  heading = float(geometry.attrib.get('hdg'))
-  origin_s = float(geometry.attrib.get('s'))
-  spiral = geometry.find('spiral')
-  curv_start = float(spiral.attrib.get('curvStart'))
-  curv_end = float(spiral.attrib.get('curvEnd'))
-  for i in range(sample_count):
-    s = i * delta_s
-    cur_s = origin_s + s
-    # roll(rad)
-    roll = get_lateral(cur_s, lateral_profile)
-
-    h = get_elevation(cur_s, elevation_profile)
-    pos = Vector3d(s, 0.0, h)
-=======
 
   hdg = float(geometry.attrib.get('hdg'))
   s = float(geometry.attrib.get('s'))
@@ -226,29 +189,11 @@ def parse_geometry_spiral(geometry, elevation_profile, lateral_profile, sample_c
     spiral_line.append(point3d)
 
   return spiral_line
->>>>>>> 96940ec16077cb299bc20e4693c72c59740161ae
 
 
 def parse_geometry_arc(geometry, elevation_profile, sample_count, delta_s):
   geometry_x = float(geometry.attrib.get('x'))
   geometry_y = float(geometry.attrib.get('y'))
-<<<<<<< HEAD
-  origin = Vector3d(geometry_x, geometry_y, 0.0)
-
-  heading = float(geometry.attrib.get('hdg'))
-  origin_s = float(geometry.attrib.get('s'))
-  arc = geometry.find('arc')
-  # curvature can't be '0.0'
-  curvature = float(arc.attrib.get('curvature'))
-  for i in range(sample_count):
-    s = i * delta_s
-    cur_s = origin_s + s
-    # roll(rad)
-    roll = get_lateral(cur_s, lateral_profile)
-
-    h = get_elevation(cur_s, elevation_profile)
-    pos = Vector3d(s, 0.0, h)
-=======
 
   hdg = float(geometry.attrib.get('hdg'))
   s = float(geometry.attrib.get('s'))
@@ -273,12 +218,10 @@ def parse_geometry_arc(geometry, elevation_profile, sample_count, delta_s):
 
   return arc_line
 
->>>>>>> 96940ec16077cb299bc20e4693c72c59740161ae
 
 def parse_geometry_poly3(geometry, elevation_profile, sample_count, delta_s):
   geometry_x = float(geometry.attrib.get('x'))
   geometry_y = float(geometry.attrib.get('y'))
-<<<<<<< HEAD
   origin = Vector3d(geometry_x, geometry_y, 0.0)
 
   heading = float(geometry.attrib.get('hdg'))
@@ -307,30 +250,12 @@ def parse_geometry_poly3(geometry, elevation_profile, sample_count, delta_s):
     v = a + b*u + c*u*u + d*u*u*u
     pos = Vector3d(u, v, h)
 
-=======
-
-  hdg = float(geometry.attrib.get('hdg'))
-  s = float(geometry.attrib.get('s'))
-
-  poly3 = geometry.find('poly3')
-  a = float(poly3.attrib.get('a'))
-  b = float(poly3.attrib.get('b'))
-  c = float(poly3.attrib.get('c'))
-  d = float(poly3.attrib.get('d'))
-
-  for i in range(sample_count):
-    local_s = i * delta_s
-    ds = s + local_s
-    # y = a + b*ds + c*ds*ds + d*ds*ds*ds
-    pass
->>>>>>> 96940ec16077cb299bc20e4693c72c59740161ae
 
 
 def parse_geometry_param_poly3(geometry, elevation_profile, sample_count, \
     delta_s):
   geometry_x = float(geometry.attrib.get('x'))
   geometry_y = float(geometry.attrib.get('y'))
-<<<<<<< HEAD
   origin = Vector3d(geometry_x, geometry_y, 0.0)
 
   heading = float(geometry.attrib.get('hdg'))
@@ -356,23 +281,6 @@ def parse_geometry_param_poly3(geometry, elevation_profile, sample_count, \
   else:
     print("Unknown pRange type")
 
-=======
-
-  hdg = float(geometry.attrib.get('hdg'))
-  s = float(geometry.attrib.get('s'))
-
-  paramPoly3 = geometry.find('paramPoly3')
-  aU = float(paramPoly3.attrib.get('aU'))
-  bU = float(paramPoly3.attrib.get('bU'))
-  cU = float(paramPoly3.attrib.get('cU'))
-  dU = float(paramPoly3.attrib.get('dU'))
-  aV = float(paramPoly3.attrib.get('aV'))
-  bV = float(paramPoly3.attrib.get('bV'))
-  cV = float(paramPoly3.attrib.get('cV'))
-  dV = float(paramPoly3.attrib.get('dV'))
-  pRange = float(paramPoly3.attrib.get('pRange'))
-
->>>>>>> 96940ec16077cb299bc20e4693c72c59740161ae
   for i in range(sample_count):
     p = i * delta_s
     cur_s = origin_s + p
@@ -386,12 +294,7 @@ def parse_geometry_param_poly3(geometry, elevation_profile, sample_count, \
     pos = Vector3d(u, v, h)
 
 
-<<<<<<< HEAD
 def parse_reference_line(plan_view, elevation_profile, lateral_profile):
-=======
-
-def parse_reference_line(plan_view, elevation_profile):
->>>>>>> 96940ec16077cb299bc20e4693c72c59740161ae
   for geometry in plan_view.iter('geometry'):
     geometry_length = float(geometry.attrib.get('length'))
     if geometry_length < GEOMETRY_SKIP_LENGTH:
