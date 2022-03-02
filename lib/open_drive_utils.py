@@ -114,6 +114,15 @@ def get_elevation(s, elevation_profile):
 
 
 def get_lateral(s, lateral_profile):
+  """s-t to x-y roll
+
+  Args:
+      s ([type]): [description]
+      lateral_profile ([type]): [description]
+
+  Returns:
+      [type]: [description]
+  """
   assert s >= 0, "start s is less then 0"
   superelevations = lateral_profile.findall('superelevation')
   if superelevations is None:
@@ -341,7 +350,7 @@ def parse_lane_link(lane):
     link.find("successor")
 
 
-def parse_lane_width(lane):
+def parse_lane_width(lane) -> bool:
   width = lane.find("width")
   if width is not None:
     sOffset = float(width.attrib.get("sOffset"))
@@ -374,9 +383,13 @@ def parse_lanes(lanes_in_section):
 
     parse_lane_link(lane)
 
-    parse_lane_width(lane)
+    success = parse_lane_width(lane)
 
-    parse_road_mark(lane)
+    # If both width and lane border elements are present for a lane section in
+    # the OpenDRIVE file, the application must use the information from the
+    # <width> elements.
+    if not success:
+      parse_road_mark(lane)
 
 
 def parse_lane_sections(lanes):
