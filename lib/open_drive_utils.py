@@ -15,6 +15,7 @@
 # limitations under the License.
 
 
+from ast import parse
 from modules.map.proto import map_pb2
 from modules.map.proto import map_road_pb2
 from modules.map.proto import map_lane_pb2
@@ -135,8 +136,8 @@ def get_lateral(s, lateral_profile):
 
 
 def parse_geometry_line(geometry, elevation_profile, lateral_profile, sample_count, delta_s):
-  geometry_x = float(geometry.attrib.get('x'))
-  geometry_y = float(geometry.attrib.get('y'))
+  origin_x = float(geometry.attrib.get('x'))
+  origin_y = float(geometry.attrib.get('y'))
 
   hdg = float(geometry.attrib.get('hdg'))
   s = float(geometry.attrib.get('s'))
@@ -144,8 +145,8 @@ def parse_geometry_line(geometry, elevation_profile, lateral_profile, sample_cou
   line = []
   for i in range(sample_count):
     local_s = i * delta_s
-    x = geometry_x + local_s * math.cos(hdg)
-    y = geometry_y + local_s * math.sin(hdg)
+    x = origin_x + local_s * math.cos(hdg)
+    y = origin_y + local_s * math.sin(hdg)
 
     # get elevation
     absolute_s = s + local_s
@@ -158,8 +159,8 @@ def parse_geometry_line(geometry, elevation_profile, lateral_profile, sample_cou
 
 
 def parse_geometry_spiral(geometry, elevation_profile, sample_count, delta_s):
-  geometry_x = float(geometry.attrib.get('x'))
-  geometry_y = float(geometry.attrib.get('y'))
+  origin_x = float(geometry.attrib.get('x'))
+  origin_y = float(geometry.attrib.get('y'))
 
   hdg = float(geometry.attrib.get('hdg'))
   s = float(geometry.attrib.get('s'))
@@ -189,8 +190,8 @@ def parse_geometry_spiral(geometry, elevation_profile, sample_count, delta_s):
 
 
 def parse_geometry_arc(geometry, elevation_profile, sample_count, delta_s):
-  geometry_x = float(geometry.attrib.get('x'))
-  geometry_y = float(geometry.attrib.get('y'))
+  origin_x = float(geometry.attrib.get('x'))
+  origin_y = float(geometry.attrib.get('y'))
 
   hdg = float(geometry.attrib.get('hdg'))
   s = float(geometry.attrib.get('s'))
@@ -216,9 +217,9 @@ def parse_geometry_arc(geometry, elevation_profile, sample_count, delta_s):
 
 
 def parse_geometry_poly3(geometry, elevation_profile, sample_count, delta_s):
-  geometry_x = float(geometry.attrib.get('x'))
-  geometry_y = float(geometry.attrib.get('y'))
-  origin = Vector3d(geometry_x, geometry_y, 0.0)
+  origin_x = float(geometry.attrib.get('x'))
+  origin_y = float(geometry.attrib.get('y'))
+  origin = Vector3d(origin_x, origin_y, 0.0)
 
   heading = float(geometry.attrib.get('hdg'))
   origin_s = float(geometry.attrib.get('s'))
@@ -250,9 +251,9 @@ def parse_geometry_poly3(geometry, elevation_profile, sample_count, delta_s):
 
 def parse_geometry_param_poly3(geometry, elevation_profile, sample_count, \
     delta_s):
-  geometry_x = float(geometry.attrib.get('x'))
-  geometry_y = float(geometry.attrib.get('y'))
-  origin = Vector3d(geometry_x, geometry_y, 0.0)
+  origin_x = float(geometry.attrib.get('x'))
+  origin_y = float(geometry.attrib.get('y'))
+  origin = Vector3d(origin_x, origin_y, 0.0)
 
   heading = float(geometry.attrib.get('hdg'))
   origin_s = float(geometry.attrib.get('s'))
@@ -332,6 +333,35 @@ def reference_line_add_offset(lanes):
       absolute_s = s + ds
       # TODO(zero): Convert coordinates
 
+
+def parse_lane_link(lane):
+  link = lane.find("link")
+  if link is not None:
+    link.find("predecessor")
+    link.find("successor")
+
+
+def parse_lane_width(lane):
+  width = lane.find("width")
+  if width is not None:
+    sOffset = float(width.attrib.get("sOffset"))
+    a = float(width.attrib.get("a"))
+    b = float(width.attrib.get("b"))
+    c = float(width.attrib.get("c"))
+    d = float(width.attrib.get("d"))
+    # a + b*ds + c*ds**2 + d*ds**3
+
+
+def parse_road_mark(lane):
+  road_mark = lane.find("roadMark")
+  if road_mark is not None:
+    sOffset = float(road_mark.attrib.get("sOffset"))
+    lane_type = road_mark.attrib.get("type")
+    weight = road_mark.attrib.get("weight")
+    color = road_mark.attrib.get("color")
+    width = float(road_mark.attrib.get("width"))
+
+
 def parse_lanes(lanes_in_section):
   if lanes_in_section is None:
     return
@@ -339,7 +369,15 @@ def parse_lanes(lanes_in_section):
   for lane in lanes_in_section.iter('lane'):
     id = lane.attrib.get('id')
     lane_type = lane.attrib.get('type')
+    level = lane.attrib.get('level')
     print("lane id: {}, type: {}".format(id, lane_type))
+
+    parse_lane_link(lane)
+
+    parse_lane_width(lane)
+
+    parse_road_mark(lane)
+
 
 def parse_lane_sections(lanes):
   for lane_section in lanes.iter('laneSection'):
