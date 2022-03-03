@@ -315,12 +315,12 @@ def parse_geometry_param_poly3(geometry, elevation_profile, sample_count, \
 
 # test
 reference_line = []
+fig, ax = plt.subplots()
 
-def draw_reference_line(reference_line):
-  x = [point.x for point in reference_line]
-  y = [point.y for point in reference_line]
-  plt.plot(x, y)
-  plt.show()
+def draw_reference_line(line):
+  x = [point.x for point in line]
+  y = [point.y for point in line]
+  ax.plot(x, y)
 
 
 def parse_reference_line(plan_view, elevation_profile, lateral_profile):
@@ -335,22 +335,20 @@ def parse_reference_line(plan_view, elevation_profile, lateral_profile):
     # reference_line = []
     if geometry[0].tag == 'line':
       line = parse_geometry_line(geometry, elevation_profile, sample_count, delta_s)
-      reference_line.extend(line)
     elif geometry[0].tag == 'spiral':
-      spiral_line = parse_geometry_spiral(geometry, elevation_profile, sample_count, delta_s)
-      reference_line.extend(spiral_line)
+      line = parse_geometry_spiral(geometry, elevation_profile, sample_count, delta_s)
     elif geometry[0].tag == 'arc':
-      arc_line = parse_geometry_arc(geometry, elevation_profile, sample_count, delta_s)
-      reference_line.extend(arc_line)
+      line = parse_geometry_arc(geometry, elevation_profile, sample_count, delta_s)
     elif geometry[0].tag == 'poly3':  # deprecated in OpenDrive 1.6.0
-      poly3_line = parse_geometry_poly3(geometry, elevation_profile, sample_count, delta_s)
-      reference_line.extend(poly3_line)
+      line = parse_geometry_poly3(geometry, elevation_profile, sample_count, delta_s)
     elif geometry[0].tag == 'paramPoly3':
-      paramPoly3_line = parse_geometry_param_poly3(geometry, elevation_profile, sample_count,\
+      line = parse_geometry_param_poly3(geometry, elevation_profile, sample_count,\
           delta_s)
-      reference_line.extend(paramPoly3_line)
     else:
       print("geometry type not support")
+
+    reference_line.extend(line)
+    draw_reference_line(line)
 
 
 def reference_line_add_offset(lanes):
@@ -557,4 +555,4 @@ def get_map_from_xml_file(filename, pb_map):
     # 3. objects
 
   # test
-  draw_reference_line(reference_line)
+  plt.show()
