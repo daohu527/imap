@@ -59,3 +59,4 @@ class Transform:
     self.x += self.origin_x
     self.y += self.origin_y
     self.z += self.origin_z
+    return self.x, self.y, self.z

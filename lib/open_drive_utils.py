@@ -22,6 +22,8 @@ from modules.map.proto import map_lane_pb2
 
 import math
 import xml.etree.ElementTree as ET
+# Debug use
+import matplotlib.pyplot as plt
 
 from lib.common import Vector3d, Point3d
 from lib.odr_spiral import odr_spiral, odr_arc
@@ -311,6 +313,15 @@ def parse_geometry_param_poly3(geometry, elevation_profile, sample_count, \
     v = aV + bV*p + cV*p*p + dV*p*p*p
     pos = Vector3d(u, v, h)
 
+# test
+reference_line = []
+
+def draw_reference_line(reference_line):
+  x = [point.x for point in reference_line]
+  y = [point.y for point in reference_line]
+  plt.plot(x, y)
+  plt.show()
+
 
 def parse_reference_line(plan_view, elevation_profile, lateral_profile):
   for geometry in plan_view.iter('geometry'):
@@ -321,23 +332,23 @@ def parse_reference_line(plan_view, elevation_profile, lateral_profile):
     delta_s = min(geometry_length, SAMPLING_LENGTH)
     sample_count = math.ceil(geometry_length/delta_s)
 
-    reference_line = []
+    # reference_line = []
     if geometry[0].tag == 'line':
       line = parse_geometry_line(geometry, elevation_profile, sample_count, delta_s)
-      reference_line.append(line)
+      reference_line.extend(line)
     elif geometry[0].tag == 'spiral':
-      spiral = parse_geometry_spiral(geometry, elevation_profile, sample_count, delta_s)
-      reference_line.append(spiral)
+      spiral_line = parse_geometry_spiral(geometry, elevation_profile, sample_count, delta_s)
+      reference_line.extend(spiral_line)
     elif geometry[0].tag == 'arc':
-      arc = parse_geometry_arc(geometry, elevation_profile, sample_count, delta_s)
-      reference_line.append(arc)
+      arc_line = parse_geometry_arc(geometry, elevation_profile, sample_count, delta_s)
+      reference_line.extend(arc_line)
     elif geometry[0].tag == 'poly3':  # deprecated in OpenDrive 1.6.0
-      poly3 = parse_geometry_poly3(geometry, elevation_profile, sample_count, delta_s)
-      reference_line.append(poly3)
+      poly3_line = parse_geometry_poly3(geometry, elevation_profile, sample_count, delta_s)
+      reference_line.extend(poly3_line)
     elif geometry[0].tag == 'paramPoly3':
-      paramPoly3 = parse_geometry_param_poly3(geometry, elevation_profile, sample_count,\
+      paramPoly3_line = parse_geometry_param_poly3(geometry, elevation_profile, sample_count,\
           delta_s)
-      reference_line.append(paramPoly3)
+      reference_line.extend(paramPoly3_line)
     else:
       print("geometry type not support")
 
@@ -370,13 +381,16 @@ def parse_lane_link(lane):
 
 def parse_lane_width(lane) -> bool:
   width = lane.find("width")
-  if width is not None:
-    sOffset = float(width.attrib.get("sOffset"))
-    a = float(width.attrib.get("a"))
-    b = float(width.attrib.get("b"))
-    c = float(width.attrib.get("c"))
-    d = float(width.attrib.get("d"))
-    # a + b*ds + c*ds**2 + d*ds**3
+  if width is None:
+    return False
+
+  sOffset = float(width.attrib.get("sOffset"))
+  a = float(width.attrib.get("a"))
+  b = float(width.attrib.get("b"))
+  c = float(width.attrib.get("c"))
+  d = float(width.attrib.get("d"))
+  # a + b*ds + c*ds**2 + d*ds**3
+  return True
 
 
 def parse_road_mark(lane):
@@ -541,3 +555,6 @@ def get_map_from_xml_file(filename, pb_map):
     # 2. signals
     parse_signal(pb_map, road)
     # 3. objects
+
+  # test
+  draw_reference_line(reference_line)
