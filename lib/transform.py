@@ -20,24 +20,42 @@ import math
 
 class Transform:
   def __init__(self, x, y, z, yaw, roll, pitch) -> None:
-    self.x = x
-    self.y = y
-    self.z = z
+    self.origin_x = x
+    self.origin_y = y
+    self.origin_z = z
     self.yaw = yaw
     self.roll = roll
     self.pitch = pitch
 
-  def roll(self):
-    y, z = self.y, self.z
-    self.y = y * math.cos() + z * math.sin()
-    self.z = -y * math.sin() + z * math.cos()
+  def set_rotate(self, yaw = 0.0, roll = 0.0, pitch = 0.0) -> None:
+    self.yaw = yaw
+    self.roll = roll
+    self.pitch = pitch
 
-  def pitch(self):
-    x, z = self.x, self.z
-    self.x = x * math.cos() - z * math.sin()
-    self.z = x * math.sin() + z * math.cos()
+  def set_translate(self, x = 0.0, y = 0.0, z = 0.0) -> None:
+    self.x = x
+    self.y = y
+    self.z = z
 
-  def yaw(self):
-    x, y = self.x, self.y
-    self.x = x * math.cos() - y * math.sin()
-    self.y = x * math.sin() + y * math.cos()
+  def transform(self, x, y, z):
+    self.r_yaw(x, y)
+    self.r_roll(y, z)
+    self.r_pitch(x, z)
+    return self.translate()
+
+  def r_yaw(self, x, y):
+    self.x = x * math.cos(self.yaw) - y * math.sin(self.yaw)
+    self.y = x * math.sin(self.yaw) + y * math.cos(self.yaw)
+
+  def r_roll(self, y, z):
+    self.y = y * math.cos(self.roll) + z * math.sin(self.roll)
+    self.z = -y * math.sin(self.roll) + z * math.cos(self.roll)
+
+  def r_pitch(self, x, z):
+    self.x = x * math.cos(self.pitch) - z * math.sin(self.pitch)
+    self.z = x * math.sin(self.pitch) + z * math.cos(self.pitch)
+
+  def translate(self):
+    self.x += self.origin_x
+    self.y += self.origin_y
+    self.z += self.origin_z

@@ -31,17 +31,17 @@ class Vector3d:
     return "Vector3d x: {}, y: {}, z: {}".format(self.x, self.y, self.z)
 
 class Point3d:
-  def __init__(self, x, y, z, s, heading):
+  def __init__(self, x, y, z, s):
     self.x = x
     self.y = y
     self.z = z
     self.s = s
-    self.heading = heading
+
+  def set_rotate(self, yaw = 0.0, roll = 0.0, pitch = 0.0):
+    self.yaw = yaw
+    self.roll = roll
+    self.pitch = pitch
 
   def __str__(self):
     return "Point3d x: {}, y: {}, z: {}, s: {}, heading: {}".format(self.x, \
-        self.y, self.z, self.s, self.heading)
-
-
-def rotate():
-  pass
+        self.y, self.z, self.s, self.yaw)

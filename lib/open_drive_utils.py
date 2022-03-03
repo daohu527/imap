@@ -25,6 +25,7 @@ import xml.etree.ElementTree as ET
 
 from lib.common import Vector3d, Point3d
 from lib.odr_spiral import odr_spiral, odr_arc
+from lib.transform import Transform
 
 GEOMETRY_SKIP_LENGTH = 0.01
 SAMPLING_LENGTH = 1.0
@@ -144,24 +145,29 @@ def get_lateral(s, lateral_profile):
   return 0.0
 
 
-def parse_geometry_line(geometry, elevation_profile, lateral_profile, sample_count, delta_s):
+def parse_geometry_line(geometry, elevation_profile, sample_count, delta_s):
   origin_x = float(geometry.attrib.get('x'))
   origin_y = float(geometry.attrib.get('y'))
 
   hdg = float(geometry.attrib.get('hdg'))
-  s = float(geometry.attrib.get('s'))
+  origin_s = float(geometry.attrib.get('s'))
+
+  tf = Transform(origin_x, origin_y, 0, hdg, 0, 0)
 
   line = []
   for i in range(sample_count):
-    local_s = i * delta_s
-    x = origin_x + local_s * math.cos(hdg)
-    y = origin_y + local_s * math.sin(hdg)
+    s, t, h = i * delta_s, 0, 0
+    x, y, _ = tf.transform(s, t, h)
+    # x = origin_x + s * math.cos(hdg)
+    # y = origin_y + s * math.sin(hdg)
 
     # get elevation
-    absolute_s = s + local_s
+    absolute_s = origin_s + s
     z = get_elevation(absolute_s, elevation_profile)
 
-    point3d = Point3d(x, y, z, absolute_s, hdg)
+    point3d = Point3d(x, y, z, absolute_s)
+    # TODO(zero): we need to add roll(<superelevation>)
+    point3d.set_rotate(hdg)
     print(point3d)
     line.append(point3d)
   return line
@@ -172,7 +178,7 @@ def parse_geometry_spiral(geometry, elevation_profile, sample_count, delta_s):
   origin_y = float(geometry.attrib.get('y'))
 
   hdg = float(geometry.attrib.get('hdg'))
-  s = float(geometry.attrib.get('s'))
+  origin_s = float(geometry.attrib.get('s'))
   length = float(geometry.attrib.get('length'))
 
   spiral = geometry.find('spiral')
@@ -181,19 +187,22 @@ def parse_geometry_spiral(geometry, elevation_profile, sample_count, delta_s):
   # first derivative of curvature
   cdot = (curvEnd - curvStart) / length
 
+  tf = Transform(origin_x, origin_y, 0, hdg, 0, 0)
+
   spiral_line = []
   for i in range(sample_count):
     local_s = i * delta_s
-    x, y, _ = odr_spiral(local_s, cdot)
+    s, t, _ = odr_spiral(local_s, cdot)
+    x, y, _ = tf.transform(s, t, 0.0)
 
     # get elevation
-    absolute_s = s + local_s
+    absolute_s = origin_s + local_s
     z = get_elevation(absolute_s, elevation_profile)
 
-    local3d = Vector3d(x, y, z)
-    # local3d *= transform
-
-    point3d = Point3d(x, y, z, absolute_s, hdg)
+    point3d = Point3d(x, y, z, absolute_s)
+    # TODO(zero): we need to add roll(<superelevation>)
+    point3d.set_rotate(hdg)
+    print(point3d)
     spiral_line.append(point3d)
   return spiral_line
 
@@ -203,24 +212,27 @@ def parse_geometry_arc(geometry, elevation_profile, sample_count, delta_s):
   origin_y = float(geometry.attrib.get('y'))
 
   hdg = float(geometry.attrib.get('hdg'))
-  s = float(geometry.attrib.get('s'))
+  origin_s = float(geometry.attrib.get('s'))
 
   arc = geometry.find('arc')
   curvature = float(arc.attrib.get('curvature'))
 
+  tf = Transform(origin_x, origin_y, 0, hdg, 0, 0)
+
   arc_line = []
   for i in range(sample_count):
     local_s = i * delta_s
-    x, y = odr_arc(local_s, curvature)
+    s, t = odr_arc(local_s, curvature)
+    x, y, _ = tf.transform(s, t, 0.0)
 
     # get elevation
-    absolute_s = s + local_s
+    absolute_s = origin_s + local_s
     z = get_elevation(absolute_s, elevation_profile)
 
-    local3d = Vector3d(x, y, z)
-    # local3d *= transform
-
-    point3d = Point3d(x, y, z, absolute_s, hdg)
+    point3d = Point3d(x, y, z, absolute_s)
+    # TODO(zero): we need to add roll(<superelevation>)
+    point3d.set_rotate(hdg)
+    print(point3d)
     arc_line.append(point3d)
   return arc_line
 
@@ -307,19 +319,25 @@ def parse_reference_line(plan_view, elevation_profile, lateral_profile):
       continue
 
     delta_s = min(geometry_length, SAMPLING_LENGTH)
-    sample_count = math.floor(geometry_length/delta_s)
+    sample_count = math.ceil(geometry_length/delta_s)
 
+    reference_line = []
     if geometry[0].tag == 'line':
-      parse_geometry_line(geometry, elevation_profile, lateral_profile, sample_count, delta_s)
+      line = parse_geometry_line(geometry, elevation_profile, sample_count, delta_s)
+      reference_line.append(line)
     elif geometry[0].tag == 'spiral':
-      parse_geometry_spiral(geometry, elevation_profile, sample_count, delta_s)
+      spiral = parse_geometry_spiral(geometry, elevation_profile, sample_count, delta_s)
+      reference_line.append(spiral)
     elif geometry[0].tag == 'arc':
-      parse_geometry_arc(geometry, elevation_profile, sample_count, delta_s)
+      arc = parse_geometry_arc(geometry, elevation_profile, sample_count, delta_s)
+      reference_line.append(arc)
     elif geometry[0].tag == 'poly3':  # deprecated in OpenDrive 1.6.0
-      parse_geometry_poly3(geometry, elevation_profile, sample_count, delta_s)
+      poly3 = parse_geometry_poly3(geometry, elevation_profile, sample_count, delta_s)
+      reference_line.append(poly3)
     elif geometry[0].tag == 'paramPoly3':
-      parse_geometry_param_poly3(geometry, elevation_profile, sample_count,\
+      paramPoly3 = parse_geometry_param_poly3(geometry, elevation_profile, sample_count,\
           delta_s)
+      reference_line.append(paramPoly3)
     else:
       print("geometry type not support")
 
@@ -435,6 +453,7 @@ def parse_road(pb_map, road):
 
   parse_reference_line(plan_view, elevation_profile, lateral_profile)
 
+  # TODO(zero): lane0 add offset, not reference line
   reference_line_add_offset(lanes)
 
   parse_lane_sections(lanes)
