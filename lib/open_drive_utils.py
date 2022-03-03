@@ -71,10 +71,14 @@ def parse_header(pb_map, header):
 
 def parse_road_speed(road):
   road_type = road.findall('type')
-  if road_type is None:
+  if not road_type:
     return
+
   speed = road_type[0].find('speed')
   speed_max = speed.attrib.get('t_maxSpeed')
+  if not speed_max:
+    return 0
+
   if speed_max == 'no limit' or speed_max == 'undefined':
     return 0
 
@@ -340,27 +344,46 @@ def parse_reference_line(plan_view, elevation_profile, lateral_profile):
       print("geometry type not support")
 
     reference_line.extend(line)
-    draw_reference_line(line)
+    # draw_reference_line(line)
     return reference_line
 
 
-def reference_line_add_offset(lanes):
+def reference_line_add_offset(lanes, road_length, reference_line):
+  lane_offset_list = []
   for lane_offset in lanes.iter('laneOffset'):
     s = float(lane_offset.attrib.get('s'))
     a = float(lane_offset.attrib.get('a'))
     b = float(lane_offset.attrib.get('b'))
     c = float(lane_offset.attrib.get('c'))
     d = float(lane_offset.attrib.get('d'))
+    lane_offset_list.append((s, a, b, c, d))
 
-    # TODO(zero) : how to calc the length
-    length = 0
-    delta_s = min(length, SAMPLING_LENGTH)
-    for i in range(length):
-      ds = i * delta_s
-      offset = a + b*ds + c*ds**2 + d*ds**3
+  if not lane_offset_list:
+    return
 
-      absolute_s = s + ds
-      # TODO(zero): Convert coordinates
+  # TODO(zero) : how to calc the length
+  i, n = 0, len(lane_offset_list)
+  cur_s = lane_offset_list[i].s
+  next_s = lane_offset_list[i+1].s if i+1 < n else road_length
+  for idx, point3d in enumerate(reference_line):
+    if point3d.s < cur_s:
+      continue
+
+    if point3d.s > next_s:
+      i += 1
+      cur_s = lane_offset_list[i].s
+      next_s = lane_offset_list[i+1].s if i+1 < n else road_length
+
+    ds = point3d.s - cur_s
+    offset = a + b*ds + c*ds**2 + d*ds**3
+
+    # TODO(zero): Shift point
+    angle = point3d.yaw + math.pi/2
+    if angle > 2*math.pi:
+      angle -= 2*math.pi
+
+    reference_line[idx].x += offset*math.cos(angle)
+    reference_line[idx].y += offset*math.sin(angle)
 
 
 def parse_lane_link(lane):
@@ -422,7 +445,7 @@ def parse_lanes(lanes_in_section, length):
       parse_road_mark(lane)
 
 
-def parse_lane_sections(lanes, road_length):
+def parse_lane_sections(lanes, road_length, reference_line):
   length = len(lanes)
   for idx, lane_section in enumerate(lanes.iter('laneSection')):
     s = float(lane_section.attrib.get('s'))
@@ -440,7 +463,7 @@ def parse_lane_sections(lanes, road_length):
 
 def parse_road(pb_map, road):
   pb_road = pb_map.road.add()
-  road_length = road.attrib.get('length')
+  road_length = float(road.attrib.get('length'))
   pb_road.id.id = road.attrib.get('id')
   pb_road.junction_id.id = road.attrib.get('junction')
   if pb_road.junction_id.id != "-1":
@@ -467,14 +490,15 @@ def parse_road(pb_map, road):
 
   reference_line = parse_reference_line(plan_view, elevation_profile, lateral_profile)
 
-  # TODO(zero): lane0 add offset, not reference line
+  draw_reference_line(reference_line)
+
   # lanes
   lanes = road.find('lanes')
   assert lanes is not None, "Road {} has no lanes!".format(pb_road.id.id)
 
-  reference_line_add_offset(lanes)
+  reference_line_add_offset(lanes, road_length, reference_line)
 
-  parse_lane_sections(lanes, road_length)
+  parse_lane_sections(lanes, road_length, reference_line)
 
 
 def to_pb_lane_type(open_drive_type):
