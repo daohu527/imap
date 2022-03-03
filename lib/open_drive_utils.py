@@ -15,7 +15,6 @@
 # limitations under the License.
 
 
-from ast import parse
 from modules.map.proto import map_pb2
 from modules.map.proto import map_road_pb2
 from modules.map.proto import map_lane_pb2
@@ -71,7 +70,7 @@ def parse_header(pb_map, header):
 
 
 def parse_road_speed(road):
-  road_type = road.find('type')
+  road_type = road.findall('type')
   if road_type is None:
     return
   speed = road_type[0].find('speed')
@@ -242,9 +241,8 @@ def parse_geometry_arc(geometry, elevation_profile, sample_count, delta_s):
 def parse_geometry_poly3(geometry, elevation_profile, sample_count, delta_s):
   origin_x = float(geometry.attrib.get('x'))
   origin_y = float(geometry.attrib.get('y'))
-  origin = Vector3d(origin_x, origin_y, 0.0)
 
-  heading = float(geometry.attrib.get('hdg'))
+  hdg = float(geometry.attrib.get('hdg'))
   origin_s = float(geometry.attrib.get('s'))
   poly3 = geometry.find('poly3')
 
@@ -255,30 +253,26 @@ def parse_geometry_poly3(geometry, elevation_profile, sample_count, delta_s):
   d = float(poly3.attrib.get('d'))
 
   # TODO(zero)
-  # if a != 0 and b != 0:
-  #   tf_uv2st = arctan(bV/bU)
-  # elif a == 0 and b == 0:
+  # 1. How to get u, v based on length?
+  # 2. arctan(bV/bU), au,zv
 
   for i in range(sample_count):
     u = i * delta_s
-    cur_s = origin_s + u
+    v = a + b*u + c*u**2 + d*u**3
+
+    absolute_s = origin_s + u
     # roll(rad)
-    roll = get_lateral(cur_s, lateral_profile)
+    roll = get_lateral(absolute_s, lateral_profile)
 
-    h = get_elevation(cur_s, elevation_profile)
-    pos = Vector3d(cur_s, 0.0, h)
-    v = a + b*u + c*u*u + d*u*u*u
-    pos = Vector3d(u, v, h)
+    z = get_elevation(absolute_s, elevation_profile)
 
 
-
-def parse_geometry_param_poly3(geometry, elevation_profile, sample_count, \
-    delta_s):
+def parse_geometry_param_poly3(geometry, elevation_profile, delta_s):
   origin_x = float(geometry.attrib.get('x'))
   origin_y = float(geometry.attrib.get('y'))
-  origin = Vector3d(origin_x, origin_y, 0.0)
 
-  heading = float(geometry.attrib.get('hdg'))
+  hdg = float(geometry.attrib.get('hdg'))
+  length = float(geometry.attrib.get('length'))
   origin_s = float(geometry.attrib.get('s'))
   param_poly3 = geometry.find('paramPoly3')
 
@@ -295,26 +289,25 @@ def parse_geometry_param_poly3(geometry, elevation_profile, sample_count, \
 
   p_range = param_poly3.attrib.get('pRange')
   if p_range == 'arcLength':
-    pass # [0, @length from <geometry>]
+    # [0, @length from <geometry>]
+    sample_count = math.ceil(length/delta_s)
   elif p_range == 'normalized':
-    pass # [0, 1]
+    # [0, 1]
+    sample_count = 1
   else:
     print("Unknown pRange type")
 
+  # TODO(zero):
+  # 1. How to get P based on length?
+  # 2. arctan(bV/bU), (aU, aV)
   for i in range(sample_count):
     p = i * delta_s
-    cur_s = origin_s + p
-    # roll(rad)
-    roll = get_lateral(cur_s, lateral_profile)
 
-    h = get_elevation(cur_s, elevation_profile)
+    u = aU + bU*p + cU*p**2 + dU*p**3
+    v = aV + bV*p + cV*p**2 + dV*p**3
 
-    u = aU + bU*p + cU*p*p + dU*p*p*p
-    v = aV + bV*p + cV*p*p + dV*p*p*p
-    pos = Vector3d(u, v, h)
 
 # test
-reference_line = []
 fig, ax = plt.subplots()
 
 def draw_reference_line(line):
@@ -332,7 +325,7 @@ def parse_reference_line(plan_view, elevation_profile, lateral_profile):
     delta_s = min(geometry_length, SAMPLING_LENGTH)
     sample_count = math.ceil(geometry_length/delta_s)
 
-    # reference_line = []
+    reference_line = []
     if geometry[0].tag == 'line':
       line = parse_geometry_line(geometry, elevation_profile, sample_count, delta_s)
     elif geometry[0].tag == 'spiral':
@@ -340,15 +333,15 @@ def parse_reference_line(plan_view, elevation_profile, lateral_profile):
     elif geometry[0].tag == 'arc':
       line = parse_geometry_arc(geometry, elevation_profile, sample_count, delta_s)
     elif geometry[0].tag == 'poly3':  # deprecated in OpenDrive 1.6.0
-      line = parse_geometry_poly3(geometry, elevation_profile, sample_count, delta_s)
+      line = parse_geometry_poly3(geometry, elevation_profile, delta_s)
     elif geometry[0].tag == 'paramPoly3':
-      line = parse_geometry_param_poly3(geometry, elevation_profile, sample_count,\
-          delta_s)
+      line = parse_geometry_param_poly3(geometry, elevation_profile, delta_s)
     else:
       print("geometry type not support")
 
     reference_line.extend(line)
     draw_reference_line(line)
+    return reference_line
 
 
 def reference_line_add_offset(lanes):
@@ -373,11 +366,11 @@ def reference_line_add_offset(lanes):
 def parse_lane_link(lane):
   link = lane.find("link")
   if link is not None:
-    link.find("predecessor")
-    link.find("successor")
+    link.findall("predecessor")
+    link.findall("successor")
 
 
-def parse_lane_width(lane) -> bool:
+def parse_lane_width(lane, length) -> bool:
   width = lane.find("width")
   if width is None:
     return False
@@ -387,7 +380,14 @@ def parse_lane_width(lane) -> bool:
   b = float(width.attrib.get("b"))
   c = float(width.attrib.get("c"))
   d = float(width.attrib.get("d"))
-  # a + b*ds + c*ds**2 + d*ds**3
+
+  # cacl width
+  # TODO(zero): todo
+  sample_count = math.ceil(length/SAMPLING_LENGTH)
+  for i in range(sample_count):
+    ds = i * SAMPLING_LENGTH
+
+    width = a + b*ds + c*ds**2 + d*ds**3
   return True
 
 
@@ -401,7 +401,7 @@ def parse_road_mark(lane):
     width = float(road_mark.attrib.get("width"))
 
 
-def parse_lanes(lanes_in_section):
+def parse_lanes(lanes_in_section, length):
   if lanes_in_section is None:
     return
 
@@ -413,7 +413,7 @@ def parse_lanes(lanes_in_section):
 
     parse_lane_link(lane)
 
-    success = parse_lane_width(lane)
+    success = parse_lane_width(lane, length)
 
     # If both width and lane border elements are present for a lane section in
     # the OpenDRIVE file, the application must use the information from the
@@ -422,15 +422,20 @@ def parse_lanes(lanes_in_section):
       parse_road_mark(lane)
 
 
-def parse_lane_sections(lanes):
-  for lane_section in lanes.iter('laneSection'):
+def parse_lane_sections(lanes, road_length):
+  length = len(lanes)
+  for idx, lane_section in enumerate(lanes.iter('laneSection')):
     s = float(lane_section.attrib.get('s'))
     single_side = bool(lane_section.attrib.get('singleSide'))
     left = lane_section.find("left")
+    center = lane_section.find("center")
     right = lane_section.find("right")
-    # Todo(zero): Check if 'left' or 'right' is None
-    parse_lanes(left)
-    parse_lanes(right)
+
+    # lane section length
+    next_s = float(lanes[idx+1].attrib.get('s')) if (idx+1 < length) else road_length
+
+    parse_lanes(left, next_s - s)
+    parse_lanes(right, next_s - s)
 
 
 def parse_road(pb_map, road):
@@ -456,26 +461,21 @@ def parse_road(pb_map, road):
   lateral_profile = road.find('lateralProfile')
 
   # reference line
-  lanes = road.find('lanes')
-  assert lanes is not None, "Road {} has no lanes!".format(pb_road.id.id)
-
   plan_view = road.find('planView')
   assert plan_view is not None, \
       "Road {} has no reference line!".format(pb_road.id.id)
 
-  parse_reference_line(plan_view, elevation_profile, lateral_profile)
+  reference_line = parse_reference_line(plan_view, elevation_profile, lateral_profile)
 
   # TODO(zero): lane0 add offset, not reference line
+  # lanes
+  lanes = road.find('lanes')
+  assert lanes is not None, "Road {} has no lanes!".format(pb_road.id.id)
+
   reference_line_add_offset(lanes)
 
-  parse_lane_sections(lanes)
+  parse_lane_sections(lanes, road_length)
 
-
-def parse_lane(pb_map, lanes):
-  for lane_section in lanes.iter('laneSection'):
-    left = lane_section.find('left')
-    center = lane_section.find('center')
-    right = lane_section.find('right')
 
 def to_pb_lane_type(open_drive_type):
   lower_type = open_drive_type.lower()
