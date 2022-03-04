@@ -16,6 +16,7 @@
 
 
 import math
+import copy
 
 
 class Vector3d:
@@ -96,6 +97,13 @@ class Point3d:
   def __str__(self):
     return "Point3d x: {}, y: {}, z: {}, s: {}, heading: {}".format(self.x, \
         self.y, self.z, self.s, self.yaw)
+
+
+def shift_t(point3d, offset):
+  npoint = copy.deepcopy(point3d)
+  npoint.shift_t(offset)
+
+  return npoint
 
 
 if __name__ == '__main__':

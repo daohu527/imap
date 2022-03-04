@@ -24,7 +24,7 @@ import xml.etree.ElementTree as ET
 # Debug use
 import matplotlib.pyplot as plt
 
-from lib.common import Vector3d, Point3d
+from lib.common import Vector3d, Point3d, shift_t
 from lib.odr_spiral import odr_spiral, odr_arc
 from lib.transform import Transform
 
@@ -364,12 +364,11 @@ def reference_line_add_offset(lanes, road_length, reference_line):
   if not lane_offset_list:
     return
 
-  # TODO(zero) : how to calc the length
+  # Add offset to reference line
   i, n = 0, len(lane_offset_list)
   cur_s = lane_offset_list[i][0]
   next_s = lane_offset_list[i+1][0] if i+1 < n else road_length
   for idx in range(len(reference_line)):
-    # reference_line[idx] is point3d
     if reference_line[idx].s < cur_s:
       continue
 
@@ -379,6 +378,11 @@ def reference_line_add_offset(lanes, road_length, reference_line):
       next_s = lane_offset_list[i+1][0] if i+1 < n else road_length
 
     ds = reference_line[idx].s - cur_s
+
+    a = lane_offset_list[i][1]
+    b = lane_offset_list[i][2]
+    c = lane_offset_list[i][3]
+    d = lane_offset_list[i][4]
     offset = a + b*ds + c*ds**2 + d*ds**3
 
     # if offset:
@@ -391,42 +395,59 @@ def reference_line_add_offset(lanes, road_length, reference_line):
 def parse_lane_link(lane):
   link = lane.find("link")
   if link is not None:
-    link.findall("predecessor")
-    link.findall("successor")
+    predecessor = link.findall("predecessor")
+    successor = link.findall("successor")
 
 
-def parse_lane_width(lane, length) -> bool:
-  width = lane.find("width")
-  if width is None:
-    return False
-
-  sOffset = float(width.attrib.get("sOffset"))
-  a = float(width.attrib.get("a"))
-  b = float(width.attrib.get("b"))
-  c = float(width.attrib.get("c"))
-  d = float(width.attrib.get("d"))
+def parse_lane_widths(widths, length, reference_line):
+  width_list = []
+  for width in widths:
+    sOffset = float(width.attrib.get("sOffset"))
+    a = float(width.attrib.get("a"))
+    b = float(width.attrib.get("b"))
+    c = float(width.attrib.get("c"))
+    d = float(width.attrib.get("d"))
+    width_list.append((sOffset, a, b, c, d))
 
   # cacl width
-  # TODO(zero): todo
-  sample_count = math.ceil(length/SAMPLING_LENGTH)
-  for i in range(sample_count):
-    ds = i * SAMPLING_LENGTH
+  line = []
+  i, n = 0, len(width_list)
+  cur_s = width_list[i][0]
+  next_s = width_list[i+1][0] if i+1 < n else length
+  for idx in range(len(reference_line)):
+    if reference_line[idx].s < cur_s:
+      continue
 
+    if reference_line[idx].s > next_s:
+      i += 1
+      cur_s = width_list[i][0]
+      next_s = width_list[i+1][0] if i+1 < n else length
+
+    ds = reference_line[idx].s - cur_s
+    a = width_list[i][1]
+    b = width_list[i][2]
+    c = width_list[i][3]
+    d = width_list[i][4]
     width = a + b*ds + c*ds**2 + d*ds**3
-  return True
+
+    point3d = shift_t(reference_line[idx], width)
+    line.append(point3d)
+
+  draw_reference_line(line)
 
 
-def parse_road_mark(lane):
-  road_mark = lane.find("roadMark")
-  if road_mark is not None:
+def parse_road_marks(road_marks):
+  road_mark_list = []
+  for road_mark in road_marks:
     sOffset = float(road_mark.attrib.get("sOffset"))
     lane_type = road_mark.attrib.get("type")
     weight = road_mark.attrib.get("weight")
     color = road_mark.attrib.get("color")
     width = float(road_mark.attrib.get("width"))
+    road_mark_list.append((sOffset, lane_type, weight, color, width))
 
 
-def parse_lanes(lanes_in_section, length):
+def parse_lanes(lanes_in_section, length, reference_line):
   if lanes_in_section is None:
     return
 
@@ -438,18 +459,21 @@ def parse_lanes(lanes_in_section, length):
 
     parse_lane_link(lane)
 
-    success = parse_lane_width(lane, length)
-
     # If both width and lane border elements are present for a lane section in
     # the OpenDRIVE file, the application must use the information from the
     # <width> elements.
-    if not success:
-      parse_road_mark(lane)
+    widths = lane.findall("width")
+    if widths:
+      parse_lane_widths(widths, length, reference_line)
+    else:
+      road_marks = lane.findall("roadMark")
+      parse_road_marks(road_marks)
 
 
 def parse_lane_sections(lanes, road_length, reference_line):
-  length = len(lanes)
-  for idx, lane_section in enumerate(lanes.iter('laneSection')):
+  lane_sections = lanes.findall("laneSection")
+  n = len(lane_sections)
+  for idx, lane_section in enumerate(lane_sections):
     s = float(lane_section.attrib.get('s'))
     single_side = bool(lane_section.attrib.get('singleSide'))
     left = lane_section.find("left")
@@ -457,10 +481,10 @@ def parse_lane_sections(lanes, road_length, reference_line):
     right = lane_section.find("right")
 
     # lane section length
-    next_s = float(lanes[idx+1].attrib.get('s')) if (idx+1 < length) else road_length
+    next_s = float(lane_sections[idx+1].attrib.get('s')) if (idx+1 < n) else road_length
 
-    parse_lanes(left, next_s - s)
-    parse_lanes(right, next_s - s)
+    parse_lanes(left, next_s - s, reference_line)
+    parse_lanes(right, next_s - s, reference_line)
 
 
 def parse_road(pb_map, road):
