@@ -170,7 +170,6 @@ def parse_geometry_line(geometry, elevation_profile, sample_count, delta_s):
     point3d = Point3d(x, y, z, absolute_s)
     # TODO(zero): we need to add roll(<superelevation>)
     point3d.set_rotate(hdg)
-    print(point3d)
     line.append(point3d)
   return line
 
@@ -204,7 +203,6 @@ def parse_geometry_spiral(geometry, elevation_profile, sample_count, delta_s):
     point3d = Point3d(x, y, z, absolute_s)
     # TODO(zero): we need to add roll(<superelevation>)
     point3d.set_rotate(hdg)
-    print(point3d)
     spiral_line.append(point3d)
   return spiral_line
 
@@ -234,7 +232,6 @@ def parse_geometry_arc(geometry, elevation_profile, sample_count, delta_s):
     point3d = Point3d(x, y, z, absolute_s)
     # TODO(zero): we need to add roll(<superelevation>)
     point3d.set_rotate(hdg)
-    print(point3d)
     arc_line.append(point3d)
   return arc_line
 
@@ -371,7 +368,7 @@ def reference_line_add_offset(lanes, road_length, reference_line):
   i, n = 0, len(lane_offset_list)
   cur_s = lane_offset_list[i][0]
   next_s = lane_offset_list[i+1][0] if i+1 < n else road_length
-  for idx in range(n):
+  for idx in range(len(reference_line)):
     # reference_line[idx] is point3d
     if reference_line[idx].s < cur_s:
       continue
@@ -384,8 +381,11 @@ def reference_line_add_offset(lanes, road_length, reference_line):
     ds = reference_line[idx].s - cur_s
     offset = a + b*ds + c*ds**2 + d*ds**3
 
-    # TODO(zero): Shift point
+    # if offset:
+    #   print(reference_line[idx])
     reference_line[idx].shift_t(offset)
+    # if offset:
+    #   print(reference_line[idx])
 
 
 def parse_lane_link(lane):
@@ -434,7 +434,7 @@ def parse_lanes(lanes_in_section, length):
     id = lane.attrib.get('id')
     lane_type = lane.attrib.get('type')
     level = lane.attrib.get('level')
-    print("lane id: {}, type: {}".format(id, lane_type))
+    # print("lane id: {}, type: {}".format(id, lane_type))
 
     parse_lane_link(lane)
 
@@ -575,7 +575,7 @@ def get_map_from_xml_file(filename, pb_map):
 
   # road
   for road in root.iter('road'):
-    print(road.attrib)
+    # print(road.attrib)
     # 1. road
     parse_road(pb_map, road)
     # 2. signals

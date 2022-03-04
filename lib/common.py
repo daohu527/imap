@@ -85,9 +85,10 @@ class Point3d:
 
   def shift_t(self, offset):
     vec_x = Vector3d(math.cos(self.yaw), math.sin(self.yaw), 0)
-    vec_z = Vector3d(math.cos(self.roll), 0, math.sin(self.roll))
+    vec_z = Vector3d(0, math.sin(self.roll), math.cos(self.roll))
     normal_xz = vec_x.cross_product(vec_z)
     vec_y = normal_xz.normalize() * offset
+
     self.x += vec_y.x
     self.y += vec_y.y
     self.z += vec_y.z
@@ -95,3 +96,10 @@ class Point3d:
   def __str__(self):
     return "Point3d x: {}, y: {}, z: {}, s: {}, heading: {}".format(self.x, \
         self.y, self.z, self.s, self.yaw)
+
+
+if __name__ == '__main__':
+  vec_x = Vector3d(0.9201668879354276, -0.3915263699257437, 0)
+  vec_z = Vector3d(0,0,1)
+  normal_xz = vec_x.cross_product(vec_z)
+  print(normal_xz.normalize())
