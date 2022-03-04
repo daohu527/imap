@@ -193,7 +193,7 @@ def parse_geometry_spiral(geometry, elevation_profile, sample_count, delta_s):
   spiral_line = []
   for i in range(sample_count):
     local_s = i * delta_s
-    s, t, _ = odr_spiral(local_s, cdot)
+    s, t, theta = odr_spiral(local_s, cdot)
     x, y, _ = tf.transform(s, t, 0.0)
 
     # get elevation
@@ -202,7 +202,7 @@ def parse_geometry_spiral(geometry, elevation_profile, sample_count, delta_s):
 
     point3d = Point3d(x, y, z, absolute_s)
     # TODO(zero): we need to add roll(<superelevation>)
-    point3d.set_rotate(hdg)
+    point3d.set_rotate(hdg + theta)
     spiral_line.append(point3d)
   return spiral_line
 
@@ -222,7 +222,7 @@ def parse_geometry_arc(geometry, elevation_profile, sample_count, delta_s):
   arc_line = []
   for i in range(sample_count):
     local_s = i * delta_s
-    s, t = odr_arc(local_s, curvature)
+    s, t, theta = odr_arc(local_s, curvature)
     x, y, _ = tf.transform(s, t, 0.0)
 
     # get elevation
@@ -231,7 +231,7 @@ def parse_geometry_arc(geometry, elevation_profile, sample_count, delta_s):
 
     point3d = Point3d(x, y, z, absolute_s)
     # TODO(zero): we need to add roll(<superelevation>)
-    point3d.set_rotate(hdg)
+    point3d.set_rotate(hdg + theta)
     arc_line.append(point3d)
   return arc_line
 

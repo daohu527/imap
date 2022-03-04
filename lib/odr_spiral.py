@@ -253,7 +253,7 @@ def odr_arc(s : float, curv : float) -> Tuple[float, float]:
   r = 1 / curv
   x = r * math.sin(theta)
   y = r - r * math.cos(theta)
-  return x, y
+  return x, y, theta
 
 
 if __name__ == '__main__':
