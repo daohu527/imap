@@ -308,10 +308,10 @@ def parse_geometry_param_poly3(geometry, elevation_profile, delta_s):
 # test
 fig, ax = plt.subplots()
 
-def draw_reference_line(line):
+def draw_reference_line(line, color):
   x = [point.x for point in line]
   y = [point.y for point in line]
-  ax.plot(x, y)
+  ax.plot(x, y, color)
 
 
 def parse_reference_line(plan_view, elevation_profile, lateral_profile):
@@ -401,7 +401,7 @@ def parse_lane_link(lane):
     successor = link.findall("successor")
 
 
-def parse_lane_widths(widths, length, reference_line):
+def parse_lane_widths(widths, length, direction, reference_line):
   width_list = []
   for width in widths:
     sOffset = float(width.attrib.get("sOffset"))
@@ -434,10 +434,10 @@ def parse_lane_widths(widths, length, reference_line):
     d = width_list[i][4]
     width = a + b*ds + c*ds**2 + d*ds**3
 
-    point3d = shift_t(reference_line[idx], width)
+    point3d = shift_t(reference_line[idx], width * direction)
     line.append(point3d)
 
-  # draw_reference_line(line)
+  draw_reference_line(line, 'c')
 
 
 def parse_road_marks(road_marks):
@@ -451,11 +451,11 @@ def parse_road_marks(road_marks):
     road_mark_list.append((sOffset, lane_type, weight, color, width))
 
 
-def parse_lanes(lanes_in_section, length, reference_line):
-  if lanes_in_section is None:
+def parse_lanes(lanes_in_section, length, direction, reference_line):
+  if not lanes_in_section:
     return
 
-  for lane in lanes_in_section.iter('lane'):
+  for lane in lanes_in_section:
     id = lane.attrib.get('id')
     lane_type = lane.attrib.get('type')
     level = lane.attrib.get('level')
@@ -468,7 +468,7 @@ def parse_lanes(lanes_in_section, length, reference_line):
     # <width> elements.
     widths = lane.findall("width")
     if widths:
-      parse_lane_widths(widths, length, reference_line)
+      parse_lane_widths(widths, length, direction, reference_line)
     else:
       road_marks = lane.findall("roadMark")
       parse_road_marks(road_marks)
@@ -480,15 +480,24 @@ def parse_lane_sections(lanes, road_length, reference_line):
   for idx, lane_section in enumerate(lane_sections):
     s = float(lane_section.attrib.get('s'))
     single_side = bool(lane_section.attrib.get('singleSide'))
-    left = lane_section.find("left")
+
     center = lane_section.find("center")
-    right = lane_section.find("right")
 
     # lane section length
     next_s = float(lane_sections[idx+1].attrib.get('s')) if (idx+1 < n) else road_length
 
-    parse_lanes(left, next_s - s, reference_line)
-    parse_lanes(right, next_s - s, reference_line)
+    left = lane_section.find("left")
+    if left:
+      direction = -1
+      # TODO(zero): why not need reverse() ?
+      left_lanes = left.findall('lane')
+      parse_lanes(left_lanes, next_s - s, direction, reference_line)
+
+    right = lane_section.find("right")
+    if right:
+      direction = 1
+      right_lanes = right.findall('lane')
+      parse_lanes(right_lanes, next_s - s, direction, reference_line)
 
 
 def parse_road(pb_map, road):
@@ -520,7 +529,7 @@ def parse_road(pb_map, road):
 
   reference_line = parse_reference_line(plan_view, elevation_profile, lateral_profile)
 
-  draw_reference_line(reference_line)
+  draw_reference_line(reference_line, 'r')
 
   # lanes
   # TODO(zero): Need to confirm that there is only one lanes element! If not
