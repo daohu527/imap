@@ -26,6 +26,7 @@ We do not currently support these two formats, because the coordinates need to b
 
 ## Todo
 1. support poly3 & paramPoly3
+2. debug mode support `if __debug__:`
 
 
 ## reference

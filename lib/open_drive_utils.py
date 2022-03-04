@@ -75,14 +75,11 @@ def parse_road_speed(road):
     return 0
 
   speed = road_type[0].find('speed')
-  speed_max = speed.attrib.get('t_maxSpeed')
-  if not speed_max:
-    return 0
-
+  speed_max = speed.attrib.get('max')
   if speed_max == 'no limit' or speed_max == 'undefined':
     return 0
 
-  speed_unit = speed.attrib.get('e_unitSpeed')
+  speed_unit = speed.attrib.get('unit')
   return convert_speed(speed_unit, speed_max)
 
 def convert_speed(speed_unit, speed_limit):
@@ -351,6 +348,13 @@ def parse_reference_line(plan_view, elevation_profile, lateral_profile):
 
 
 def reference_line_add_offset(lanes, road_length, reference_line):
+  """Adjust reference line by offset
+
+  Args:
+      lanes (_type_): _description_
+      road_length (_type_): _description_
+      reference_line (_type_): _description_
+  """
   lane_offset_list = []
   for lane_offset in lanes.iter('laneOffset'):
     s = float(lane_offset.attrib.get('s'))
@@ -367,25 +371,21 @@ def reference_line_add_offset(lanes, road_length, reference_line):
   i, n = 0, len(lane_offset_list)
   cur_s = lane_offset_list[i][0]
   next_s = lane_offset_list[i+1][0] if i+1 < n else road_length
-  for idx, point3d in enumerate(reference_line):
-    if point3d.s < cur_s:
+  for idx in range(n):
+    # reference_line[idx] is point3d
+    if reference_line[idx].s < cur_s:
       continue
 
-    if point3d.s > next_s:
+    if reference_line[idx].s > next_s:
       i += 1
       cur_s = lane_offset_list[i][0]
       next_s = lane_offset_list[i+1][0] if i+1 < n else road_length
 
-    ds = point3d.s - cur_s
+    ds = reference_line[idx].s - cur_s
     offset = a + b*ds + c*ds**2 + d*ds**3
 
     # TODO(zero): Shift point
-    angle = point3d.yaw + math.pi/2
-    if angle > 2*math.pi:
-      angle -= 2*math.pi
-
-    reference_line[idx].x += offset*math.cos(angle)
-    reference_line[idx].y += offset*math.sin(angle)
+    reference_line[idx].shift_t(offset)
 
 
 def parse_lane_link(lane):
@@ -495,6 +495,8 @@ def parse_road(pb_map, road):
   draw_reference_line(reference_line)
 
   # lanes
+  # TODO(zero): Need to confirm that there is only one lanes element! If not
+  # we should use findall
   lanes = road.find('lanes')
   assert lanes is not None, "Road {} has no lanes!".format(pb_road.id.id)
 
