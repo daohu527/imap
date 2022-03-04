@@ -374,6 +374,8 @@ def reference_line_add_offset(lanes, road_length, reference_line):
 
     if reference_line[idx].s > next_s:
       i += 1
+      if i >= n:
+        break
       cur_s = lane_offset_list[i][0]
       next_s = lane_offset_list[i+1][0] if i+1 < n else road_length
 
@@ -420,6 +422,8 @@ def parse_lane_widths(widths, length, reference_line):
 
     if reference_line[idx].s > next_s:
       i += 1
+      if i >= n:
+        break
       cur_s = width_list[i][0]
       next_s = width_list[i+1][0] if i+1 < n else length
 
@@ -433,7 +437,7 @@ def parse_lane_widths(widths, length, reference_line):
     point3d = shift_t(reference_line[idx], width)
     line.append(point3d)
 
-  draw_reference_line(line)
+  # draw_reference_line(line)
 
 
 def parse_road_marks(road_marks):
