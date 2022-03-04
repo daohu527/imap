@@ -321,6 +321,8 @@ def draw_reference_line(line):
 
 
 def parse_reference_line(plan_view, elevation_profile, lateral_profile):
+  reference_line = []
+
   for geometry in plan_view.iter('geometry'):
     geometry_length = float(geometry.attrib.get('length'))
     if geometry_length < GEOMETRY_SKIP_LENGTH:
@@ -329,7 +331,6 @@ def parse_reference_line(plan_view, elevation_profile, lateral_profile):
     delta_s = min(geometry_length, SAMPLING_LENGTH)
     sample_count = math.ceil(geometry_length/delta_s)
 
-    reference_line = []
     if geometry[0].tag == 'line':
       line = parse_geometry_line(geometry, elevation_profile, sample_count, delta_s)
     elif geometry[0].tag == 'spiral':
@@ -345,7 +346,8 @@ def parse_reference_line(plan_view, elevation_profile, lateral_profile):
 
     reference_line.extend(line)
     # draw_reference_line(line)
-    return reference_line
+
+  return reference_line
 
 
 def reference_line_add_offset(lanes, road_length, reference_line):
