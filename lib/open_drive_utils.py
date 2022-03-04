@@ -72,7 +72,7 @@ def parse_header(pb_map, header):
 def parse_road_speed(road):
   road_type = road.findall('type')
   if not road_type:
-    return
+    return 0
 
   speed = road_type[0].find('speed')
   speed_max = speed.attrib.get('t_maxSpeed')
@@ -365,16 +365,16 @@ def reference_line_add_offset(lanes, road_length, reference_line):
 
   # TODO(zero) : how to calc the length
   i, n = 0, len(lane_offset_list)
-  cur_s = lane_offset_list[i].s
-  next_s = lane_offset_list[i+1].s if i+1 < n else road_length
+  cur_s = lane_offset_list[i][0]
+  next_s = lane_offset_list[i+1][0] if i+1 < n else road_length
   for idx, point3d in enumerate(reference_line):
     if point3d.s < cur_s:
       continue
 
     if point3d.s > next_s:
       i += 1
-      cur_s = lane_offset_list[i].s
-      next_s = lane_offset_list[i+1].s if i+1 < n else road_length
+      cur_s = lane_offset_list[i][0]
+      next_s = lane_offset_list[i+1][0] if i+1 < n else road_length
 
     ds = point3d.s - cur_s
     offset = a + b*ds + c*ds**2 + d*ds**3
