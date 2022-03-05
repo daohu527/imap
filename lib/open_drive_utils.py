@@ -394,13 +394,6 @@ def reference_line_add_offset(lanes, road_length, reference_line):
     #   print(reference_line[idx])
 
 
-def parse_lane_link(lane):
-  link = lane.find("link")
-  if link is not None:
-    predecessor = link.findall("predecessor")
-    successor = link.findall("successor")
-
-
 def parse_lane_widths(widths, sec_cur_s, sec_next_s, direction, reference_line):
   width_list = []
   for width in widths:
@@ -412,7 +405,7 @@ def parse_lane_widths(widths, sec_cur_s, sec_next_s, direction, reference_line):
     width_list.append((sOffset, a, b, c, d))
 
   # cacl width
-  line = []
+  boundary_line, center_line = [], []
   i, n = 0, len(width_list)
   cur_s = sec_cur_s + width_list[i][0]
   next_s = width_list[i+1][0] if i+1 < n else sec_next_s
@@ -435,9 +428,12 @@ def parse_lane_widths(widths, sec_cur_s, sec_next_s, direction, reference_line):
     width = a + b*ds + c*ds**2 + d*ds**3
 
     point3d = shift_t(reference_line[idx], width * direction)
-    line.append(point3d)
+    boundary_line.append(point3d)
 
-  return line
+    point3d = shift_t(reference_line[idx], width * direction / 2)
+    center_line.append(point3d)
+
+  return boundary_line, center_line
 
 
 def parse_road_marks(road_marks):
@@ -451,35 +447,138 @@ def parse_road_marks(road_marks):
     road_mark_list.append((sOffset, lane_type, weight, color, width))
 
 
-def parse_lanes(lanes_in_section, sec_cur_s, sec_next_s, direction, reference_line):
+def parse_lane_speed(lane) -> float:
+  # TODO(zero): according to the spec, there're multi speed limit, but we just deal with one.
+  # If there are multiple lane speed limit elements per lane section,
+  # the elements shall be defined in ascending order.
+  speed = lane.find("speed")
+  if not speed:
+    return 0.0
+
+  speed_max = speed.attrib.get('max')
+  speed_unit = speed.attrib.get('unit')
+  return convert_speed(speed_unit, speed_max)
+
+
+def parse_lane_link(pb_lane, lane):
+  link = lane.find("link")
+  if not link:
+    return
+
+  predecessors = link.findall("predecessor")
+  if predecessors:
+    for predecessor in predecessors:
+      # normal
+      id = predecessor.attrib.get("id")
+      if id:
+        pb_lane.predecessor_id.add().id = id
+      # junction
+      element_type = predecessor.attrib.get("elementType")
+      if element_type:
+        element_id = predecessor.attrib.get("elementId")
+        # TODO(zero): todo
+
+
+  successors = link.findall("successor")
+  if successors:
+    for successor in successors:
+      id = successor.attrib.get("id")
+      if id:
+        pb_lane.successor_id.add().id = id
+      # junction
+      element_type = successor.attrib.get("elementType")
+      if element_type:
+        element_id = successor.attrib.get("elementId")
+        # TODO(zero): todo
+
+
+def add_lane_boundary(pb_lane, left_boundary_line, center_line, right_boundary_line):
+  if not left_boundary_line or not right_boundary_line or not center_line:
+    print("lane boundary length is zero")
+    return
+
+  # 1. left boundary
+  segment = pb_lane.left_boundary.curve.segment.add()
+  for point3d in left_boundary_line:
+    point = segment.line_segment.point.add()
+    point.x, point.y = point3d.x, point3d.y
+  segment.s = 0
+  segment.start_position.x = left_boundary_line[0].x
+  segment.start_position.y = left_boundary_line[0].y
+  segment.start_position.z = left_boundary_line[0].z
+  segment.length = pb_lane.length
+  pb_lane.left_boundary.length = pb_lane.length
+
+  # 2. center line
+  segment = pb_lane.central_curve.segment.add()
+  for point3d in center_line:
+    point = segment.line_segment.point.add()
+    point.x, point.y = point3d.x, point3d.y
+  segment.s = 0
+  segment.start_position.x = center_line[0].x
+  segment.start_position.y = center_line[0].y
+  segment.start_position.z = center_line[0].z
+  segment.length = pb_lane.length
+
+  # 3. right boundary
+  segment = pb_lane.right_boundary.curve.segment.add()
+  for point3d in right_boundary_line:
+    point = segment.line_segment.point.add()
+    point.x, point.y = point3d.x, point3d.y
+  segment.s = 0
+  segment.start_position.x = right_boundary_line[0].x
+  segment.start_position.y = right_boundary_line[0].y
+  segment.start_position.z = right_boundary_line[0].z
+  segment.length = pb_lane.length
+  pb_lane.right_boundary.length = pb_lane.length
+
+
+def parse_lanes(pb_map, lanes_in_section, sec_cur_s, sec_next_s, direction, reference_line):
+  assert sec_cur_s < sec_next_s, "lane section length is below zero"
+
   if not lanes_in_section:
     return
 
   left_boundary_line = reference_line
   for idx, lane in enumerate(lanes_in_section):
-    id = lane.attrib.get('id')
-    lane_type = lane.attrib.get('type')
-    level = lane.attrib.get('level')
-    print("lane id: {}, type: {}".format(id, lane_type))
+    pb_lane = pb_map.lane.add()
 
-    parse_lane_link(lane)
+    # pb_road_id = pb_map.road[-1].id.id
+    # pb_lane.id.id = "{}_{}".format(pb_road_id, lane.attrib.get('id'))
+
+    pb_lane.id.id = lane.attrib.get('id')
+
+    pb_lane.type = to_pb_lane_type(lane.attrib.get('type'))
+    pb_lane.length = sec_next_s - sec_cur_s
+    pb_lane.speed_limit = parse_lane_speed(lane)
+    pb_lane.direction = map_lane_pb2.Lane.FORWARD
+
+    level = lane.attrib.get('level')
+    print("road id : {}, lane id: {}, type: {}".format( \
+        pb_map.road[-1].id.id, pb_lane.id.id, pb_lane.type))
+
+    parse_lane_link(pb_lane, lane)
 
     # If both width and lane border elements are present for a lane section in
     # the OpenDRIVE file, the application must use the information from the
     # <width> elements.
     widths = lane.findall("width")
     if widths:
-      right_boundary_line = parse_lane_widths(widths, sec_cur_s, sec_next_s, \
-          direction, left_boundary_line)
+      right_boundary_line, center_line = parse_lane_widths(widths, sec_cur_s, \
+          sec_next_s, direction, left_boundary_line)
     else:
       road_marks = lane.findall("roadMark")
       parse_road_marks(road_marks)
 
     draw_line(right_boundary_line, 'g')
+
+    # add lane to map
+    add_lane_boundary(pb_lane, left_boundary_line, center_line, right_boundary_line)
+
     left_boundary_line = right_boundary_line
 
 
-def parse_lane_sections(lanes, road_length, reference_line):
+def parse_lane_sections(pb_map, lanes, road_length, reference_line):
   lane_sections = lanes.findall("laneSection")
   n = len(lane_sections)
   for idx, lane_section in enumerate(lane_sections):
@@ -496,13 +595,13 @@ def parse_lane_sections(lanes, road_length, reference_line):
       direction = -1
       left_lanes = left.findall('lane')
       left_lanes.reverse()
-      parse_lanes(left_lanes, cur_s, next_s, direction, reference_line)
+      parse_lanes(pb_map, left_lanes, cur_s, next_s, direction, reference_line)
 
     right = lane_section.find("right")
     if right:
       direction = 1
       right_lanes = right.findall('lane')
-      parse_lanes(right_lanes, cur_s, next_s, direction, reference_line)
+      parse_lanes(pb_map, right_lanes, cur_s, next_s, direction, reference_line)
 
 
 def parse_road(pb_map, road):
@@ -543,7 +642,7 @@ def parse_road(pb_map, road):
 
   draw_line(reference_line, 'r')
 
-  parse_lane_sections(lanes, road_length, reference_line)
+  parse_lane_sections(pb_map, lanes, road_length, reference_line)
 
 
 def to_pb_lane_type(open_drive_type):
@@ -580,11 +679,6 @@ def to_pb_lane_type(open_drive_type):
     return map_lane_pb2.Lane.NONE
   elif lower_type == 'connectingRamp': # not support
     return map_lane_pb2.Lane.NONE
-
-def parse_lane_section_left(pb_lane, left):
-  for lane in left.iter('lane'):
-    pb_lane.id.id = lane.attrib.get('id')
-    pb_lane.type = to_pb_lane_type(lane.attrib.get('type'))
 
 
 def parse_junction(pb_map):
