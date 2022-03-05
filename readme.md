@@ -1,11 +1,11 @@
 ## Imap
-Imap is a tool for visualize the hd-map. This project was inspired by Apollo.
-```
-data     // hd-map dir
-main.py  // main process
-map.py  // hd-map struct
-editor.py  // user interaction
-```
+Imap is a tool for visualize and convert format of the hd-map. This project was inspired by Apollo.
+
+**Supported features**:
+1. Visualize the hd-map, supported formats: Apollo, OpenDrive.
+2. Convert format: Opendrive to Apollo format.
+
+> Convert format still has some problems!!! I will deal with it asap!
 
 ## Quick start
 #### dependency
