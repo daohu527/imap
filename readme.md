@@ -9,9 +9,9 @@ Imap is a tool for visualize and convert format of the hd-map. This project was 
 
 ## Quick start
 #### dependency
-The following is the tested environment, python3 is also feasible, but I did not test.
+The following is the tested environment, must use **python3**.
 ```
-Python      2.7.17
+Python      3.7.6
 matplotlib  2.2.5
 protobuf    3.17.3
 ```
