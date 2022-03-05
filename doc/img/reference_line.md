@@ -28,6 +28,12 @@ We do not currently support these two formats, because the coordinates need to b
 1. support poly3 & paramPoly3
 2. debug mode support `if __debug__:`
 
+#### next
+1. add predecessor_id, successor_id, left_neighbor_forward_lane_id, right_neighbor_forward_lane_id
+2. lane LaneTurn
+3. junctions
+4. signal
+
 
 ## reference
 https://releases.asam.net/OpenDRIVE/1.6.0/ASAM_OpenDRIVE_BS_V1-6-0.html#_coordinate_systems

@@ -570,7 +570,11 @@ def parse_lanes(pb_map, lanes_in_section, sec_cur_s, sec_next_s, direction, refe
       road_marks = lane.findall("roadMark")
       parse_road_marks(road_marks)
 
-    draw_line(right_boundary_line, 'g')
+    # TODO(zero): debug use, need to delete
+    # if pb_map.road[-1].junction_id.id != "-1":
+    if lane.attrib.get('type') == "driving":
+      draw_line(left_boundary_line, 'g')
+      draw_line(right_boundary_line, 'g')
 
     # add lane to map
     add_lane_boundary(pb_lane, left_boundary_line, center_line, right_boundary_line)
@@ -579,6 +583,9 @@ def parse_lanes(pb_map, lanes_in_section, sec_cur_s, sec_next_s, direction, refe
 
 
 def parse_lane_sections(pb_map, lanes, road_length, reference_line):
+  # TODO(zero): add road sections
+  # pb_road_section = pb_map.road[-1].section.add()
+
   lane_sections = lanes.findall("laneSection")
   n = len(lane_sections)
   for idx, lane_section in enumerate(lane_sections):
@@ -603,6 +610,8 @@ def parse_lane_sections(pb_map, lanes, road_length, reference_line):
       right_lanes = right.findall('lane')
       parse_lanes(pb_map, right_lanes, cur_s, next_s, direction, reference_line)
 
+    # TODO(zero): add left_neighbor and successor_id and predecessor_id
+
 
 def parse_road(pb_map, road):
   pb_road = pb_map.road.add()
@@ -618,7 +627,7 @@ def parse_road(pb_map, road):
   if road.attrib.get('type') is None:
     pb_road.type = map_road_pb2.Road.CITY_ROAD  # default
 
-  # child node "type"
+  # speed
   road_speed_limit = parse_road_speed(road)
 
   # Elevation in reference line
@@ -681,13 +690,29 @@ def to_pb_lane_type(open_drive_type):
     return map_lane_pb2.Lane.NONE
 
 
-def parse_junction(pb_map):
+def parse_junction(pb_map, junction):
+  pb_junction = pb_map.junction.add()
+  pb_junction.id.id = junction.attrib.get('id')
+  # TODO(zero): pb_junction polygon
+  # pb_junction.polygon.point.add()
+  name = junction.attrib.get('name')
+  junction_type = junction.attrib.get('type')
+  for connection in junction.iter('connection'):
+    connection.attrib.get('id')
+    connection.attrib.get('type')
+    connection.attrib.get('incomingRoad')
+    connection.attrib.get('connectingRoad')
+    connection.attrib.get('contactPoint')
+
+
+def parse_object(pb_map, obj):
+  # parse_crosswalk()
+  # parse_stop_sign()
+  # parse_overlap()
   pass
+
 
 def parse_crosswalk(pb_map):
-  pass
-
-def parse_signal(pb_map, road):
   pass
 
 def parse_stop_sign(pb_map):
@@ -695,6 +720,40 @@ def parse_stop_sign(pb_map):
 
 def parse_yield_sign(pb_map):
   pass
+
+def parse_overlap(pb_map):
+  pass
+
+
+def parse_signal(pb_map, signal):
+  signal.attrib.get('s')
+  signal.attrib.get('t')
+  signal.attrib.get('id')
+  signal.attrib.get('name')
+  signal.attrib.get('dynamic')
+  signal.attrib.get('orientation')
+  signal.attrib.get('zOffset')
+  signal.attrib.get('value')
+  signal.attrib.get('unit')
+  signal.attrib.get('height')
+  signal.attrib.get('width')
+  signal.attrib.get('text')
+  signal.attrib.get('hOffset')
+  signal.attrib.get('pitch')
+  signal.attrib.get('roll')
+
+  # inertial coordinate
+  position_inertial = signal.find('positionInertial')
+  pb_map.signal.id.id = signal.attrib.get('id')
+  # pb_map.signal.boundary
+  # pb_map.signal.subsignal.add()
+  # pb_map.signal.overlap_id
+  # pb_map.signal.type
+  # pb_map.signal.stop_line.add()
+
+
+  # s-t coordinate
+  position_road = signal.find('positionRoad')
 
 
 def get_map_from_xml_file(filename, pb_map):
@@ -713,9 +772,25 @@ def get_map_from_xml_file(filename, pb_map):
     # print(road.attrib)
     # 1. road
     parse_road(pb_map, road)
-    # 2. signals
-    parse_signal(pb_map, road)
-    # 3. objects
+    # TODO(zero): add successor_id and predecessor_id
+
+  # 2. junctions
+  junctions = root.findall('junction')
+  if not junctions:
+    for junction in junctions:
+      parse_junction(pb_map, junction)
+
+  # 3. signals
+  signals = root.findall('signals')
+  if not signals:
+    for signal in signals:
+      parse_signal(pb_map, signal)
+
+  # 4. objects
+  objects = root.findall('objects')
+  if not objects:
+    for obj in objects:
+      parse_object(pb_map, obj)
 
   # test
   plt.show()
