@@ -17,7 +17,6 @@
 
 import global_var
 import lib.proto_utils as proto_utils
-import lib.open_drive_utils as open_drive_utils
 from modules.map.proto import map_pb2
 
 from matplotlib.patches import Polygon
@@ -155,6 +154,4 @@ class Map:
 
 
 if __name__ == '__main__':
-  map = map_pb2.Map()
-  open_drive_utils.get_map_from_xml_file("data/sample.odr", map)
-  proto_utils.write_pb_to_text_file(map, "data/test.txt")
+  pass

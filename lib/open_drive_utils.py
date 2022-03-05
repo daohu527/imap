@@ -21,9 +21,9 @@ from modules.map.proto import map_lane_pb2
 
 import math
 import xml.etree.ElementTree as ET
-# Debug use
 import matplotlib.pyplot as plt
 
+from lib.proto_utils import write_pb_to_text_file
 from lib.common import Vector3d, Point3d, shift_t
 from lib.odr_spiral import odr_spiral, odr_arc
 from lib.transform import Transform
@@ -31,8 +31,18 @@ from lib.transform import Transform
 GEOMETRY_SKIP_LENGTH = 0.01
 SAMPLING_LENGTH = 1.0
 
-def save_map_to_xml_file(pb_value, file_path):
-  pass
+
+fig, ax = plt.subplots()
+plt.gca().set_aspect('equal', adjustable='box')
+
+def draw_line(line, color = None):
+  x = [point.x for point in line]
+  y = [point.y for point in line]
+  if color:
+    ax.plot(x, y, color)
+  else:
+    ax.plot(x, y)
+
 
 def parse_geo_reference(header):
   geo_reference = header.find('geoReference')
@@ -82,7 +92,7 @@ def parse_road_speed(road):
   speed_unit = speed.attrib.get('unit')
   return convert_speed(speed_unit, speed_max)
 
-def convert_speed(speed_unit, speed_limit):
+def convert_speed(speed_unit, speed_limit) -> float:
   if speed_unit == 'm/s':
     return float(speed_limit)
   elif speed_unit == 'km/h':
@@ -94,6 +104,15 @@ def convert_speed(speed_unit, speed_limit):
     return float(speed_limit)
 
 def get_elevation(s, elevation_profile):
+  """get height of lane
+
+  Args:
+      s ([type]): [description]
+      elevation_profile ([type]): [description]
+
+  Returns:
+      [type]: [description]
+  """
   assert s >= 0, "start s is less then 0"
 
   elevations = elevation_profile.findall('elevation')
@@ -303,16 +322,6 @@ def parse_geometry_param_poly3(geometry, elevation_profile, delta_s):
 
     u = aU + bU*p + cU*p**2 + dU*p**3
     v = aV + bV*p + cV*p**2 + dV*p**3
-
-
-# test
-fig, ax = plt.subplots()
-plt.gca().set_aspect('equal', adjustable='box')
-
-def draw_line(line, color):
-  x = [point.x for point in line]
-  y = [point.y for point in line]
-  ax.plot(x, y, color)
 
 
 def parse_reference_line(plan_view, elevation_profile, lateral_profile):
@@ -575,6 +584,9 @@ def parse_lanes(pb_map, lanes_in_section, sec_cur_s, sec_next_s, direction, refe
     if lane.attrib.get('type') == "driving":
       draw_line(left_boundary_line, 'g')
       draw_line(right_boundary_line, 'g')
+    else:
+      draw_line(left_boundary_line)
+      draw_line(right_boundary_line)
 
     # add lane to map
     add_lane_boundary(pb_lane, left_boundary_line, center_line, right_boundary_line)
@@ -709,6 +721,7 @@ def parse_object(pb_map, obj):
   # parse_crosswalk()
   # parse_stop_sign()
   # parse_overlap()
+  # parse_parking_space()
   pass
 
 
@@ -719,6 +732,9 @@ def parse_stop_sign(pb_map):
   pass
 
 def parse_yield_sign(pb_map):
+  pass
+
+def parse_parking_space(pb_map):
   pass
 
 def parse_overlap(pb_map):
@@ -756,41 +772,45 @@ def parse_signal(pb_map, signal):
   position_road = signal.find('positionRoad')
 
 
-def get_map_from_xml_file(filename, pb_map):
+def get_map_from_xml_file(filename):
+  pb_map = map_pb2.Map()
   tree = ET.parse(filename)
   root = tree.getroot()
   assert root is not None, "Map XML failed!"
   assert root.tag == 'OpenDRIVE'
 
-  # header
+  # 1. header
   header = root.find('header')
   assert header is not None, "Open drive map missing header"
   parse_header(pb_map, header)
 
-  # road
+  # 2. road
   for road in root.iter('road'):
-    # print(road.attrib)
-    # 1. road
     parse_road(pb_map, road)
     # TODO(zero): add successor_id and predecessor_id
 
-  # 2. junctions
+  # 3. junctions
   junctions = root.findall('junction')
   if not junctions:
     for junction in junctions:
       parse_junction(pb_map, junction)
 
-  # 3. signals
+  # 4. signals
   signals = root.findall('signals')
   if not signals:
     for signal in signals:
       parse_signal(pb_map, signal)
 
-  # 4. objects
+  # 5. objects
   objects = root.findall('objects')
   if not objects:
     for obj in objects:
       parse_object(pb_map, obj)
 
-  # test
+  # show map
   plt.show()
+
+  return pb_map
+
+def save_map_to_xml_file(pb_map, file_path):
+  write_pb_to_text_file(pb_map, file_path)
