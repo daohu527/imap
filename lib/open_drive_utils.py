@@ -307,8 +307,9 @@ def parse_geometry_param_poly3(geometry, elevation_profile, delta_s):
 
 # test
 fig, ax = plt.subplots()
+plt.gca().set_aspect('equal', adjustable='box')
 
-def draw_reference_line(line, color):
+def draw_line(line, color):
   x = [point.x for point in line]
   y = [point.y for point in line]
   ax.plot(x, y, color)
@@ -339,7 +340,6 @@ def parse_reference_line(plan_view, elevation_profile, lateral_profile):
       print("geometry type not support")
 
     reference_line.extend(line)
-    # draw_reference_line(line)
 
   return reference_line
 
@@ -437,7 +437,7 @@ def parse_lane_widths(widths, sec_cur_s, sec_next_s, direction, reference_line):
     point3d = shift_t(reference_line[idx], width * direction)
     line.append(point3d)
 
-  draw_reference_line(line, 'c')
+  return line
 
 
 def parse_road_marks(road_marks):
@@ -455,11 +455,12 @@ def parse_lanes(lanes_in_section, sec_cur_s, sec_next_s, direction, reference_li
   if not lanes_in_section:
     return
 
-  for lane in lanes_in_section:
+  left_boundary_line = reference_line
+  for idx, lane in enumerate(lanes_in_section):
     id = lane.attrib.get('id')
     lane_type = lane.attrib.get('type')
     level = lane.attrib.get('level')
-    # print("lane id: {}, type: {}".format(id, lane_type))
+    print("lane id: {}, type: {}".format(id, lane_type))
 
     parse_lane_link(lane)
 
@@ -468,11 +469,14 @@ def parse_lanes(lanes_in_section, sec_cur_s, sec_next_s, direction, reference_li
     # <width> elements.
     widths = lane.findall("width")
     if widths:
-      parse_lane_widths(widths, sec_cur_s, sec_next_s, direction, reference_line)
+      right_boundary_line = parse_lane_widths(widths, sec_cur_s, sec_next_s, \
+          direction, left_boundary_line)
     else:
-      print("road_marks")
       road_marks = lane.findall("roadMark")
       parse_road_marks(road_marks)
+
+    draw_line(right_boundary_line, 'g')
+    left_boundary_line = right_boundary_line
 
 
 def parse_lane_sections(lanes, road_length, reference_line):
@@ -490,8 +494,8 @@ def parse_lane_sections(lanes, road_length, reference_line):
     left = lane_section.find("left")
     if left:
       direction = -1
-      # TODO(zero): why not need reverse() ?
       left_lanes = left.findall('lane')
+      left_lanes.reverse()
       parse_lanes(left_lanes, cur_s, next_s, direction, reference_line)
 
     right = lane_section.find("right")
@@ -537,7 +541,7 @@ def parse_road(pb_map, road):
 
   reference_line_add_offset(lanes, road_length, reference_line)
 
-  draw_reference_line(reference_line, 'r')
+  draw_line(reference_line, 'r')
 
   parse_lane_sections(lanes, road_length, reference_line)
 
