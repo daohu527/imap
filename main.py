@@ -39,8 +39,8 @@ def show_map():
     hdmap.load(args.map)
     draw(hdmap)
     # max windows
-    manager=plt.get_current_fig_manager()
-    manager.window.showMaximized()
+    # manager=plt.get_current_fig_manager()
+    # manager.window.showMaximized()
     # tight layout
     # todo(zero): why tight layout not work?
     plt.tight_layout()

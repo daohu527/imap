@@ -8,6 +8,15 @@ editor.py  // user interaction
 ```
 
 ## Quick start
+#### dependency
+The following is the tested environment, python3 is also feasible, but I did not test.
+```
+Python      2.7.17
+matplotlib  2.2.5
+protobuf    3.17.3
+```
+If you encounter problems, you can try uninstalling and then reinstalling to ensure that the software version is consistent.
+
 #### Install
 There are 2 ways to install imap.
 1. Install matplotlib and protobuf.
@@ -37,10 +46,19 @@ The following is the display of the hd-map in `data\borregas_ave.txt`.You can cl
 
 ![map_show](doc/img/map_show.jpg)
 
+
 ## Format conversion
 Now you can convert OpenDrive map to Apollo map by following command.
 ```
 python main.py -f -i data/town.xodr -o data/apollo_map.txt
+```
+
+## Questions
+1. After running the command `python main.py -m data/your_map_file.bin`, nothing display and no errors!!!
+
+A: Check the permissions of the map file, if the current user does not have permissions, modify the permissions with the following commands.
+```
+sudo chmod 777 data/your_map_file.bin
 ```
 
 ## Todo
