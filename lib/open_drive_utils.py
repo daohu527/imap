@@ -21,27 +21,15 @@ from modules.map.proto import map_lane_pb2
 
 import math
 import xml.etree.ElementTree as ET
-import matplotlib.pyplot as plt
 
 from lib.proto_utils import write_pb_to_text_file
 from lib.common import Vector3d, Point3d, shift_t
 from lib.odr_spiral import odr_spiral, odr_arc
 from lib.transform import Transform
+from lib.draw import draw_line, show
 
 GEOMETRY_SKIP_LENGTH = 0.01
 SAMPLING_LENGTH = 1.0
-
-
-fig, ax = plt.subplots()
-plt.gca().set_aspect('equal', adjustable='box')
-
-def draw_line(line, color = None):
-  x = [point.x for point in line]
-  y = [point.y for point in line]
-  if color:
-    ax.plot(x, y, color)
-  else:
-    ax.plot(x, y)
 
 
 def parse_geo_reference(header):
@@ -333,7 +321,7 @@ def parse_reference_line(plan_view, elevation_profile, lateral_profile):
       continue
 
     delta_s = min(geometry_length, SAMPLING_LENGTH)
-    sample_count = math.ceil(geometry_length/delta_s)
+    sample_count = math.ceil(geometry_length/delta_s) + 1
 
     if geometry[0].tag == 'line':
       line = parse_geometry_line(geometry, elevation_profile, sample_count, delta_s)
@@ -383,8 +371,7 @@ def reference_line_add_offset(lanes, road_length, reference_line):
 
     if reference_line[idx].s > next_s:
       i += 1
-      if i >= n:
-        break
+      i = min(n-1, i)
       cur_s = lane_offset_list[i][0]
       next_s = lane_offset_list[i+1][0] if i+1 < n else road_length
 
@@ -424,8 +411,7 @@ def parse_lane_widths(widths, sec_cur_s, sec_next_s, direction, reference_line):
 
     if reference_line[idx].s > next_s:
       i += 1
-      if i >= n:
-        break
+      i = min(n-1, i)
       cur_s = width_list[i][0]
       next_s = width_list[i+1][0] if i+1 < n else sec_next_s
 
@@ -807,8 +793,7 @@ def get_map_from_xml_file(filename):
     for obj in objects:
       parse_object(pb_map, obj)
 
-  # show map
-  plt.show()
+  show()
 
   return pb_map
 
