@@ -371,6 +371,8 @@ def reference_line_add_offset(lanes, road_length, reference_line):
 
     if reference_line[idx].s > next_s:
       i += 1
+      # if i >= n:
+      #   break
       i = min(n-1, i)
       cur_s = lane_offset_list[i][0]
       next_s = lane_offset_list[i+1][0] if i+1 < n else road_length
@@ -411,7 +413,10 @@ def parse_lane_widths(widths, sec_cur_s, sec_next_s, direction, reference_line):
 
     if reference_line[idx].s > next_s:
       i += 1
-      i = min(n-1, i)
+      # Todo(zero): Adding will cause inexplicable line segments, and they are very long
+      if i >= n:
+        break
+      # i = min(n-1, i)
       cur_s = width_list[i][0]
       next_s = width_list[i+1][0] if i+1 < n else sec_next_s
 
