@@ -535,8 +535,12 @@ def parse_lanes(pb_map, lanes_in_section, sec_cur_s, sec_next_s, direction, refe
     return
 
   left_boundary_line = reference_line
+  n = len(lanes_in_section)
+  first_pb_lane = None
   for idx, lane in enumerate(lanes_in_section):
     pb_lane = pb_map.lane.add()
+    if not first_pb_lane:
+      first_pb_lane = pb_lane
 
     # pb_road_id = pb_map.road[-1].id.id
     # pb_lane.id.id = "{}_{}".format(pb_road_id, lane.attrib.get('id'))
@@ -547,6 +551,12 @@ def parse_lanes(pb_map, lanes_in_section, sec_cur_s, sec_next_s, direction, refe
     pb_lane.length = sec_next_s - sec_cur_s
     pb_lane.speed_limit = parse_lane_speed(lane)
     pb_lane.direction = map_lane_pb2.Lane.FORWARD
+
+    # add neighbor
+    if direction == -1 and idx + 1 < n:
+      pb_lane.left_neighbor_forward_lane_id.add().id = lanes_in_section[idx + 1].attrib.get('id')
+    elif direction == 1 and idx + 1 < n:
+      pb_lane.right_neighbor_forward_lane_id.add().id = lanes_in_section[idx + 1].attrib.get('id')
 
     level = lane.attrib.get('level')
     print("road id : {}, lane id: {}, type: {}".format( \
@@ -578,6 +588,7 @@ def parse_lanes(pb_map, lanes_in_section, sec_cur_s, sec_next_s, direction, refe
     add_lane_boundary(pb_lane, left_boundary_line, center_line, right_boundary_line)
 
     left_boundary_line = right_boundary_line
+  return first_pb_lane
 
 
 def parse_lane_sections(pb_map, lanes, road_length, reference_line):
@@ -600,15 +611,19 @@ def parse_lane_sections(pb_map, lanes, road_length, reference_line):
       direction = -1
       left_lanes = left.findall('lane')
       left_lanes.reverse()
-      parse_lanes(pb_map, left_lanes, cur_s, next_s, direction, reference_line)
+      first_left_pb_lane = parse_lanes(pb_map, left_lanes, cur_s, next_s, direction, reference_line)
 
     right = lane_section.find("right")
     if right:
       direction = 1
       right_lanes = right.findall('lane')
-      parse_lanes(pb_map, right_lanes, cur_s, next_s, direction, reference_line)
+      first_right_pb_lane = parse_lanes(pb_map, right_lanes, cur_s, next_s, direction, reference_line)
 
-    # TODO(zero): add left_neighbor and successor_id and predecessor_id
+    # TODO(zero): add left_neighbor_reverse_lane_id/right_neighbor_reverse_lane_id
+    # check center is not isolate
+    if first_left_pb_lane and first_right_pb_lane:
+      first_left_pb_lane.right_neighbor_reverse_lane_id.add().id = first_right_pb_lane.id()
+      first_right_pb_lane.left_neighbor_reverse_lane_id.add().id = first_left_pb_lane.id()
 
 
 def parse_road(pb_map, road):
