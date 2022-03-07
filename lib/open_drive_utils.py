@@ -626,9 +626,9 @@ def parse_lane_sections(pb_map, lanes, road_length, reference_line):
 
     # TODO(zero): add left_neighbor_reverse_lane_id/right_neighbor_reverse_lane_id
     # check center is not isolate
-    if first_left_pb_lane and first_right_pb_lane:
-      first_left_pb_lane.right_neighbor_reverse_lane_id.add().id = first_right_pb_lane.id()
-      first_right_pb_lane.left_neighbor_reverse_lane_id.add().id = first_left_pb_lane.id()
+    if left and right:
+      first_left_pb_lane.right_neighbor_reverse_lane_id.add().id = first_right_pb_lane.id.id
+      first_right_pb_lane.left_neighbor_reverse_lane_id.add().id = first_left_pb_lane.id.id
 
 
 def parse_road(pb_map, road):
