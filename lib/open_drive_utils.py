@@ -427,24 +427,81 @@ def parse_lane_widths(widths, sec_cur_s, sec_next_s, direction, reference_line):
     d = width_list[i][4]
     width = a + b*ds + c*ds**2 + d*ds**3
 
-    point3d = shift_t(reference_line[idx], width * direction)
+    direct = -1 if direction == "left" else 1
+
+    point3d = shift_t(reference_line[idx], width * direct)
     boundary_line.append(point3d)
 
-    point3d = shift_t(reference_line[idx], width * direction / 2)
+    point3d = shift_t(reference_line[idx], width * direct / 2)
     center_line.append(point3d)
 
   return boundary_line, center_line
 
 
+def parse_lane_border(pb_lane, border):
+  pass
+
+
+def is_adjacent(road_mark) -> bool:
+  if road_mark is None:
+    return True
+  road_mark_type = road_mark.attrib.get("type")
+  if road_mark_type == "botts dots" or \
+     road_mark_type == "broken broken" or \
+     road_mark_type == "broken solid" or \
+     road_mark_type == "broken" or \
+     road_mark_type == "none":
+    return True
+  return False
+
 def parse_road_marks(road_marks):
   road_mark_list = []
+  # t_road_lanes_laneSection_lcr_lane_roadMark
   for road_mark in road_marks:
     sOffset = float(road_mark.attrib.get("sOffset"))
-    lane_type = road_mark.attrib.get("type")
-    weight = road_mark.attrib.get("weight")
-    color = road_mark.attrib.get("color")
-    width = float(road_mark.attrib.get("width"))
-    road_mark_list.append((sOffset, lane_type, weight, color, width))
+
+    road_mark_type = road_mark.attrib.get("type")
+    if road_mark_type == "botts dots":
+      pass
+    elif road_mark_type == "broken broken":
+      pass
+    elif road_mark_type == "broken solid":
+      pass
+    elif road_mark_type == "broken":
+      pass
+    elif road_mark_type == "curb":
+      pass
+    elif road_mark_type == "custom":
+      pass
+    elif road_mark_type == "edge":
+      pass
+    elif road_mark_type == "grass":
+      pass
+    elif road_mark_type == "none":
+      pass
+    elif road_mark_type == "solid broken":
+      pass
+    elif road_mark_type == "solid solid":
+      pass
+    elif road_mark_type == "solid":
+      pass
+
+    # TODO(zero): Not used for now
+    # weight = road_mark.attrib.get("weight")
+    # color = road_mark.attrib.get("color")
+    # width = float(road_mark.attrib.get("width"))
+
+    lane_change = road_mark.attrib.get("lane_change")
+    if lane_change == "both":
+      pass
+    elif lane_change == "decrease":
+      pass
+    elif lane_change == "increase":
+      pass
+    elif lane_change == "none":
+      pass
+
+    road_mark_list.append((sOffset, road_mark_type, lane_change))
 
 
 def parse_lane_speed(lane) -> float:
@@ -460,7 +517,7 @@ def parse_lane_speed(lane) -> float:
   return convert_speed(speed_unit, speed_max)
 
 
-def parse_lane_link(pb_lane, lane):
+def parse_lane_link(pb_lane, section_id, lane):
   link = lane.find("link")
   if not link:
     return
@@ -469,9 +526,10 @@ def parse_lane_link(pb_lane, lane):
   if predecessors:
     for predecessor in predecessors:
       # normal
-      id = predecessor.attrib.get("id")
-      if id:
-        pb_lane.predecessor_id.add().id = id
+      predecessor_id = predecessor.attrib.get("id")
+      if predecessor_id:
+        # TODO(zero): deal with begin and end
+        pb_lane.predecessor_id.add().id = "{}_{}".format(section_id - 1, predecessor_id)
       # junction
       element_type = predecessor.attrib.get("elementType")
       if element_type:
@@ -482,9 +540,9 @@ def parse_lane_link(pb_lane, lane):
   successors = link.findall("successor")
   if successors:
     for successor in successors:
-      id = successor.attrib.get("id")
-      if id:
-        pb_lane.successor_id.add().id = id
+      successor_id = successor.attrib.get("id")
+      if successor_id:
+        pb_lane.successor_id.add().id = "{}_{}".format(section_id + 1, successor_id)
       # junction
       element_type = successor.attrib.get("elementType")
       if element_type:
@@ -533,7 +591,7 @@ def add_lane_boundary(pb_lane, left_boundary_line, center_line, right_boundary_l
   pb_lane.right_boundary.length = pb_lane.length
 
 
-def parse_lanes(pb_map, lanes_in_section, sec_cur_s, sec_next_s, direction, reference_line):
+def parse_lanes(pb_map, lanes_in_section, section_id, sec_cur_s, sec_next_s, direction, reference_line):
   assert sec_cur_s < sec_next_s, "lane section length is below zero"
 
   if not lanes_in_section:
@@ -550,7 +608,7 @@ def parse_lanes(pb_map, lanes_in_section, sec_cur_s, sec_next_s, direction, refe
     # pb_road_id = pb_map.road[-1].id.id
     # pb_lane.id.id = "{}_{}".format(pb_road_id, lane.attrib.get('id'))
 
-    pb_lane.id.id = lane.attrib.get('id')
+    pb_lane.id.id = "{}_{}".format(section_id, lane.attrib.get('id'))
 
     pb_lane.type = to_pb_lane_type(lane.attrib.get('type'))
     pb_lane.length = sec_next_s - sec_cur_s
@@ -558,16 +616,22 @@ def parse_lanes(pb_map, lanes_in_section, sec_cur_s, sec_next_s, direction, refe
     pb_lane.direction = map_lane_pb2.Lane.FORWARD
 
     # add neighbor
-    if direction == -1 and idx + 1 < n:
-      pb_lane.left_neighbor_forward_lane_id.add().id = lanes_in_section[idx + 1].attrib.get('id')
-    elif direction == 1 and idx + 1 < n:
-      pb_lane.right_neighbor_forward_lane_id.add().id = lanes_in_section[idx + 1].attrib.get('id')
+    if idx > 0:
+      pb_lane.left_neighbor_forward_lane_id.add().id = \
+          "{}_{}".format(section_id, lanes_in_section[idx - 1].attrib.get('id'))
+    if idx + 1 < n:
+      pb_lane.right_neighbor_forward_lane_id.add().id = \
+          "{}_{}".format(section_id, lanes_in_section[idx + 1].attrib.get('id'))
 
-    level = lane.attrib.get('level')
+    # TODO(zero):
+    # "true" = keep lane on level, that is, do not apply superelevation;
+    # "false" = apply superelevation to this lane
+    # (default, also used if attribute level is missing)
+    # level = lane.attrib.get('level')
     print("road id : {}, lane id: {}, type: {}".format( \
         pb_map.road[-1].id.id, pb_lane.id.id, pb_lane.type))
 
-    parse_lane_link(pb_lane, lane)
+    parse_lane_link(pb_lane, section_id, lane)
 
     # If both width and lane border elements are present for a lane section in
     # the OpenDRIVE file, the application must use the information from the
@@ -577,11 +641,14 @@ def parse_lanes(pb_map, lanes_in_section, sec_cur_s, sec_next_s, direction, refe
       right_boundary_line, center_line = parse_lane_widths(widths, sec_cur_s, \
           sec_next_s, direction, left_boundary_line)
     else:
-      road_marks = lane.findall("roadMark")
-      parse_road_marks(road_marks)
+      border = lane.findall("border")
+      parse_lane_border(pb_lane, border)
 
-    # TODO(zero): debug use, need to delete
-    # if pb_map.road[-1].junction_id.id != "-1":
+    # Not used for now
+    road_marks = lane.findall("roadMark")
+    parse_road_marks(road_marks)
+
+    # TODO(zero): debug use
     if lane.attrib.get('type') == "driving":
       draw_line(left_boundary_line, 'g')
       draw_line(right_boundary_line, 'g')
@@ -602,32 +669,34 @@ def parse_lane_sections(pb_map, lanes, road_length, reference_line):
 
   lane_sections = lanes.findall("laneSection")
   n = len(lane_sections)
+  # TODO(zero): debug use, find len(lane_sections) > 1
+  # if n != 1:
+  #   print(pb_map.road[-1])
   for idx, lane_section in enumerate(lane_sections):
     cur_s = float(lane_section.attrib.get('s'))
     single_side = bool(lane_section.attrib.get('singleSide'))
-
-    center = lane_section.find("center")
 
     # lane section length
     next_s = float(lane_sections[idx+1].attrib.get('s')) if (idx+1 < n) else road_length
 
     left = lane_section.find("left")
     if left:
-      direction = -1
+      direction = "left"
       left_lanes = left.findall('lane')
       left_lanes.reverse()
-      first_left_pb_lane = parse_lanes(pb_map, left_lanes, cur_s, next_s, direction, reference_line)
+      first_left_pb_lane = parse_lanes(pb_map, left_lanes, idx, cur_s, next_s, direction, reference_line)
 
     right = lane_section.find("right")
     if right:
-      direction = 1
+      direction = "right"
       right_lanes = right.findall('lane')
-      first_right_pb_lane = parse_lanes(pb_map, right_lanes, cur_s, next_s, direction, reference_line)
+      first_right_pb_lane = parse_lanes(pb_map, right_lanes, idx, cur_s, next_s, direction, reference_line)
 
-    # TODO(zero): add left_neighbor_reverse_lane_id/right_neighbor_reverse_lane_id
-    # check center is not isolate
-    if left and right:
-      first_left_pb_lane.right_neighbor_reverse_lane_id.add().id = first_right_pb_lane.id.id
+    # add left_neighbor_reverse_lane_id/right_neighbor_reverse_lane_id
+    center = lane_section.find("center")
+    road_mark = center.find("roadMark")
+    if left and right and is_adjacent(road_mark):
+      first_left_pb_lane.left_neighbor_reverse_lane_id.add().id = first_right_pb_lane.id.id
       first_right_pb_lane.left_neighbor_reverse_lane_id.add().id = first_left_pb_lane.id.id
 
 
@@ -791,8 +860,9 @@ def get_map_from_xml_file(filename):
   parse_header(pb_map, header)
 
   # 2. road
-  for road in root.iter('road'):
-    parse_road(pb_map, road)
+  roads = root.findall('road')
+  for idx, road in enumerate(roads):
+    parse_road(pb_map, road, idx)
     # TODO(zero): add successor_id and predecessor_id
 
   # 3. junctions
