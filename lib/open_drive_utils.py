@@ -700,7 +700,7 @@ def parse_lane_sections(pb_map, lanes, road_length, reference_line):
       first_right_pb_lane.left_neighbor_reverse_lane_id.add().id = first_left_pb_lane.id.id
 
 
-def parse_road(pb_map, road):
+def parse_road(pb_map, road, road_id):
   pb_road = pb_map.road.add()
   road_length = float(road.attrib.get('length'))
   pb_road.id.id = road.attrib.get('id')
