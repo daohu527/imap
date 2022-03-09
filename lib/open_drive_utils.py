@@ -28,8 +28,13 @@ from lib.odr_spiral import odr_spiral, odr_arc
 from lib.transform import Transform
 from lib.draw import draw_line, show
 
+from lib.opendrive.junction import Junction, Connection
+
 GEOMETRY_SKIP_LENGTH = 0.01
 SAMPLING_LENGTH = 1.0
+
+# global parameters
+junctions_objs = {}
 
 
 def parse_geo_reference(header):
@@ -529,7 +534,7 @@ def parse_lane_link(pb_lane, road_id, section_id, lane):
       predecessor_id = predecessor.attrib.get("id")
       if predecessor_id:
         # TODO(zero): deal with begin and end
-        pb_lane.predecessor_id.add().id = "road{}_lane{}_{}".format(road_id, section_id - 1, predecessor_id)
+        pb_lane.predecessor_id.add().id = "road_{}_lane_{}_{}".format(road_id, section_id - 1, predecessor_id)
       # junction
       element_type = predecessor.attrib.get("elementType")
       if element_type:
@@ -542,7 +547,7 @@ def parse_lane_link(pb_lane, road_id, section_id, lane):
     for successor in successors:
       successor_id = successor.attrib.get("id")
       if successor_id:
-        pb_lane.successor_id.add().id = "road{}_lane{}_{}".format(road_id, section_id + 1, successor_id)
+        pb_lane.successor_id.add().id = "road_{}_lane_{}_{}".format(road_id, section_id + 1, successor_id)
       # junction
       element_type = successor.attrib.get("elementType")
       if element_type:
@@ -599,15 +604,14 @@ def parse_lanes(pb_map, lanes_in_section, section_id, sec_cur_s, sec_next_s, dir
 
   left_boundary_line = reference_line
   n = len(lanes_in_section)
-  first_pb_lane = None
+  pb_lane_section = []
   for idx, lane in enumerate(lanes_in_section):
     pb_lane = pb_map.lane.add()
-    if not first_pb_lane:
-      first_pb_lane = pb_lane
+    pb_lane_section.append(pb_lane)
 
     road_id = pb_map.road[-1].id.id
 
-    pb_lane.id.id = "road{}_lane{}_{}".format(road_id, section_id, lane.attrib.get('id'))
+    pb_lane.id.id = "road_{}_lane_{}_{}".format(road_id, section_id, lane.attrib.get('id'))
     pb_lane.type = to_pb_lane_type(lane.attrib.get('type'))
     pb_lane.length = sec_next_s - sec_cur_s
     pb_lane.speed_limit = parse_lane_speed(lane)
@@ -616,10 +620,10 @@ def parse_lanes(pb_map, lanes_in_section, section_id, sec_cur_s, sec_next_s, dir
     # add neighbor
     if idx > 0:
       pb_lane.left_neighbor_forward_lane_id.add().id = \
-          "road{}_lane{}_{}".format(road_id, section_id, lanes_in_section[idx - 1].attrib.get('id'))
+          "road_{}_lane_{}_{}".format(road_id, section_id, lanes_in_section[idx - 1].attrib.get('id'))
     if idx + 1 < n:
       pb_lane.right_neighbor_forward_lane_id.add().id = \
-          "road{}_lane{}_{}".format(road_id, section_id, lanes_in_section[idx + 1].attrib.get('id'))
+          "road_{}_lane_{}_{}".format(road_id, section_id, lanes_in_section[idx + 1].attrib.get('id'))
 
     # TODO(zero):
     # "true" = keep lane on level, that is, do not apply superelevation;
@@ -658,19 +662,31 @@ def parse_lanes(pb_map, lanes_in_section, section_id, sec_cur_s, sec_next_s, dir
     add_lane_boundary(pb_lane, left_boundary_line, center_line, right_boundary_line)
 
     left_boundary_line = right_boundary_line
-  return first_pb_lane
+  return pb_lane_section
 
 
-def parse_lane_sections(pb_map, lanes, road_length, reference_line):
+def post_process_predecessor(predecessor_road, pb_lane_section):
+  element_type = predecessor_road.attrib.get('elementType')
+  element_id = predecessor_road.attrib.get('elementId')
+  if element_type == "road":
+    for pb_lane in pb_lane_section:
+      for predecessor_id in pb_lane.predecessor_id:
+        # TODO(zero): section_id is element_id's
+        predecessor_id.id = "road_{}_lane_{}_{}".format(element_id, section_id, successor_id)
+
+
+def parse_lane_sections(pb_map, predecessor_road, successor_road, lanes, road_length, reference_line):
   # TODO(zero): add road sections
   # pb_road_section = pb_map.road[-1].section.add()
 
   lane_sections = lanes.findall("laneSection")
   n = len(lane_sections)
-  # TODO(zero): debug use, find len(lane_sections) > 1
-  # if n != 1:
-  #   print(pb_map.road[-1])
   for idx, lane_section in enumerate(lane_sections):
+    # TODO(zero): predecessor
+    if idx == 0:
+      pass
+
+    # parse
     cur_s = float(lane_section.attrib.get('s'))
     single_side = bool(lane_section.attrib.get('singleSide'))
 
@@ -682,13 +698,15 @@ def parse_lane_sections(pb_map, lanes, road_length, reference_line):
       direction = "left"
       left_lanes = left.findall('lane')
       left_lanes.reverse()
-      first_left_pb_lane = parse_lanes(pb_map, left_lanes, idx, cur_s, next_s, direction, reference_line)
+      pb_lane_section = parse_lanes(pb_map, left_lanes, idx, cur_s, next_s, direction, reference_line)
+      first_left_pb_lane = pb_lane_section[0]
 
     right = lane_section.find("right")
     if right:
       direction = "right"
       right_lanes = right.findall('lane')
-      first_right_pb_lane = parse_lanes(pb_map, right_lanes, idx, cur_s, next_s, direction, reference_line)
+      pb_lane_section = parse_lanes(pb_map, right_lanes, idx, cur_s, next_s, direction, reference_line)
+      first_right_pb_lane = pb_lane_section[0]
 
     # add left_neighbor_reverse_lane_id/right_neighbor_reverse_lane_id
     center = lane_section.find("center")
@@ -709,8 +727,8 @@ def parse_road(pb_map, road):
 
   road_link = road.find('link')
   if road_link:
-    predecessors = road_link.findall('predecessor')
-    successors = road_link.findall('successor')
+    predecessor_road = road_link.findall('predecessor')
+    successor_road = road_link.findall('successor')
 
   # The definition of road type is inconsistent
   # https://releases.asam.net/OpenDRIVE/1.6.0/ASAM_OpenDRIVE_BS_V1-6-0.html#_road_type
@@ -741,7 +759,7 @@ def parse_road(pb_map, road):
 
   draw_line(reference_line, 'r')
 
-  parse_lane_sections(pb_map, lanes, road_length, reference_line)
+  parse_lane_sections(pb_map, predecessor_road, successor_road, lanes, road_length, reference_line)
 
 
 def to_pb_lane_type(open_drive_type):
@@ -781,18 +799,28 @@ def to_pb_lane_type(open_drive_type):
 
 
 def parse_junction(pb_map, junction):
-  pb_junction = pb_map.junction.add()
-  pb_junction.id.id = junction.attrib.get('id')
-  # TODO(zero): pb_junction polygon
-  # pb_junction.polygon.point.add()
+  junction_id = junction.attrib.get('id')
   name = junction.attrib.get('name')
   junction_type = junction.attrib.get('type')
+
+  junction_obj = Junction(junction_id, name, junction_type)
+
+  pb_junction = pb_map.junction.add()
+  pb_junction.id.id = junction_id
+  # TODO(zero): pb_junction polygon
+  # pb_junction.polygon.point.add()
+
   for connection in junction.iter('connection'):
-    connection.attrib.get('id')
-    connection.attrib.get('type')
-    connection.attrib.get('incomingRoad')
-    connection.attrib.get('connectingRoad')
-    connection.attrib.get('contactPoint')
+    connection_id = connection.attrib.get('id')
+    connection_type = connection.attrib.get('type')
+    incoming_road = connection.attrib.get('incomingRoad')
+    connecting_road = connection.attrib.get('connectingRoad')
+    contact_point = connection.attrib.get('contactPoint')
+
+    connection_obj = Connection(connection_id, connection_type, incoming_road, connecting_road, contact_point)
+
+    junction_obj.add_connection(connection_obj)
+  return junction_obj
 
 
 def parse_object(pb_map, obj):
@@ -862,17 +890,18 @@ def get_map_from_xml_file(filename):
   assert header is not None, "Open drive map missing header"
   parse_header(pb_map, header)
 
-  # 2. road
+  # 2. junctions
+  junctions = root.findall('junction')
+  if not junctions:
+    for junction in junctions:
+      junctions_obj = parse_junction(pb_map, junction)
+      junctions_objs[junctions_obj.junction_id] = junctions_obj
+
+  # 3. road
   roads = root.findall('road')
   for _, road in enumerate(roads):
     parse_road(pb_map, road)
     # TODO(zero): add successor_id and predecessor_id
-
-  # 3. junctions
-  junctions = root.findall('junction')
-  if not junctions:
-    for junction in junctions:
-      parse_junction(pb_map, junction)
 
   # 4. signals
   signals = root.findall('signals')
