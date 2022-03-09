@@ -53,15 +53,6 @@ class RoadMark:
     self.lane_change = lane_change
 
 
-## UserData
-class VectorLane:
-  def __init__(self, travel_dir):
-    self.travel_dir = travel_dir
-
-class UserData:
-  def __init__(self):
-    self.vector_lane = None
-
 class Lane:
   def __init__(self, lane_id, lane_type, level):
     self.lane_id = lane_id

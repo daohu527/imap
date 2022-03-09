@@ -15,21 +15,11 @@
 # limitations under the License.
 
 
-class Connection:
-  def __init__(self, connection_id, connection_type, incoming_road, \
-               connecting_road, contact_point):
-    self.connection_id = connection_id
-    self.connection_type = connection_type
-    self.incoming_road = incoming_road
-    self.connecting_road = connecting_road
-    self.contact_point = contact_point
 
-class Junction:
-  def __init__(self, junction_id, name, junction_type):
-    self.junction_id = junction_id
-    self.name = name
-    self.junction_type = junction_type
-    self.connections = []
+class VectorLane:
+  def __init__(self, travel_dir):
+    self.travel_dir = travel_dir
 
-  def add_connection(self, connection):
-    self.connections.append(connection)
+class UserData:
+  def __init__(self):
+    self.vector_lane = None

@@ -15,6 +15,22 @@
 # limitations under the License.
 
 
-class Header:
+
+class GeoReference:
   def __init__(self):
     pass
+
+
+class Header:
+  def __init__(self, rev_major, rev_minor, name, version, date, north, south, \
+               east, west, vendor):
+    self.rev_major = rev_major
+    self.rev_minor = rev_minor
+    self.name = name
+    self.version = version
+    self.date = date
+    self.north = north
+    self.south = south
+    self.east = east
+    self.west = west
+    self.vendor = vendor
