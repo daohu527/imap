@@ -517,7 +517,7 @@ def parse_lane_speed(lane) -> float:
   return convert_speed(speed_unit, speed_max)
 
 
-def parse_lane_link(pb_lane, section_id, lane):
+def parse_lane_link(pb_lane, road_id, section_id, lane):
   link = lane.find("link")
   if not link:
     return
@@ -529,7 +529,7 @@ def parse_lane_link(pb_lane, section_id, lane):
       predecessor_id = predecessor.attrib.get("id")
       if predecessor_id:
         # TODO(zero): deal with begin and end
-        pb_lane.predecessor_id.add().id = "{}_{}".format(section_id - 1, predecessor_id)
+        pb_lane.predecessor_id.add().id = "road{}_lane{}_{}".format(road_id, section_id - 1, predecessor_id)
       # junction
       element_type = predecessor.attrib.get("elementType")
       if element_type:
@@ -542,7 +542,7 @@ def parse_lane_link(pb_lane, section_id, lane):
     for successor in successors:
       successor_id = successor.attrib.get("id")
       if successor_id:
-        pb_lane.successor_id.add().id = "{}_{}".format(section_id + 1, successor_id)
+        pb_lane.successor_id.add().id = "road{}_lane{}_{}".format(road_id, section_id + 1, successor_id)
       # junction
       element_type = successor.attrib.get("elementType")
       if element_type:
@@ -605,11 +605,9 @@ def parse_lanes(pb_map, lanes_in_section, section_id, sec_cur_s, sec_next_s, dir
     if not first_pb_lane:
       first_pb_lane = pb_lane
 
-    # pb_road_id = pb_map.road[-1].id.id
-    # pb_lane.id.id = "{}_{}".format(pb_road_id, lane.attrib.get('id'))
+    road_id = pb_map.road[-1].id.id
 
-    pb_lane.id.id = "{}_{}".format(section_id, lane.attrib.get('id'))
-
+    pb_lane.id.id = "road{}_lane{}_{}".format(road_id, section_id, lane.attrib.get('id'))
     pb_lane.type = to_pb_lane_type(lane.attrib.get('type'))
     pb_lane.length = sec_next_s - sec_cur_s
     pb_lane.speed_limit = parse_lane_speed(lane)
@@ -618,10 +616,10 @@ def parse_lanes(pb_map, lanes_in_section, section_id, sec_cur_s, sec_next_s, dir
     # add neighbor
     if idx > 0:
       pb_lane.left_neighbor_forward_lane_id.add().id = \
-          "{}_{}".format(section_id, lanes_in_section[idx - 1].attrib.get('id'))
+          "road{}_lane{}_{}".format(road_id, section_id, lanes_in_section[idx - 1].attrib.get('id'))
     if idx + 1 < n:
       pb_lane.right_neighbor_forward_lane_id.add().id = \
-          "{}_{}".format(section_id, lanes_in_section[idx + 1].attrib.get('id'))
+          "road{}_lane{}_{}".format(road_id, section_id, lanes_in_section[idx + 1].attrib.get('id'))
 
     # TODO(zero):
     # "true" = keep lane on level, that is, do not apply superelevation;
@@ -631,7 +629,7 @@ def parse_lanes(pb_map, lanes_in_section, section_id, sec_cur_s, sec_next_s, dir
     print("road id : {}, lane id: {}, type: {}".format( \
         pb_map.road[-1].id.id, pb_lane.id.id, pb_lane.type))
 
-    parse_lane_link(pb_lane, section_id, lane)
+    parse_lane_link(pb_lane, road_id, section_id, lane)
 
     # If both width and lane border elements are present for a lane section in
     # the OpenDRIVE file, the application must use the information from the
@@ -700,7 +698,7 @@ def parse_lane_sections(pb_map, lanes, road_length, reference_line):
       first_right_pb_lane.left_neighbor_reverse_lane_id.add().id = first_left_pb_lane.id.id
 
 
-def parse_road(pb_map, road, road_id):
+def parse_road(pb_map, road):
   pb_road = pb_map.road.add()
   road_length = float(road.attrib.get('length'))
   pb_road.id.id = road.attrib.get('id')
@@ -708,6 +706,11 @@ def parse_road(pb_map, road, road_id):
   if pb_road.junction_id.id != "-1":
     # Todo(zero): need complete
     pass
+
+  road_link = road.find('link')
+  if road_link:
+    predecessors = road_link.findall('predecessor')
+    successors = road_link.findall('successor')
 
   # The definition of road type is inconsistent
   # https://releases.asam.net/OpenDRIVE/1.6.0/ASAM_OpenDRIVE_BS_V1-6-0.html#_road_type
@@ -861,8 +864,8 @@ def get_map_from_xml_file(filename):
 
   # 2. road
   roads = root.findall('road')
-  for idx, road in enumerate(roads):
-    parse_road(pb_map, road, idx)
+  for _, road in enumerate(roads):
+    parse_road(pb_map, road)
     # TODO(zero): add successor_id and predecessor_id
 
   # 3. junctions
