@@ -15,6 +15,12 @@
 # limitations under the License.
 
 
+import math
+
+from lib.transform import Transform
+from lib.common import Point3d
+from lib.odr_spiral import odr_spiral, odr_arc
+
 class Geometry:
   def __init__(self, s = None, x = None, y = None, hdg = None, length = None):
     self.s = s
@@ -30,6 +36,23 @@ class Geometry:
     self.hdg = float(raw_geometry.attrib.get('hdg'))
     self.length = float(raw_geometry.attrib.get('length'))
 
+  def sampling(self, delta_s):
+    sample_count = math.ceil(self.length / delta_s) + 1
+
+    tf = Transform(self.x, self.y, 0, self.hdg, 0, 0)
+
+    points = []
+    for i in range(sample_count):
+      s, t, h = i * delta_s, 0, 0
+      x, y, z = tf.transform(s, t, h)
+
+      absolute_s = self.s + s
+
+      point3d = Point3d(x, y, z, absolute_s)
+      point3d.set_rotate(self.hdg)
+      points.append(point3d)
+    return points
+
 class Spiral(Geometry):
   def __init__(self, s = None, x = None, y = None, hdg = None, length = None, \
                curv_start = None, curv_end = None):
@@ -43,6 +66,25 @@ class Spiral(Geometry):
     self.curv_start = float(raw_spiral.attrib.get('curvStart'))
     self.curv_end = float(raw_spiral.attrib.get('curvEnd'))
 
+  def sampling(self, delta_s):
+    sample_count = math.ceil(self.length / delta_s) + 1
+    cdot = (self.curv_end - self.curv_start) / self.length
+
+    tf = Transform(self.x, self.y, 0, self.hdg, 0, 0)
+
+    points = []
+    for i in range(sample_count):
+      local_s = i * delta_s
+      s, t, theta = odr_spiral(local_s, cdot)
+      x, y, z = tf.transform(s, t, 0.0)
+
+      absolute_s = self.s + local_s
+
+      point3d = Point3d(x, y, z, absolute_s)
+      point3d.set_rotate(self.hdg + theta)
+      points.append(point3d)
+    return points
+
 
 class Arc(Geometry):
   def __init__(self, s = None, x = None, y = None, hdg = None, length = None, \
@@ -54,6 +96,25 @@ class Arc(Geometry):
     super().parse_from(raw_geometry)
     raw_arc = raw_geometry.find('arc')
     self.curvature = float(raw_arc.attrib.get('curvature'))
+
+  def sampling(self, delta_s):
+    sample_count = math.ceil(self.length / delta_s) + 1
+    tf = Transform(self.x, self.y, 0, self.hdg, 0, 0)
+
+    points = []
+    for i in range(sample_count):
+      local_s = i * delta_s
+      s, t, theta = odr_arc(local_s, self.curvature)
+      x, y, z = tf.transform(s, t, 0.0)
+
+      # get elevation
+      absolute_s = self.s + local_s
+
+      point3d = Point3d(x, y, z, absolute_s)
+      point3d.set_rotate(self.hdg + theta)
+      points.append(point3d)
+    return points
+
 
 class Poly3(Geometry):
   def __init__(self, s = None, x = None, y = None, hdg = None, length = None, \
@@ -72,6 +133,10 @@ class Poly3(Geometry):
     self.b = float(raw_poly3.attrib.get('b'))
     self.c = float(raw_poly3.attrib.get('c'))
     self.d = float(raw_poly3.attrib.get('d'))
+
+  def sampling(self, delta_s):
+    sample_count = math.ceil(self.length / delta_s) + 1
+    pass
 
 
 class ParamPoly3(Geometry):
@@ -102,6 +167,10 @@ class ParamPoly3(Geometry):
     self.cV = float(raw_param_poly3.attrib.get('cV'))
     self.dV = float(raw_param_poly3.attrib.get('dV'))
     self.pRange = raw_param_poly3.attrib.get('pRange')
+
+  def sampling(self, delta_s):
+    sample_count = math.ceil(self.length / delta_s) + 1
+    pass
 
 
 class PlanView:

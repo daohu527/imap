@@ -18,7 +18,11 @@
 
 class GeoReference:
   def __init__(self):
-    pass
+    self.text = None
+
+  def parse_from(self, raw_geo_reference):
+    if raw_geo_reference:
+      self.text = raw_geo_reference.text
 
 
 class Header:
@@ -35,7 +39,7 @@ class Header:
     self.east = east
     self.west = west
     self.vendor = vendor
-
+    self.geo_reference = GeoReference()
 
   def parse_from(self, raw_header):
     self.rev_major = raw_header.attrib.get('revMajor').encode()
@@ -48,3 +52,11 @@ class Header:
     self.south = float(raw_header.attrib.get('south'))
     self.north = float(raw_header.attrib.get('north'))
     self.vendor = raw_header.attrib.get('vendor').encode()
+
+    raw_geo_reference = raw_header.find("geoReference")
+    self.geo_reference.parse_from(raw_geo_reference)
+
+  def parse_geo_reference(self):
+    if self.geo_reference is not None:
+      # TODO(zero): proj
+      print(self.geo_reference.text)

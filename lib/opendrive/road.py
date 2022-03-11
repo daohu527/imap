@@ -15,10 +15,17 @@
 # limitations under the License.
 
 
+import math
+
 from lib.opendrive.common import convert_speed
 from lib.opendrive.plan_view import PlanView
 from lib.opendrive.profile import ElevationProfile, LateralProfile
 from lib.opendrive.lanes import Lanes
+
+
+GEOMETRY_SKIP_LENGTH = 0.01
+SAMPLING_LENGTH = 1.0
+
 
 # Type
 class Speed:
@@ -91,6 +98,9 @@ class Road:
     self.lateral_profile = LateralProfile()
     self.lanes = Lanes()
 
+    # private
+    self.reference_line = []
+
   def parse_from(self, raw_road):
     self.name = raw_road.attrib.get('name')
     self.length = float(raw_road.attrib.get('length'))
@@ -121,3 +131,45 @@ class Road:
     raw_lanes = raw_road.find('lanes')
     assert raw_lanes is not None, "Road {} has no lanes!".format(self.road_id)
     self.lanes.parse_from(raw_lanes)
+
+  def generate_reference_line(self):
+    for geometry in self.plan_view.geometrys:
+      if geometry.length < GEOMETRY_SKIP_LENGTH:
+        continue
+
+      points = geometry.sampling(SAMPLING_LENGTH)
+      self.reference_line.extend(points)
+
+      self.reference_line_add_offset()
+
+
+  def reference_line_add_offset(self):
+    lane_offsets = self.lanes.lane_offsets
+    i, n = 0, len()
+    cur_s = lane_offsets[i].s
+    next_s = lane_offsets[i+1].s if i+1 < n else self.road_length
+    for idx in range(len(self.reference_line)):
+      if self.reference_line[idx].s < cur_s:
+        continue
+
+      if self.reference_line[idx].s > next_s:
+        i += 1
+        # if i >= n:
+        #   break
+        i = min(n-1, i)
+        cur_s = lane_offsets[i].s
+        next_s = lane_offsets[i+1].s if i+1 < n else self.road_length
+
+      ds = self.reference_line[idx].s - cur_s
+
+      a = lane_offsets[i].a
+      b = lane_offsets[i].b
+      c = lane_offsets[i].c
+      d = lane_offsets[i].d
+      offset = a + b*ds + c*ds**2 + d*ds**3
+
+      # if offset:
+      #   print(reference_line[idx])
+      self.reference_line[idx].shift_t(offset)
+      # if offset:
+      #   print(reference_line[idx])
