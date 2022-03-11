@@ -17,7 +17,7 @@
 
 ## LaneOffset
 class LaneOffset:
-  def __init__(self, s, a, b, c, d):
+  def __init__(self, s = None, a = None, b = None, c = None, d = None):
     self.s = s
     self.a = a
     self.b = b
@@ -37,7 +37,8 @@ class LaneLink:
     self.link_id = link_id
 
   def parse_from(self, raw_data):
-    self.link_id = raw_data.attrib.get("id")
+    if raw_data:
+      self.link_id = raw_data.attrib.get("id")
 
 
 class Link:
@@ -46,11 +47,12 @@ class Link:
     self.successor = LaneLink()
 
   def parse_from(self, raw_link):
-    raw_predecessor = raw_link.find("predecessor")
-    self.predecessor.parse_from(raw_predecessor)
+    if raw_link:
+      raw_predecessor = raw_link.find("predecessor")
+      self.predecessor.parse_from(raw_predecessor)
 
-    raw_successor = raw_link.find("successor")
-    self.successor.parse_from(raw_successor)
+      raw_successor = raw_link.find("successor")
+      self.successor.parse_from(raw_successor)
 
 
 class Width:
@@ -81,7 +83,7 @@ class RoadMark:
   def parse_from(self, raw_road_mark):
     self.sOffset = float(raw_road_mark.attrib.get("sOffset"))
     self.roadmark_type = raw_road_mark.attrib.get("type")
-    self.width = float(raw_road_mark.attrib.get("width"))
+    # self.width = float(raw_road_mark.attrib.get("width"))
     self.lane_change = raw_road_mark.attrib.get("lane_change")
 
 

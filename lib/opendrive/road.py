@@ -22,7 +22,7 @@ from lib.opendrive.lanes import Lanes
 
 # Type
 class Speed:
-  def __init__(self, max_speed, unit):
+  def __init__(self, max_speed = None, unit = None):
     self.max_speed = max_speed
     self.unit = unit
 
@@ -33,7 +33,7 @@ class Speed:
 
 
 class RoadType:
-  def __init__(self, s, road_type):
+  def __init__(self, s = None, road_type = None):
     self.s = s
     self.road_type = road_type
 
@@ -41,13 +41,14 @@ class RoadType:
     self.speed = speed
 
   def parse_from(self, raw_road_type):
-    self.s = raw_road_type.attrib.get('s')
-    self.road_type = raw_road_type.attrib.get('type')
+    if raw_road_type:
+      self.s = raw_road_type.attrib.get('s')
+      self.road_type = raw_road_type.attrib.get('type')
 
-    raw_speed = raw_road_type.find('speed')
-    speed = Speed()
-    speed.parse_from(raw_speed)
-    self.add_speed(speed)
+      raw_speed = raw_road_type.find('speed')
+      speed = Speed()
+      speed.parse_from(raw_speed)
+      self.add_speed(speed)
 
 # Link
 class RoadLink:
