@@ -25,7 +25,7 @@ class Connection:
     self.contact_point = contact_point
 
 class Junction:
-  def __init__(self, junction_id, name, junction_type):
+  def __init__(self, junction_id = None, name = None, junction_type = None):
     self.junction_id = junction_id
     self.name = name
     self.junction_type = junction_type
@@ -33,3 +33,18 @@ class Junction:
 
   def add_connection(self, connection):
     self.connections.append(connection)
+
+  def parse_from(self, raw_junction):
+    self.junction_id = raw_junction.attrib.get('id')
+    self.name = raw_junction.attrib.get('name')
+    self.junction_type = raw_junction.attrib.get('type')
+
+    for raw_connection in raw_junction.iter('connection'):
+      connection_id = raw_connection.attrib.get('id')
+      connection_type = raw_connection.attrib.get('type')
+      incoming_road = raw_connection.attrib.get('incomingRoad')
+      connecting_road = raw_connection.attrib.get('connectingRoad')
+      contact_point = raw_connection.attrib.get('contactPoint')
+      connection = Connection(connection_id, connection_type, incoming_road, \
+                      connecting_road, contact_point)
+      self.add_connection(connection)

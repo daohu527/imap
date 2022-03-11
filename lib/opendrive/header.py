@@ -22,8 +22,9 @@ class GeoReference:
 
 
 class Header:
-  def __init__(self, rev_major, rev_minor, name, version, date, north, south, \
-               east, west, vendor):
+  def __init__(self, rev_major = None, rev_minor = None, name = None,
+               version = None, date = None, north = None, south = None, \
+               east = None, west = None, vendor = None):
     self.rev_major = rev_major
     self.rev_minor = rev_minor
     self.name = name
@@ -34,3 +35,16 @@ class Header:
     self.east = east
     self.west = west
     self.vendor = vendor
+
+
+  def parse_from(self, raw_header):
+    self.rev_major = raw_header.attrib.get('revMajor').encode()
+    self.rev_minor = raw_header.attrib.get('revMinor').encode()
+    self.name = raw_header.attrib.get('name').encode()
+    self.version = raw_header.attrib.get('version').encode()
+    self.date = raw_header.attrib.get('date').encode()
+    self.east = float(raw_header.attrib.get('east'))
+    self.west = float(raw_header.attrib.get('west'))
+    self.south = float(raw_header.attrib.get('south'))
+    self.north = float(raw_header.attrib.get('north'))
+    self.vendor = raw_header.attrib.get('vendor').encode()

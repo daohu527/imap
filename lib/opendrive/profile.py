@@ -16,12 +16,19 @@
 
 
 class Elevation:
-  def __init__(self, s, a, b, c, d):
+  def __init__(self, s = None, a = None, b = None, c = None, d = None):
     self.s = s
     self.a = a
     self.b = b
     self.c = c
     self.d = d
+
+  def parse_from(self, raw_elevation):
+    self.s = float(raw_elevation.attrib.get('a'))
+    self.a = float(raw_elevation.attrib.get('a'))
+    self.b = float(raw_elevation.attrib.get('b'))
+    self.c = float(raw_elevation.attrib.get('c'))
+    self.d = float(raw_elevation.attrib.get('d'))
 
 
 class ElevationProfile:
@@ -31,9 +38,28 @@ class ElevationProfile:
   def add_elevation(self, elevation):
     self.elevations.append(elevation)
 
+  def parse_from(self, raw_elevation_profile):
+    if not raw_elevation_profile:
+      return
+
+    for raw_elevation in raw_elevation_profile.iter('elevation'):
+      elevation = Elevation()
+      elevation.parse_from(raw_elevation)
+      self.add_elevation(elevation)
+
+
 class LateralProfile:
   def __init__(self):
     self.elevations = []
 
   def add_elevation(self, elevation):
     self.elevations.append(elevation)
+
+  def parse_from(self, raw_lateral_profile):
+    if not raw_lateral_profile:
+      return
+
+    for raw_elevation in raw_lateral_profile.iter('superelevation'):
+      elevation = Elevation()
+      elevation.parse_from(raw_elevation)
+      self.add_elevation(elevation)
