@@ -163,13 +163,13 @@ class Opendrive2Apollo(Convertor):
     if lane_section == xodr_road.lanes.lane_sections[0]:
       # road link
       predecessor_road = xodr_road.link.predecessor_road
-      if predecessor_road:
+      if predecessor_road and lane.link.predecessor:
         n = len(predecessor_road.lanes.lane_sections)
         pb_lane.predecessor_id.add().id = "road_{}_lane_{}_{}".format( \
             predecessor_road.road_id, n-1, lane.link.predecessor.link_id)
-
-      pb_lane.successor_id.add().id = "road_{}_lane_{}_{}".format( \
-          xodr_road.road_id, idx + 1, lane.link.successor.link_id)
+      if lane.link.successor:
+        pb_lane.successor_id.add().id = "road_{}_lane_{}_{}".format( \
+            xodr_road.road_id, idx + 1, lane.link.successor.link_id)
       # junction
       predecessor_junction = xodr_road.link.predecessor_junction
       if predecessor_junction:
@@ -180,10 +180,12 @@ class Opendrive2Apollo(Convertor):
                 connection.incoming_road, n-1, connection.lane_link.from_id)
     # successor road
     elif lane_section == xodr_road.lanes.lane_sections[-1]:
-      pb_lane.predecessor_id.add().id = "road_{}_lane_{}_{}".format( \
-          xodr_road.road_id, idx - 1, lane.link.predecessor.link_id)
-      pb_lane.successor_id.add().id = "road_{}_lane_{}_{}".format( \
-          xodr_road.link.successor.element_id, 0, lane.link.successor.link_id)
+      if lane.link.predecessor:
+        pb_lane.predecessor_id.add().id = "road_{}_lane_{}_{}".format( \
+            xodr_road.road_id, idx - 1, lane.link.predecessor.link_id)
+      if lane.link.successor:
+        pb_lane.successor_id.add().id = "road_{}_lane_{}_{}".format( \
+            xodr_road.link.successor.element_id, 0, lane.link.successor.link_id)
       # junction
       successor_junction = xodr_road.link.successor_junction
       if successor_junction:
@@ -192,10 +194,12 @@ class Opendrive2Apollo(Convertor):
             pb_lane.successor_id.add().id = "road_{}_lane_{}_{}".format( \
                 connection.connecting_road, 0, connection.lane_link.to_id)
     else:
-      pb_lane.predecessor_id.add().id = "road_{}_lane_{}_{}".format( \
-          xodr_road.road_id, idx - 1, lane.link.predecessor.link_id)
-      pb_lane.successor_id.add().id = "road_{}_lane_{}_{}".format( \
-          xodr_road.road_id, idx + 1, lane.link.successor.link_id)
+      if lane.link.predecessor:
+        pb_lane.predecessor_id.add().id = "road_{}_lane_{}_{}".format( \
+            xodr_road.road_id, idx - 1, lane.link.predecessor.link_id)
+      if lane.link.successor:
+        pb_lane.successor_id.add().id = "road_{}_lane_{}_{}".format( \
+            xodr_road.road_id, idx + 1, lane.link.successor.link_id)
 
   def create_lane(self, xodr_road, lane_section, idx, lane):
     pb_lane = self.pb_map.lane.add()

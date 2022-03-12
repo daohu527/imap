@@ -48,7 +48,7 @@ class RoadType:
     self.speed = speed
 
   def parse_from(self, raw_road_type):
-    if raw_road_type:
+    if raw_road_type is not None:
       self.s = raw_road_type.attrib.get('s')
       self.road_type = raw_road_type.attrib.get('type')
 

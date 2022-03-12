@@ -54,22 +54,25 @@ class LaneLink:
     self.link_id = link_id
 
   def parse_from(self, raw_data):
-    if raw_data:
-      self.link_id = raw_data.attrib.get("id")
+    self.link_id = raw_data.attrib.get("id")
 
 
 class Link:
   def __init__(self):
-    self.predecessor = LaneLink()
-    self.successor = LaneLink()
+    self.predecessor = None
+    self.successor = None
 
   def parse_from(self, raw_link):
-    if raw_link:
+    if raw_link is not None:
       raw_predecessor = raw_link.find("predecessor")
-      self.predecessor.parse_from(raw_predecessor)
+      if raw_predecessor is not None:
+        self.predecessor = LaneLink()
+        self.predecessor.parse_from(raw_predecessor)
 
       raw_successor = raw_link.find("successor")
-      self.successor.parse_from(raw_successor)
+      if raw_successor is not None:
+        self.successor = LaneLink()
+        self.successor.parse_from(raw_successor)
 
 
 class Width:
@@ -112,7 +115,7 @@ class Speed:
     self.max_v = None
 
   def parse_from(self, raw_speed):
-    if raw_speed:
+    if raw_speed is not None:
       self.sOffset = float(raw_speed.attrib.get("sOffset"))
       self.raw_max_v = float(raw_speed.attrib.get("max"))
       self.unit = raw_speed.attrib.get("unit")
@@ -232,7 +235,7 @@ class LaneSection:
 
     # left
     left = raw_lane_section.find("left")
-    if left:
+    if left is not None:
       for raw_lane in left.iter('lane'):
         lane = Lane(direction = -1)
         lane.parse_from(raw_lane)
@@ -245,7 +248,7 @@ class LaneSection:
 
     # right
     right = raw_lane_section.find("right")
-    if right:
+    if right is not None:
       for raw_lane in right.iter('lane'):
         lane = Lane(direction = 1)
         lane.parse_from(raw_lane)

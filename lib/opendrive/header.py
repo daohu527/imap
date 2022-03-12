@@ -21,7 +21,7 @@ class GeoReference:
     self.text = None
 
   def parse_from(self, raw_geo_reference):
-    if raw_geo_reference:
+    if raw_geo_reference is not None:
       self.text = raw_geo_reference.text
 
 

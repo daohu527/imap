@@ -63,6 +63,6 @@ class Junction:
                       connecting_road, contact_point)
 
       raw_lane_link = raw_junction.find('laneLink')
-      if raw_lane_link:
+      if raw_lane_link is not None:
         connection.lane_link.parse_from(raw_lane_link)
       self.add_connection(connection)
