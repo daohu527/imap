@@ -15,6 +15,23 @@
 # limitations under the License.
 
 
+import math
+
+from lib.common import shift_t
+from lib.draw import draw_line
+
+
+def binary_search(arr, val):
+  left, right = 0, len(arr) - 1
+  while left <= right:
+    mid = math.floor((left + right)/2)
+    if arr[mid] <= val:
+      left = mid + 1
+    else:
+      right = mid - 1
+  return left - 1
+
+
 ## LaneOffset
 class LaneOffset:
   def __init__(self, s = None, a = None, b = None, c = None, d = None):
@@ -87,29 +104,50 @@ class RoadMark:
     self.lane_change = raw_road_mark.attrib.get("lane_change")
 
 
+class Speed:
+  def __init__(self, sOffset = None, raw_max_v = None, unit = None):
+    self.sOffset = sOffset
+    self.raw_max_v = raw_max_v
+    self.unit = unit
+    self.max_v = None
+
+  def parse_from(self, raw_speed):
+    if raw_speed:
+      self.sOffset = float(raw_speed.attrib.get("sOffset"))
+      self.raw_max_v = float(raw_speed.attrib.get("max"))
+      self.unit = raw_speed.attrib.get("unit")
+      self.max_v = convert_speed(self.raw_max_v, self.unit)
+
+
 class Lane:
-  def __init__(self, lane_id = None, lane_type = None, level = None):
+  def __init__(self, lane_id = None, lane_type = None, level = None, \
+              direction = None):
     self.lane_id = lane_id
     self.lane_type = lane_type
     self.level = level
     self.link = Link()
     self.widths = []
+    self.speed = Speed()
     self.road_marks = []
     self.user_data = None
 
-  def get_width_by_s(self, s):
-    idx = binary_search(s)
-    a = self.widths[idx].a
-    b = self.widths[idx].b
-    c = self.widths[idx].c
-    d = self.widths[idx].d
-
-    ds = s - self.s
-    return a + b*ds + c*ds**2 + d*ds**3
+    # private
+    self.direction = direction
+    self.length = None
+    self.left_neighbor_forward = []
+    self.right_neighbor_forward = []
+    self.left_neighbor_reverse = []
+    self.right_neighbor_reverse = []
+    self.left_boundary = []
+    self.right_boundary = []
+    self.center_line = []
 
 
   def add_width(self, width):
     self.widths.append(width)
+
+  def set_length(self, length):
+    self.length = length
 
   def add_road_mark(self, road_mark):
     self.road_marks.append(road_mark)
@@ -129,11 +167,45 @@ class Lane:
       width.parse_from(raw_width)
       self.add_width(width)
 
+    # speed
+    raw_speed = raw_lane.find("speed")
+    self.speed.parse_from(raw_speed)
+
     # roadMark
     for raw_road_mark in raw_lane.iter("roadMark"):
       road_mark = RoadMark()
       road_mark.parse_from(raw_road_mark)
       self.add_road_mark(road_mark)
+
+  def get_width_by_s(self, s):
+    idx = binary_search([width.sOffset for width in self.widths], s)
+    a = self.widths[idx].a
+    b = self.widths[idx].b
+    c = self.widths[idx].c
+    d = self.widths[idx].d
+
+    ds = s - self.widths[idx].sOffset
+    return a + b*ds + c*ds**2 + d*ds**3
+
+  def generate_boundary(self, left_boundary):
+    self.left_boundary = left_boundary
+    for point3d in left_boundary:
+      width = self.get_width_by_s(point3d.s)
+
+      point3d = shift_t(point3d, width * self.direction)
+      self.right_boundary.append(point3d)
+
+      point3d = shift_t(point3d, width * self.direction / 2)
+      self.center_line.append(point3d)
+
+    # TODO(zero): debug use
+    if self.lane_type == "driving":
+      draw_line(self.left_boundary, 'g')
+      draw_line(self.right_boundary, 'g')
+    else:
+      draw_line(self.left_boundary)
+      draw_line(self.right_boundary)
+    return self.right_boundary
 
 
 class LaneSection:
@@ -145,7 +217,6 @@ class LaneSection:
     self.right = []
 
     # private
-    self.start_s = None
     self.end_s = None
 
   def add_left_lane(self, lane):
@@ -156,13 +227,14 @@ class LaneSection:
 
   def parse_from(self, raw_lane_section):
     self.s = float(raw_lane_section.attrib.get('s'))
+
     self.single_side = bool(raw_lane_section.attrib.get('singleSide'))
 
     # left
     left = raw_lane_section.find("left")
     if left:
       for raw_lane in left.iter('lane'):
-        lane = Lane()
+        lane = Lane(direction = -1)
         lane.parse_from(raw_lane)
         self.add_left_lane(lane)
 
@@ -175,9 +247,45 @@ class LaneSection:
     right = raw_lane_section.find("right")
     if right:
       for raw_lane in right.iter('lane'):
-        lane = Lane()
+        lane = Lane(direction = 1)
         lane.parse_from(raw_lane)
         self.add_right_lane(lane)
+
+  def set_lane_length(self, length):
+    for lane in self.left:
+      lane.set_length(length)
+    for lane in self.right:
+      lane.set_length(length)
+    self.center.set_length(length)
+
+  def add_neighbors(self):
+    n = len(self.left)
+    for idx in range(n):
+      if idx+1 < n:
+        self.left[idx].left_neighbor_forward.append(self.left[idx+1].lane_id)
+      if idx > 0:
+        self.left[idx].right_neighbor_forward.append(self.left[idx-1].lane_id)
+
+    n = len(self.right)
+    for idx in range(n):
+      if idx+1 < n:
+        self.right[idx].right_neighbor_forward.append(self.right[idx+1].lane_id)
+      if idx > 0:
+        self.right[idx].left_neighbor_forward.append(self.right[idx-1].lane_id)
+
+    if self.left and self.right:
+      self.left[-1].left_neighbor_reverse.append(self.right[0].lane_id)
+      self.right[0].left_neighbor_reverse.append(self.right[0].lane_id)
+
+
+  def process_lane(self, reference_line):
+    left_boundary = reference_line
+    for lane in self.left[::-1]:
+      left_boundary = lane.generate_boundary(left_boundary)
+
+    left_boundary = reference_line
+    for lane in self.right:
+      left_boundary = lane.generate_boundary(left_boundary)
 
 
 # Lanes
@@ -200,7 +308,23 @@ class Lanes:
       self.add_lane_offset(lane_offset)
 
     # laneSection
+    i = 0
     for raw_lane_section in raw_lanes.iter("laneSection"):
       lane_section = LaneSection()
       lane_section.parse_from(raw_lane_section)
       self.add_lane_section(lane_section)
+      i += 1
+
+  def get_offset_by_s(self, s):
+    idx = binary_search([lane_offset.s for lane_offset in self.lane_offsets], s)
+    a = self.lane_offsets[idx].a
+    b = self.lane_offsets[idx].b
+    c = self.lane_offsets[idx].c
+    d = self.lane_offsets[idx].d
+    ds = s - self.lane_offsets[idx].s
+    return a + b*ds + c*ds**2 + d*ds**3
+
+
+  def process_lane_sections(self, reference_line):
+    for lane_section in self.lane_sections:
+      lane_section.process_lane(reference_line)

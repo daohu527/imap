@@ -15,6 +15,16 @@
 # limitations under the License.
 
 
+class Link:
+  def __init__(self, from_id = None, to_id = None):
+    self.from_id = from_id
+    self.to_id = to_id
+
+  def parse_from(self, raw_lane_link):
+    self.from_id = raw_lane_link.attrib.get('from')
+    self.to_id = raw_lane_link.attrib.get('to')
+
+
 class Connection:
   def __init__(self, connection_id, connection_type, incoming_road, \
                connecting_road, contact_point):
@@ -23,6 +33,10 @@ class Connection:
     self.incoming_road = incoming_road
     self.connecting_road = connecting_road
     self.contact_point = contact_point
+    self.lane_link = Link()
+
+    # private
+    self.incoming_road_obj = None
 
 class Junction:
   def __init__(self, junction_id = None, name = None, junction_type = None):
@@ -47,4 +61,8 @@ class Junction:
       contact_point = raw_connection.attrib.get('contactPoint')
       connection = Connection(connection_id, connection_type, incoming_road, \
                       connecting_road, contact_point)
+
+      raw_lane_link = raw_junction.find('laneLink')
+      if raw_lane_link:
+        connection.lane_link.parse_from(raw_lane_link)
       self.add_connection(connection)

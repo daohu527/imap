@@ -75,6 +75,12 @@ class Link:
     self.predecessor = RoadLink()
     self.successor = RoadLink()
 
+    # private
+    self.predecessor_road = None
+    self.successor_road = None
+    self.predecessor_junction = None
+    self.successor_junction = None
+
   def parse_from(self, raw_link):
     raw_predecessor = raw_link.find('predecessor')
     self.predecessor.parse_from(raw_predecessor)
@@ -101,18 +107,6 @@ class Road:
     # private
     self.reference_line = []
 
-  def parse_lane(self, lane, left_boundary):
-    for left_point3d in left_boundary:
-      width = lane.get_width_by_s(left_point3d.s)
-
-      direct = -1 if direction == "left" else 1
-
-      point3d = shift_t(left_point3d, width * direct)
-      right_boundary.append(point3d)
-
-      point3d = shift_t(left_point3d, width * direct / 2)
-      center_line.append(point3d)
-
 
   def parse_lanes_in_section(self, lanes_in_section, direction):
     for idx, lane in enumerate(lanes_in_section):
@@ -126,10 +120,23 @@ class Road:
 
 
   def post_processing(self):
-    lane_sections = self.lanes.lane_sections
-    for idx in range(len(lane_sections) - 1):
-      lane_sections[idx].end_s = lane_sections[idx + 1].start_s
-    lane_sections[-1].end_s = self.length
+    # add length
+    for idx in range(len(self.lanes.lane_sections) - 1):
+      self.lanes.lane_sections[idx].end_s = self.lanes.lane_sections[idx+1].s
+    self.lanes.lane_sections[-1].end_s = self.length
+
+    for idx, lane_section in enumerate(self.lanes.lane_sections):
+      length = lane_section.end_s - lane_section.s
+      assert length > 0, "Road_{}_Section_{} length is below zero".format( \
+          self.road_id, idx)
+      lane_section.set_lane_length(length)
+
+    # add neighbor
+    for lane_section in self.lanes.lane_sections:
+      lane_section.add_neighbors()
+
+    # add link
+
 
 
   def parse_from(self, raw_road):
@@ -175,28 +182,12 @@ class Road:
       self.reference_line.extend(points)
 
   def add_offset_to_reference_line(self):
-    lane_offsets = self.lanes.lane_offsets
-    i, n = 0, len(lane_offsets)
-    cur_s = lane_offsets[i].s
-    next_s = lane_offsets[i+1].s if i+1 < n else self.length
     for idx in range(len(self.reference_line)):
-      if self.reference_line[idx].s < cur_s:
-        continue
-
-      if self.reference_line[idx].s > next_s:
-        i += 1
-        # if i >= n:
-        #   break
-        i = min(n-1, i)
-        cur_s = lane_offsets[i].s
-        next_s = lane_offsets[i+1].s if i+1 < n else self.length
-
-      ds = self.reference_line[idx].s - cur_s
-
-      a = lane_offsets[i].a
-      b = lane_offsets[i].b
-      c = lane_offsets[i].c
-      d = lane_offsets[i].d
-      offset = a + b*ds + c*ds**2 + d*ds**3
-
+      offset = self.lanes.get_offset_by_s(self.reference_line[idx].s)
       self.reference_line[idx].shift_t(offset)
+
+  def process_lanes(self):
+    # generate boundary
+    self.lanes.process_lane_sections(self.reference_line)
+
+

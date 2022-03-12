@@ -25,14 +25,36 @@ from lib.opendrive.junction import Junction
 class Map:
   def __init__(self):
     self.header = Header()
-    self.roads = []
-    self.junctions = []
+    self.roads = {}
+    self.junctions = {}
+
+  def post_process(self):
+    # add link
+    for road_id, road in self.roads.items():
+      # Todo(zero):
+      if road.link.predecessor.element_type == "junction":
+        road.link.predecessor_junction = \
+            self.junctions[road.link.predecessor.element_id]
+      elif road.link.predecessor.element_type == "road":
+        road.link.predecessor_road = self.roads[road.link.predecessor.element_id]
+
+      if road.link.successor.element_type == "junction":
+        road.link.successor_junction = \
+            self.junctions[road.link.successor.element_id]
+      elif road.link.successor.element_type == "road":
+        road.link.successor_road = self.roads[road.link.successor.element_id]
+
+    # add junction link
+    for junction_id, junction in self.junctions.items():
+      for connection in junction.connections:
+        connection.incoming_road_obj = self.roads[connection.incoming_road]
 
   def parse_roads(self, raw_roads):
     for raw_road in raw_roads:
       road = Road()
       road.parse_from(raw_road)
-      self.roads.append(road)
+      self.roads[road.road_id] = road
+
 
   def parse_junctions(self, raw_junctions):
     if not raw_junctions:
@@ -41,7 +63,7 @@ class Map:
     for raw_junction in raw_junctions:
       junction = Junction()
       junction.parse_from(raw_junction)
-      self.junctions.append(junction)
+      self.junctions[junction.junction_id] = junction
 
   def load(self, filename):
     tree = ET.parse(filename)
@@ -54,11 +76,13 @@ class Map:
     assert raw_header is not None, "Open drive map missing header"
     self.header.parse_from(raw_header)
 
+    # 3. junction.
+    raw_junctions = root.findall('junction')
+    self.parse_junctions(raw_junctions)
+
     # 2. road
     raw_roads = root.findall('road')
     assert raw_roads is not None, "Open drive map missing roads"
     self.parse_roads(raw_roads)
 
-    # 3. junction
-    raw_junctions = root.findall('junction')
-    self.parse_junctions(raw_junctions)
+    self.post_process()
