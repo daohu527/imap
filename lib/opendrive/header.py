@@ -59,4 +59,4 @@ class Header:
   def parse_geo_reference(self):
     if self.geo_reference is not None:
       # TODO(zero): proj
-      print(self.geo_reference.text)
+      print("parse_geo_reference is {}: ".format(self.geo_reference.text))

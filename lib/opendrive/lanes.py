@@ -97,6 +97,17 @@ class Lane:
     self.road_marks = []
     self.user_data = None
 
+  def get_width_by_s(self, s):
+    idx = binary_search(s)
+    a = self.widths[idx].a
+    b = self.widths[idx].b
+    c = self.widths[idx].c
+    d = self.widths[idx].d
+
+    ds = s - self.s
+    return a + b*ds + c*ds**2 + d*ds**3
+
+
   def add_width(self, width):
     self.widths.append(width)
 
@@ -132,6 +143,10 @@ class LaneSection:
     self.left = []
     self.center = Lane()
     self.right = []
+
+    # private
+    self.start_s = None
+    self.end_s = None
 
   def add_left_lane(self, lane):
     self.left.append(lane)

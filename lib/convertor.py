@@ -25,7 +25,7 @@ from lib.proto_utils import write_pb_to_text_file
 from lib.draw import draw_line, show
 
 
-class Converter:
+class Convertor:
   def __init__(self) -> None:
     pass
 
@@ -33,16 +33,13 @@ class Converter:
     pass
 
 
-class Opendrive2Apollo(Converter):
+class Opendrive2Apollo(Convertor):
   def __init__(self, input_file_name, output_file_name) -> None:
-    self.load_input_file(input_file_name)
-    self.pb_map = map_pb2.Map()
-    self.output_file_name = output_file_name
-
-
-  def load_input_file(self, input_file_name):
     self.xodr_map = Map()
     self.xodr_map.load(input_file_name)
+
+    self.pb_map = map_pb2.Map()
+    self.output_file_name = output_file_name
 
 
   def parse_header(self):
@@ -73,14 +70,14 @@ class Opendrive2Apollo(Converter):
       pb_road.junction_id.id = xodr_road.junction_id
 
       # The definition of road type is inconsistent
-      # https://releases.asam.net/OpenDRIVE/1.6.0/ASAM_OpenDRIVE_BS_V1-6-0.html#_road_type
       if xodr_road.road_type.road_type is None:
         pb_road.type = map_road_pb2.Road.CITY_ROAD
 
       xodr_road.generate_reference_line()
-
+      xodr_road.add_offset_to_reference_line()
       # Todo(zero):
-      draw_line(reference_line, 'r')
+      draw_line(xodr_road.reference_line, 'r')
+
 
 
   def parse_junctions(self):
@@ -96,6 +93,7 @@ class Opendrive2Apollo(Converter):
     self.parse_junctions()
     self.parse_roads()
     self.save_map()
+    show()
 
   def save_map(self):
     write_pb_to_text_file(self.pb_map, self.output_file_name)

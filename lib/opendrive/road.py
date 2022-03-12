@@ -101,6 +101,37 @@ class Road:
     # private
     self.reference_line = []
 
+  def parse_lane(self, lane, left_boundary):
+    for left_point3d in left_boundary:
+      width = lane.get_width_by_s(left_point3d.s)
+
+      direct = -1 if direction == "left" else 1
+
+      point3d = shift_t(left_point3d, width * direct)
+      right_boundary.append(point3d)
+
+      point3d = shift_t(left_point3d, width * direct / 2)
+      center_line.append(point3d)
+
+
+  def parse_lanes_in_section(self, lanes_in_section, direction):
+    for idx, lane in enumerate(lanes_in_section):
+      self.parse_lane(lane)
+
+
+  def generate_lane_boundary(self):
+    for lane_section in self.lanes.lane_sections:
+      lane_section.left
+      lane_section.right
+
+
+  def post_processing(self):
+    lane_sections = self.lanes.lane_sections
+    for idx in range(len(lane_sections) - 1):
+      lane_sections[idx].end_s = lane_sections[idx + 1].start_s
+    lane_sections[-1].end_s = self.length
+
+
   def parse_from(self, raw_road):
     self.name = raw_road.attrib.get('name')
     self.length = float(raw_road.attrib.get('length'))
@@ -132,6 +163,9 @@ class Road:
     assert raw_lanes is not None, "Road {} has no lanes!".format(self.road_id)
     self.lanes.parse_from(raw_lanes)
 
+    # post processing
+    self.post_processing()
+
   def generate_reference_line(self):
     for geometry in self.plan_view.geometrys:
       if geometry.length < GEOMETRY_SKIP_LENGTH:
@@ -140,14 +174,11 @@ class Road:
       points = geometry.sampling(SAMPLING_LENGTH)
       self.reference_line.extend(points)
 
-      self.reference_line_add_offset()
-
-
-  def reference_line_add_offset(self):
+  def add_offset_to_reference_line(self):
     lane_offsets = self.lanes.lane_offsets
-    i, n = 0, len()
+    i, n = 0, len(lane_offsets)
     cur_s = lane_offsets[i].s
-    next_s = lane_offsets[i+1].s if i+1 < n else self.road_length
+    next_s = lane_offsets[i+1].s if i+1 < n else self.length
     for idx in range(len(self.reference_line)):
       if self.reference_line[idx].s < cur_s:
         continue
@@ -158,7 +189,7 @@ class Road:
         #   break
         i = min(n-1, i)
         cur_s = lane_offsets[i].s
-        next_s = lane_offsets[i+1].s if i+1 < n else self.road_length
+        next_s = lane_offsets[i+1].s if i+1 < n else self.length
 
       ds = self.reference_line[idx].s - cur_s
 
@@ -168,8 +199,4 @@ class Road:
       d = lane_offsets[i].d
       offset = a + b*ds + c*ds**2 + d*ds**3
 
-      # if offset:
-      #   print(reference_line[idx])
       self.reference_line[idx].shift_t(offset)
-      # if offset:
-      #   print(reference_line[idx])
