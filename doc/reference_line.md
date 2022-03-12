@@ -34,6 +34,9 @@ We do not currently support these two formats, because the coordinates need to b
 3. junctions
 4. signal
 
+## refactor
+1. First parse opendrive and then use object to convert to apollo.
+
 
 ## reference
 https://releases.asam.net/OpenDRIVE/1.6.0/ASAM_OpenDRIVE_BS_V1-6-0.html#_coordinate_systems
