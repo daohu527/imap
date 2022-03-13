@@ -36,7 +36,10 @@ class Speed:
   def parse_from(self, raw_speed):
     raw_max_speed = raw_speed.attrib.get('max')
     self.unit = raw_speed.attrib.get('unit')
-    self.max_speed = convert_speed(raw_max_speed, self.unit)
+    if raw_max_speed == 'no limit' or raw_max_speed == 'undefined':
+      self.max_speed = 0
+    else:
+      self.max_speed = convert_speed(raw_max_speed, self.unit)
 
 
 class RoadType:
@@ -134,9 +137,6 @@ class Road:
     # add neighbor
     for lane_section in self.lanes.lane_sections:
       lane_section.add_neighbors()
-
-    # add link
-
 
 
   def parse_from(self, raw_road):

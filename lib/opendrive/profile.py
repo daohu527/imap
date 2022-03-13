@@ -47,13 +47,25 @@ class ElevationProfile:
       elevation.parse_from(raw_elevation)
       self.add_elevation(elevation)
 
+  def get_elevation_by_s(self):
+    i = len(self.elevations) - 1
+    while i >= 0:
+      elevation = self.elevations[i]
+      if s >= elevation.s:
+        a, b, c, d = elevation.a, elevation.b, elevation.c, elevation.d
+        ds = s - elevation.s
+        elev = a + b*ds + c*ds*ds + d*ds**3
+        return elev
+      i -= 1
+    return 0.0
+
 
 class LateralProfile:
   def __init__(self):
-    self.elevations = []
+    self.superelevations = []
 
   def add_elevation(self, elevation):
-    self.elevations.append(elevation)
+    self.superelevations.append(elevation)
 
   def parse_from(self, raw_lateral_profile):
     if not raw_lateral_profile:
@@ -63,3 +75,18 @@ class LateralProfile:
       elevation = Elevation()
       elevation.parse_from(raw_elevation)
       self.add_elevation(elevation)
+
+  def get_superelevation_by_s(self):
+    i = len(self.superelevations) - 1
+    while i >= 0:
+      superelevation = self.superelevations[i]
+      if s >= superelevation.s:
+        a = superelevation.a
+        b = superelevation.b
+        c = superelevation.c
+        d = superelevation.d
+        ds = s - superelevation.s
+        elev = a + b*ds + c*ds*ds + d*ds**3
+        return elev
+      i -= 1
+    return 0.0
