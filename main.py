@@ -19,14 +19,15 @@
 import argparse
 
 import global_var
-import lib.open_drive_utils as open_drive_utils
 
 from lib.draw import add_editor, show_map
+from lib.convertor import Opendrive2Apollo
 
 
 def convert_map_format():
-    pb_map = open_drive_utils.get_map_from_xml_file(args.input)
-    open_drive_utils.save_map_to_xml_file(pb_map, args.output)
+    opendrive2apollo = Opendrive2Apollo(args.input, args.output)
+    opendrive2apollo.set_parameters(only_driving=True)
+    opendrive2apollo.convert()
 
 
 def show_open_drive_map():

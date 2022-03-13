@@ -32,6 +32,20 @@ def binary_search(arr, val):
   return left - 1
 
 
+def is_adjacent(road_marks) -> bool:
+  if not road_marks:
+    return True
+
+  road_mark = road_marks[0]
+  if road_mark.roadmark_type == "botts dots" or \
+     road_mark.roadmark_type == "broken broken" or \
+     road_mark.roadmark_type == "broken solid" or \
+     road_mark.roadmark_type == "broken" or \
+     road_mark.roadmark_type == "none":
+    return True
+  return False
+
+
 ## LaneOffset
 class LaneOffset:
   def __init__(self, s = None, a = None, b = None, c = None, d = None):
@@ -276,7 +290,7 @@ class LaneSection:
       if idx > 0:
         self.right[idx].left_neighbor_forward.append(self.right[idx-1].lane_id)
 
-    if self.left and self.right:
+    if self.left and self.right and is_adjacent(self.center.road_marks):
       self.left[-1].left_neighbor_reverse.append(self.right[0].lane_id)
       self.right[0].left_neighbor_reverse.append(self.right[0].lane_id)
 

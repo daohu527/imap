@@ -77,6 +77,9 @@ class Opendrive2Apollo(Convertor):
     self.pb_map = map_pb2.Map()
     self.output_file_name = output_file_name
 
+  def set_parameters(self, only_driving = True):
+    self.only_driving = only_driving
+
 
   def convert_header(self):
     self.pb_map.header.version = self.xodr_map.header.version
@@ -160,7 +163,8 @@ class Opendrive2Apollo(Convertor):
           "road_{}_lane_{}_{}".format(xodr_road.road_id, idx, lane_id)
 
   def add_lane_relationships(self, pb_lane, xodr_road, lane_section, idx, lane):
-    if lane_section == xodr_road.lanes.lane_sections[0]:
+    cur_n = len(xodr_road.lanes.lane_sections)
+    if idx == 0:
       # road link
       predecessor_road = xodr_road.link.predecessor_road
       if predecessor_road and lane.link.predecessor:
@@ -179,7 +183,7 @@ class Opendrive2Apollo(Convertor):
             pb_lane.successor_id.add().id = "road_{}_lane_{}_{}".format( \
                 connection.incoming_road, n-1, connection.lane_link.from_id)
     # successor road
-    elif lane_section == xodr_road.lanes.lane_sections[-1]:
+    if idx == cur_n - 1:
       if lane.link.predecessor:
         pb_lane.predecessor_id.add().id = "road_{}_lane_{}_{}".format( \
             xodr_road.road_id, idx - 1, lane.link.predecessor.link_id)
@@ -193,7 +197,7 @@ class Opendrive2Apollo(Convertor):
           if connection.incoming_road == xodr_road.road_id:
             pb_lane.successor_id.add().id = "road_{}_lane_{}_{}".format( \
                 connection.connecting_road, 0, connection.lane_link.to_id)
-    else:
+    if idx > 0 and idx < cur_n - 1:
       if lane.link.predecessor:
         pb_lane.predecessor_id.add().id = "road_{}_lane_{}_{}".format( \
             xodr_road.road_id, idx - 1, lane.link.predecessor.link_id)
@@ -202,6 +206,9 @@ class Opendrive2Apollo(Convertor):
             xodr_road.road_id, idx + 1, lane.link.successor.link_id)
 
   def create_lane(self, xodr_road, lane_section, idx, lane):
+    if self.only_driving and lane.lane_type != "driving":
+      return
+
     pb_lane = self.pb_map.lane.add()
     self.add_basic_info(pb_lane, xodr_road, idx, lane)
     # add boundary
