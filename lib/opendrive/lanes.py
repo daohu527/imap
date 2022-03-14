@@ -296,11 +296,13 @@ class LaneSection:
 
 
   def process_lane(self, reference_line):
-    left_boundary = reference_line
+    left_boundary = reference_line.copy()
+    # The left lane is opposite to the reference line
+    left_boundary.reverse()
     for lane in self.left[::-1]:
       left_boundary = lane.generate_boundary(left_boundary)
 
-    left_boundary = reference_line
+    left_boundary = reference_line.copy()
     for lane in self.right:
       left_boundary = lane.generate_boundary(left_boundary)
 
