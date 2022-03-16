@@ -28,10 +28,13 @@ def convert_map_format():
     opendrive2apollo = Opendrive2Apollo(args.input, args.output)
     opendrive2apollo.set_parameters(only_driving=True)
     opendrive2apollo.convert()
+    opendrive2apollo.save_map()
 
 
 def show_open_drive_map():
-    pb_map = open_drive_utils.get_map_from_xml_file(args.map)
+    opendrive2apollo = Opendrive2Apollo(args.map)
+    opendrive2apollo.set_parameters(only_driving=True)
+    opendrive2apollo.convert()
 
 
 if __name__ == "__main__":

@@ -70,7 +70,7 @@ class Convertor:
 
 
 class Opendrive2Apollo(Convertor):
-  def __init__(self, input_file_name, output_file_name) -> None:
+  def __init__(self, input_file_name, output_file_name = None) -> None:
     self.xodr_map = Map()
     self.xodr_map.load(input_file_name)
 
@@ -259,7 +259,6 @@ class Opendrive2Apollo(Convertor):
     self.convert_header()
     self.convert_junctions()
     self.convert_roads()
-    self.save_map()
     show()
 
   def save_map(self):
