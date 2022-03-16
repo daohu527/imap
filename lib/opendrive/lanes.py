@@ -20,6 +20,8 @@ import math
 from lib.common import shift_t
 from lib.draw import draw_line
 
+from lib.opendrive.common import convert_speed
+
 
 def binary_search(arr, val):
   left, right = 0, len(arr) - 1
