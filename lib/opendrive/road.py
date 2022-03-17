@@ -85,11 +85,12 @@ class Link:
     self.successor_junction = None
 
   def parse_from(self, raw_link):
-    raw_predecessor = raw_link.find('predecessor')
-    self.predecessor.parse_from(raw_predecessor)
+    if raw_link is not None:
+      raw_predecessor = raw_link.find('predecessor')
+      self.predecessor.parse_from(raw_predecessor)
 
-    raw_successor = raw_link.find('successor')
-    self.successor.parse_from(raw_successor)
+      raw_successor = raw_link.find('successor')
+      self.successor.parse_from(raw_successor)
 
 # Road
 class Road:
