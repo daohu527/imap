@@ -44,10 +44,17 @@ class Map:
       elif road.link.successor.element_type == "road":
         road.link.successor_road = self.roads[road.link.successor.element_id]
 
+      # add connect relation in junctions
+      if road.junction_id != "-1":
+        successor_id = road.link.successor.element_id
+        predecessor_list = self.junctions[road.junction_id].predecessor_dict.get(successor_id, [])
+        predecessor_list.append({self.roads[road.link.predecessor.element_id], road.link.predecessor.contact_point})
+
     # add junction link
     for junction_id, junction in self.junctions.items():
       for connection in junction.connections:
         connection.incoming_road_obj = self.roads[connection.incoming_road]
+        connection.connecting_road_obj = self.roads[connection.connecting_road]
 
   def parse_roads(self, raw_roads):
     for raw_road in raw_roads:

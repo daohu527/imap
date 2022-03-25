@@ -37,6 +37,7 @@ class Connection:
 
     # private
     self.incoming_road_obj = None
+    self.connecting_road_obj = None
 
 class Junction:
   def __init__(self, junction_id = None, name = None, junction_type = None):
@@ -44,6 +45,9 @@ class Junction:
     self.name = name
     self.junction_type = junction_type
     self.connections = []
+
+    # private
+    self.predecessor_dict = {}
 
   def add_connection(self, connection):
     self.connections.append(connection)
@@ -66,3 +70,12 @@ class Junction:
       if raw_lane_link is not None:
         connection.lane_link.parse_from(raw_lane_link)
       self.add_connection(connection)
+
+  def get_predecessors(self, road_id):
+    return self.predecessor_dict[road_id]
+
+  def is_incoming_road(self, road_id):
+    for connection in self.connections:
+      if connection.incoming_road == road_id:
+        return True
+    return False
