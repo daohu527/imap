@@ -225,7 +225,7 @@ class Opendrive2Apollo(Convertor):
             pb_lane.successor_id.add().id = "road_{}_lane_{}_{}".format( \
                 connection.connecting_road, section_id, connection.lane_link.to_id)
         # outcoming_road
-        predecessors = predecessor_junction.get_predecessors(xodr_road.road_id)
+        predecessors = successor_junction.get_predecessors(xodr_road.road_id)
         for predecessor_road, contact_point in predecessors:
           for predecessor_lane in predecessor_road.lanes.lane_sections.left:
             if predecessor_lane.link.successor.link_id == lane.lane_id:

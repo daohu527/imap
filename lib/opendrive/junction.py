@@ -72,7 +72,7 @@ class Junction:
       self.add_connection(connection)
 
   def get_predecessors(self, road_id):
-    return self.predecessor_dict[road_id]
+    return self.predecessor_dict.get(road_id, [])
 
   def is_incoming_road(self, road_id):
     for connection in self.connections:
