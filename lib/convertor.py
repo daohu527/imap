@@ -164,9 +164,9 @@ class Opendrive2Apollo(Convertor):
 
 
   def outcoming_road_relationships(self, pb_lane, lane, predecessors, xodr_road):
-    print("--------")
+    # print("--------")
     for predecessor_road, dirct in predecessors:
-      print("{}->{}".format(predecessor_road.road_id, xodr_road.road_id))
+      # print("{}->{}".format(predecessor_road.road_id, xodr_road.road_id))
       section_id = len(predecessor_road.lanes.lane_sections) - 1
       # left
       if dirct == "predecessor":
