@@ -149,6 +149,28 @@ class Opendrive2Apollo(Convertor):
     segment.length = pb_lane.length
     pb_lane.right_boundary.length = pb_lane.length
 
+
+  def add_lane_sample(self, pb_lane, lane):
+    cur_lane_id = int(lane.lane_id)
+    total_s = lane.center_line[0].s
+    for point3d in lane.center_line:
+      lane_width = lane.get_width_by_s(point3d.s)
+
+      # 1. left sample
+      left_sample = pb_lane.left_sample.add()
+      left_sample.width = lane_width / 2
+      # 2. right sample
+      right_sample = pb_lane.right_sample.add()
+      right_sample.width = lane_width / 2
+      # left lane's should be reverse
+      if cur_lane_id > 0:
+        left_sample.s = total_s - point3d.s
+        right_sample.s = total_s - point3d.s
+      else:
+        left_sample.s = point3d.s
+        right_sample.s = point3d.s
+
+
   def add_lane_neighbors(self, pb_lane, xodr_road, idx, lane):
     for lane_id in lane.left_neighbor_forward:
       pb_lane.left_neighbor_forward_lane_id.add().id = \
@@ -276,6 +298,8 @@ class Opendrive2Apollo(Convertor):
     self.add_basic_info(pb_lane, xodr_road, idx, lane)
     # add boundary
     self.add_lane_boundary(pb_lane, lane)
+    # add lane sample
+    self.add_lane_sample(pb_lane, lane)
     # add neighbor
     self.add_lane_neighbors(pb_lane, xodr_road, idx, lane)
     # predecessor road
