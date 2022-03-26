@@ -211,11 +211,11 @@ class Lane:
     for point3d in left_boundary:
       width = self.get_width_by_s(point3d.s)
 
-      point3d = shift_t(point3d, width * self.direction)
-      self.right_boundary.append(point3d)
+      rpoint3d = shift_t(point3d, width * self.direction)
+      self.right_boundary.append(rpoint3d)
 
-      point3d = shift_t(point3d, width * self.direction / 2)
-      self.center_line.append(point3d)
+      cpoint3d = shift_t(point3d, width * self.direction / 2)
+      self.center_line.append(cpoint3d)
 
     # TODO(zero): debug use
     if self.lane_type == "driving":
