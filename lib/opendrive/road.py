@@ -69,9 +69,10 @@ class RoadLink:
     self.contact_point = contact_point
 
   def parse_from(self, raw_data):
-    self.element_type = raw_data.attrib.get('elementType')
-    self.element_id = raw_data.attrib.get('elementId')
-    self.contact_point = raw_data.attrib.get('contactPoint')
+    if raw_data is not None:
+      self.element_type = raw_data.attrib.get('elementType')
+      self.element_id = raw_data.attrib.get('elementId')
+      self.contact_point = raw_data.attrib.get('contactPoint')
 
 class Link:
   def __init__(self, predecessor = None, successor = None):
@@ -110,11 +111,6 @@ class Road:
 
     # private
     self.reference_line = []
-
-
-  def parse_lanes_in_section(self, lanes_in_section, direction):
-    for idx, lane in enumerate(lanes_in_section):
-      self.parse_lane(lane)
 
 
   def generate_lane_boundary(self):
