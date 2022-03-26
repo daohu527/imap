@@ -52,7 +52,7 @@ class Map:
           if successor_id not in self.junctions[road.junction_id].predecessor_dict:
             self.junctions[road.junction_id].predecessor_dict[successor_id] = []
           self.junctions[road.junction_id].predecessor_dict[successor_id]. \
-              append(road)
+              append([road, "successor"])
 
         predecessor_id = road.link.predecessor.element_id
         if not self.junctions[road.junction_id].is_incoming_road( \
@@ -60,7 +60,7 @@ class Map:
           if predecessor_id not in self.junctions[road.junction_id].predecessor_dict:
             self.junctions[road.junction_id].predecessor_dict[predecessor_id] = []
           self.junctions[road.junction_id].predecessor_dict[predecessor_id]. \
-              append(road)
+              append([road, "predecessor"])
 
     # add junction link
     for junction_id, junction in self.junctions.items():
