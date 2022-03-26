@@ -35,12 +35,12 @@ class Map:
   def draw_roads(self, ax, road_ids):
     pass
 
-  def draw_lanes(self, ax, lane_ids):
+  def draw_lanes(self, ax, lane_id):
     for lane in self.map_pb.lane:
-      if len(lane_ids) == 0 or lane.id.id in lane_ids:
-        # todo(zero): add option
-        # self._draw_lane_boundary(lane, ax, "yellow")
-        self._draw_lane_central(lane, ax, 'g')
+      if lane.id.id == lane_id:
+        self._draw_lane_central(lane, ax, 'r', 1)
+      else:
+        self._draw_lane_central(lane, ax, 'g', 0.5)
 
   def draw_junctions(self, ax, junction_ids):
     for junction in self.map_pb.junction:
@@ -106,7 +106,7 @@ class Map:
           ax.plot(px, py, ls='-', c=color_val, alpha=0.5, picker=True)
 
   @staticmethod
-  def _draw_lane_central(lane, ax, color_val):
+  def _draw_lane_central(lane, ax, color_val, alpha_val = 0.5):
     for curve in lane.central_curve.segment:
       if curve.HasField('line_segment'):
         px = []
@@ -114,7 +114,7 @@ class Map:
         for p in curve.line_segment.point:
           px.append(float(p.x))
           py.append(float(p.y))
-        line2d, = ax.plot(px, py, ls='-', linewidth=5, c=color_val, alpha=0.5, picker=True)
+        line2d, = ax.plot(px, py, ls='-', linewidth=5, c=color_val, alpha=alpha_val, picker=True)
 
         # add data to global_var
         global_var.set_artist_value(line2d, lane)

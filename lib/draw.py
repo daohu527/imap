@@ -24,19 +24,19 @@ fig, ax = plt.subplots()
 # plt.gca().set_aspect('equal', adjustable='box')
 
 
-def draw(hdmap):
+def draw(hdmap, lane_id):
     lane_ids = []
     junction_ids = []
-    hdmap.draw_lanes(ax, lane_ids)
+    hdmap.draw_lanes(ax, lane_id)
     hdmap.draw_junctions(ax, junction_ids)
     hdmap.draw_crosswalks(ax)
     hdmap.draw_stop_signs(ax)
     hdmap.draw_yields(ax)
 
-def show_map(map_path):
+def show_map(map_path, lane_id):
     hdmap=Map()
     hdmap.load(map_path)
-    draw(hdmap)
+    draw(hdmap, lane_id)
     # max windows
     # manager=plt.get_current_fig_manager()
     # manager.window.showMaximized()

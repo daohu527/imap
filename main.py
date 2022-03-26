@@ -45,6 +45,9 @@ if __name__ == "__main__":
     parser.add_argument(
         "-m", "--map", action="store", type=str, required=False,
         help="Specify the map file in txt or binary format")
+    parser.add_argument(
+        "-l", "--lane", action="store", type=str, required=False,
+        help="Find lane by lane id")
 
     parser.add_argument(
         "-f", "--format", action="store", type=str, required=False,
@@ -68,7 +71,7 @@ if __name__ == "__main__":
         suffix = args.map.split(".")[1]
         if suffix == "bin" or suffix == "txt":
             add_editor()
-            show_map(args.map)
+            show_map(args.map, args.lane)
         elif suffix == "xodr":
             show_open_drive_map()
         else:
