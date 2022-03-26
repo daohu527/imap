@@ -47,8 +47,20 @@ class Map:
       # add connect relation in junctions
       if road.junction_id != "-1":
         successor_id = road.link.successor.element_id
-        predecessor_list = self.junctions[road.junction_id].predecessor_dict.get(successor_id, [])
-        predecessor_list.append({self.roads[road.link.predecessor.element_id], road.link.predecessor.contact_point})
+        if not self.junctions[road.junction_id].is_incoming_road( \
+                  successor_id, road.road_id):
+          if successor_id not in self.junctions[road.junction_id].predecessor_dict:
+            self.junctions[road.junction_id].predecessor_dict[successor_id] = []
+          self.junctions[road.junction_id].predecessor_dict[successor_id]. \
+              append(road)
+
+        predecessor_id = road.link.predecessor.element_id
+        if not self.junctions[road.junction_id].is_incoming_road( \
+                  predecessor_id, road.road_id):
+          if predecessor_id not in self.junctions[road.junction_id].predecessor_dict:
+            self.junctions[road.junction_id].predecessor_dict[predecessor_id] = []
+          self.junctions[road.junction_id].predecessor_dict[predecessor_id]. \
+              append(road)
 
     # add junction link
     for junction_id, junction in self.junctions.items():

@@ -162,95 +162,116 @@ class Opendrive2Apollo(Convertor):
       pb_lane.left_neighbor_reverse_lane_id.add().id = \
           "road_{}_lane_{}_{}".format(xodr_road.road_id, idx, lane_id)
 
+
+  def add_junction_relationships(self, pb_lane, xodr_road, lane_section, idx, lane):
+    cur_n = len(xodr_road.lanes.lane_sections)
+    if idx != 0 and idx != cur_n - 1:
+      return
+
+    # junction
+    predecessor_junction = xodr_road.link.predecessor_junction
+    if predecessor_junction is not None:
+      # incoming_road
+      for connection in predecessor_junction.connections:
+        if connection.lane_link.from_id == lane.lane_id and \
+            connection.incoming_road == xodr_road.road_id:
+          section_id = len(connection.connecting_road_obj.lanes.lane_sections) - 1
+          pb_lane.successor_id.add().id = "road_{}_lane_{}_{}".format( \
+              connection.connecting_road, section_id, connection.lane_link.to_id)
+      # outcoming_road
+      predecessors = predecessor_junction.get_predecessors(xodr_road.road_id)
+      for predecessor_road in predecessors:
+        print("{}->{}".format(predecessor_road.road_id, xodr_road.road_id))
+        section_id = len(predecessor_road.lanes.lane_sections) - 1
+        for predecessor_lane in predecessor_road.lanes.lane_sections[section_id].left:
+          if predecessor_lane.link.successor.link_id == lane.lane_id:
+            pb_lane.predecessor_id.add().id = "road_{}_lane_{}_{}".format( \
+                predecessor_road.road_id, section_id, predecessor_lane.lane_id)
+
+        for predecessor_lane in predecessor_road.lanes.lane_sections[section_id].right:
+          if predecessor_lane.link.successor.link_id == lane.lane_id:
+            pb_lane.predecessor_id.add().id = "road_{}_lane_{}_{}".format( \
+                predecessor_road.road_id, section_id, predecessor_lane.lane_id)
+
+    # junction
+    successor_junction = xodr_road.link.successor_junction
+    if successor_junction is not None:
+      # incoming_road
+      for connection in successor_junction.connections:
+        if connection.lane_link.from_id == lane.lane_id and \
+            connection.incoming_road == xodr_road.road_id:
+          section_id = 0
+          if connection.contact_point == "end":
+            section_id = len(connection.connecting_road_obj.lanes.lane_sections) - 1
+          pb_lane.successor_id.add().id = "road_{}_lane_{}_{}".format( \
+              connection.connecting_road, section_id, connection.lane_link.to_id)
+      # outcoming_road
+      predecessors = successor_junction.get_predecessors(xodr_road.road_id)
+      for predecessor_road in predecessors:
+        section_id = len(predecessor_road.lanes.lane_sections) - 1
+        for predecessor_lane in predecessor_road.lanes.lane_sections[section_id].left:
+          if predecessor_lane.link.successor.link_id == lane.lane_id:
+            pb_lane.predecessor_id.add().id = "road_{}_lane_{}_{}".format( \
+                predecessor_road.road_id, section_id, predecessor_lane.lane_id)
+
+        for predecessor_lane in predecessor_road.lanes.lane_sections[section_id].right:
+          if predecessor_lane.link.successor.link_id == lane.lane_id:
+            pb_lane.predecessor_id.add().id = "road_{}_lane_{}_{}".format( \
+                predecessor_road.road_id, section_id, predecessor_lane.lane_id)
+
+
   def add_lane_relationships(self, pb_lane, xodr_road, lane_section, idx, lane):
     cur_n = len(xodr_road.lanes.lane_sections)
+    cur_lane_id = int(lane.lane_id)
+    # External connection
     if idx == 0:
-      # road link
-      predecessor_road = xodr_road.link.predecessor_road
-      if predecessor_road and lane.link.predecessor:
-        n = len(predecessor_road.lanes.lane_sections)
-        pb_lane.predecessor_id.add().id = "road_{}_lane_{}_{}".format( \
-            predecessor_road.road_id, n-1, lane.link.predecessor.link_id)
-      if lane.link.successor:
-        pb_lane.successor_id.add().id = "road_{}_lane_{}_{}".format( \
-            xodr_road.road_id, idx + 1, lane.link.successor.link_id)
-      # junction
-      predecessor_junction = xodr_road.link.predecessor_junction
-      if predecessor_junction is not None:
-        # incoming_road
-        for connection in predecessor_junction.connections:
-          if connection.lane_link.from_id == lane.lane_id and \
-             connection.incoming_road == xodr_road.road_id:
-            section_id = 0
-            if connection.contact_point == "end":
-              section_id = len(connection.connecting_road_obj.lanes.lane_sections) - 1
-            pb_lane.successor_id.add().id = "road_{}_lane_{}_{}".format( \
-                connection.connecting_road, section_id, connection.lane_link.to_id)
-        # outcoming_road
-        predecessors = predecessor_junction.get_predecessors(xodr_road.road_id)
-        for predecessor_road, contact_point in predecessors:
-          for predecessor_lane in predecessor_road.lanes.lane_sections.left:
-            if predecessor_lane.link.successor.link_id == lane.lane_id:
-              section_id = 0
-              if contact_point == "end":
-                section_id = len(predecessor_road.lanes.lane_sections) - 1
-              pb_lane.predecessor_id.add().id = "road_{}_lane_{}_{}".format( \
-                  predecessor_road.road_id, section_id, predecessor_lane.lane_id)
+      # predecessor road
+      predecessor_road_id = xodr_road.link.predecessor.element_id
+      if predecessor_road_id and lane.link.predecessor:
+        section_id = 0
+        if xodr_road.link.predecessor.contact_point == "start":
+          section_id = 0
+        elif xodr_road.link.predecessor.contact_point == "end":
+          section_id = len(xodr_road.link.predecessor_road.lanes.lane_sections) - 1
 
-          for predecessor_lane in predecessor_road.lanes.lane_sections.right:
-            if predecessor_lane.link.successor.link_id == lane.lane_id:
-              section_id = 0
-              if contact_point == "end":
-                section_id = len(predecessor_road.lanes.lane_sections) - 1
-              pb_lane.predecessor_id.add().id = "road_{}_lane_{}_{}".format( \
-                  predecessor_road.road_id, section_id, predecessor_lane.lane_id)
-    # successor road
+        if cur_lane_id < 0:
+          pb_lane.predecessor_id.add().id = "road_{}_lane_{}_{}".format( \
+              predecessor_road_id, section_id, lane.link.predecessor.link_id)
+        elif cur_lane_id > 0:
+          pb_lane.successor_id.add().id = "road_{}_lane_{}_{}".format( \
+              predecessor_road_id, section_id, lane.link.predecessor.link_id)
     if idx == cur_n - 1:
-      if lane.link.predecessor:
+      # successor road
+      successor_road_id = xodr_road.link.successor.element_id
+      if successor_road_id and lane.link.successor:
+        section_id = 0
+        if xodr_road.link.successor.contact_point == "start":
+          section_id = 0
+        elif xodr_road.link.successor.contact_point == "end":
+          section_id = len(xodr_road.link.successor_road.lanes.lane_sections) - 1
+
+        if cur_lane_id < 0:
+          pb_lane.successor_id.add().id = "road_{}_lane_{}_{}".format( \
+              successor_road_id, section_id, lane.link.successor.link_id)
+        elif cur_lane_id > 0:
+          pb_lane.predecessor_id.add().id = "road_{}_lane_{}_{}".format( \
+              successor_road_id, section_id, lane.link.successor.link_id)
+    # Internal connection
+    if idx > 0 and lane.link.predecessor:
+      if cur_lane_id < 0:
         pb_lane.predecessor_id.add().id = "road_{}_lane_{}_{}".format( \
             xodr_road.road_id, idx - 1, lane.link.predecessor.link_id)
-      if lane.link.successor:
+      elif cur_lane_id > 0:
         pb_lane.successor_id.add().id = "road_{}_lane_{}_{}".format( \
-            xodr_road.link.successor.element_id, 0, lane.link.successor.link_id)
-      # junction
-      successor_junction = xodr_road.link.successor_junction
-      if successor_junction is not None:
-        # incoming_road
-        for connection in successor_junction.connections:
-          if connection.lane_link.from_id == lane.lane_id and \
-             connection.incoming_road == xodr_road.road_id:
-            section_id = 0
-            if connection.contact_point == "end":
-              section_id = len(connection.connecting_road_obj.lanes.lane_sections) - 1
-            pb_lane.successor_id.add().id = "road_{}_lane_{}_{}".format( \
-                connection.connecting_road, section_id, connection.lane_link.to_id)
-        # outcoming_road
-        predecessors = successor_junction.get_predecessors(xodr_road.road_id)
-        for predecessor_road, contact_point in predecessors:
-          for predecessor_lane in predecessor_road.lanes.lane_sections.left:
-            if predecessor_lane.link.successor.link_id == lane.lane_id:
-              section_id = 0
-              if contact_point == "end":
-                section_id = len(predecessor_road.lanes.lane_sections) - 1
-              pb_lane.predecessor_id.add().id = "road_{}_lane_{}_{}".format( \
-                  predecessor_road.road_id, section_id, predecessor_lane.lane_id)
-
-          for predecessor_lane in predecessor_road.lanes.lane_sections.right:
-            if predecessor_lane.link.successor.link_id == lane.lane_id:
-              section_id = 0
-              if contact_point == "end":
-                section_id = len(predecessor_road.lanes.lane_sections) - 1
-              pb_lane.predecessor_id.add().id = "road_{}_lane_{}_{}".format( \
-                  predecessor_road.road_id, section_id, predecessor_lane.lane_id)
-
-
-    if idx > 0 and idx < cur_n - 1:
-      if lane.link.predecessor:
-        pb_lane.predecessor_id.add().id = "road_{}_lane_{}_{}".format( \
             xodr_road.road_id, idx - 1, lane.link.predecessor.link_id)
-      if lane.link.successor:
+    if idx < cur_n - 1 and lane.link.successor:
+      if cur_lane_id < 0:
         pb_lane.successor_id.add().id = "road_{}_lane_{}_{}".format( \
             xodr_road.road_id, idx + 1, lane.link.successor.link_id)
+      elif cur_lane_id > 0:
+        pb_lane.predecessor_id.add().id = "road_{}_lane_{}_{}".format( \
+            xodr_road.road_id, idx + 1, lane.link.successor.link_id)
+
 
   def create_lane(self, xodr_road, lane_section, idx, lane):
     if self.only_driving and lane.lane_type != "driving":
@@ -264,6 +285,7 @@ class Opendrive2Apollo(Convertor):
     self.add_lane_neighbors(pb_lane, xodr_road, idx, lane)
     # predecessor road
     self.add_lane_relationships(pb_lane, xodr_road, lane_section, idx, lane)
+    self.add_junction_relationships(pb_lane, xodr_road, lane_section, idx, lane)
 
   def convert_lane(self, xodr_road):
     for idx, lane_section in enumerate(xodr_road.lanes.lane_sections):

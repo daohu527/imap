@@ -21,8 +21,9 @@ class Link:
     self.to_id = to_id
 
   def parse_from(self, raw_lane_link):
-    self.from_id = raw_lane_link.attrib.get('from')
-    self.to_id = raw_lane_link.attrib.get('to')
+    if raw_lane_link is not None:
+      self.from_id = raw_lane_link.attrib.get('from')
+      self.to_id = raw_lane_link.attrib.get('to')
 
 
 class Connection:
@@ -66,16 +67,16 @@ class Junction:
       connection = Connection(connection_id, connection_type, incoming_road, \
                       connecting_road, contact_point)
 
-      raw_lane_link = raw_junction.find('laneLink')
-      if raw_lane_link is not None:
-        connection.lane_link.parse_from(raw_lane_link)
+      raw_lane_link = raw_connection.find('laneLink')
+      connection.lane_link.parse_from(raw_lane_link)
       self.add_connection(connection)
 
   def get_predecessors(self, road_id):
     return self.predecessor_dict.get(road_id, [])
 
-  def is_incoming_road(self, road_id):
+  def is_incoming_road(self, incoming_road, connecting_road):
     for connection in self.connections:
-      if connection.incoming_road == road_id:
+      if connection.incoming_road == incoming_road and \
+         connection.connecting_road == connecting_road:
         return True
     return False
