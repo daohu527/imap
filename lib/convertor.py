@@ -164,33 +164,23 @@ class Opendrive2Apollo(Convertor):
 
 
   def outcoming_road_relationships(self, pb_lane, lane, predecessors, xodr_road):
+    print("--------")
     for predecessor_road, dirct in predecessors:
-      # print("{}->{}".format(predecessor_road.road_id, xodr_road.road_id))
+      print("{}->{}".format(predecessor_road.road_id, xodr_road.road_id))
       section_id = len(predecessor_road.lanes.lane_sections) - 1
       # left
-      for predecessor_lane in predecessor_road.lanes.lane_sections[section_id].left:
-        if dirct == "predecessor":
+      if dirct == "predecessor":
+        for predecessor_lane in predecessor_road.lanes.lane_sections[0].left:
           if predecessor_lane.link.predecessor.link_id == lane.lane_id:
             pb_lane.predecessor_id.add().id = "road_{}_lane_{}_{}".format( \
-                predecessor_road.road_id, section_id, predecessor_lane.lane_id)
-        elif dirct == "successor":
+                predecessor_road.road_id, 0, predecessor_lane.lane_id)
+      elif dirct == "successor":
+        for predecessor_lane in predecessor_road.lanes.lane_sections[section_id].right:
           if predecessor_lane.link.successor.link_id == lane.lane_id:
             pb_lane.predecessor_id.add().id = "road_{}_lane_{}_{}".format( \
                 predecessor_road.road_id, section_id, predecessor_lane.lane_id)
-        else:
-          print("Unknown direction!")
-      # right
-      for predecessor_lane in predecessor_road.lanes.lane_sections[section_id].right:
-        if dirct == "predecessor":
-          if predecessor_lane.link.predecessor.link_id == lane.lane_id:
-            pb_lane.predecessor_id.add().id = "road_{}_lane_{}_{}".format( \
-                predecessor_road.road_id, section_id, predecessor_lane.lane_id)
-        elif dirct == "successor":
-          if predecessor_lane.link.successor.link_id == lane.lane_id:
-            pb_lane.predecessor_id.add().id = "road_{}_lane_{}_{}".format( \
-                predecessor_road.road_id, section_id, predecessor_lane.lane_id)
-        else:
-          print("Unknown direction!")
+      else:
+        print("Unknown direction!")
 
 
   def add_junction_relationships(self, pb_lane, xodr_road, lane_section, idx, lane):
