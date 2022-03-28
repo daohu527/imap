@@ -65,12 +65,12 @@ class Map:
       # add connected roads to junctions
       if road.link.predecessor.element_type == "junction":
         junction_id = road.link.predecessor.element_id
-        roads_to_junction = self.junctions[junction_id].roads_to_junction
-        roads_to_junction.append([road, "predecessor"])
+        connected_roads = self.junctions[junction_id].connected_roads
+        connected_roads.append([road, "predecessor"])
       if road.link.successor.element_type == "junction":
         junction_id = road.link.successor.element_id
-        roads_to_junction = self.junctions[junction_id].roads_to_junction
-        roads_to_junction.append([road, "successor"])
+        connected_roads = self.junctions[junction_id].connected_roads
+        connected_roads.append([road, "successor"])
 
     # add junction link
     for junction_id, junction in self.junctions.items():

@@ -41,3 +41,10 @@ def convex_hull(points):
     l = reduce(_keep_left, points, [])
     u = reduce(_keep_left, reversed(points), [])
     return l.extend(u[i] for i in range(1, len(u) - 1)) or l
+
+
+if __name__ == '__main__':
+    points = [[0,0],[0,1],[1,0],[1,1],[2,2]]
+    polygon = convex_hull(points)
+    for x, y in polygon:
+        print("{}, {}".format(x, y))
