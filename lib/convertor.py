@@ -15,7 +15,6 @@
 # limitations under the License.
 
 
-from turtle import right
 from modules.map.proto import map_pb2
 from modules.map.proto import map_road_pb2
 from modules.map.proto import map_lane_pb2
@@ -325,9 +324,9 @@ class Opendrive2Apollo(Convertor):
 
   def add_road_section_boundary(self, pb_road_section, lane_section):
     left_boundary_edge = pb_road_section.boundary.outer_polygon.edge.add()
-    left_boundary_edge.type = map_lane_pb2.Road.LEFT_BOUNDARY
+    left_boundary_edge.type = map_road_pb2.BoundaryEdge.LEFT_BOUNDARY
     right_boundary_edge = pb_road_section.boundary.outer_polygon.edge.add()
-    right_boundary_edge.type = map_lane_pb2.Road.RIGHT_BOUNDARY
+    right_boundary_edge.type = map_road_pb2.BoundaryEdge.RIGHT_BOUNDARY
 
     if lane_section.left and lane_section.right:
       leftmost_boundary = lane_section.left[0].left_boundary[::-1]
@@ -356,16 +355,19 @@ class Opendrive2Apollo(Convertor):
   def convert_lane(self, xodr_road, pb_road):
     for idx, lane_section in enumerate(xodr_road.lanes.lane_sections):
       pb_road_section = pb_road.section.add()
-      pb_road_section.id.id = idx
+      pb_road_section.id.id = str(idx)
       self.add_road_section_boundary(pb_road_section, lane_section)
 
       for lane in lane_section.left:
         pb_lane = self.create_lane(xodr_road, lane_section, idx, lane)
-        pb_road_section.lane_id.add().id = pb_lane.id.id
+        # Not driving road is None
+        if pb_lane is not None:
+          pb_road_section.lane_id.add().id = pb_lane.id.id
 
       for lane in lane_section.right:
         pb_lane = self.create_lane(xodr_road, lane_section, idx, lane)
-        pb_road_section.lane_id.add().id = pb_lane.id.id
+        if pb_lane is not None:
+          pb_road_section.lane_id.add().id = pb_lane.id.id
 
 
   def convert_roads(self):
