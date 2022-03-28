@@ -49,6 +49,7 @@ class Junction:
 
     # private
     self.predecessor_dict = {}
+    self.connected_roads = []
 
   def add_connection(self, connection):
     self.connections.append(connection)
