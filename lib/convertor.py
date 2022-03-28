@@ -15,6 +15,7 @@
 # limitations under the License.
 
 
+from turtle import right
 from modules.map.proto import map_pb2
 from modules.map.proto import map_road_pb2
 from modules.map.proto import map_lane_pb2
@@ -307,21 +308,72 @@ class Opendrive2Apollo(Convertor):
     # predecessor road
     self.add_lane_relationships(pb_lane, xodr_road, lane_section, idx, lane)
     self.add_junction_relationships(pb_lane, xodr_road, lane_section, idx, lane)
+    return pb_lane
 
-  def convert_lane(self, xodr_road):
+
+  def add_road_section_curve(self, pb_boundary_edge, boundary, length):
+    segment = pb_boundary_edge.curve.segment.add()
+    for point3d in boundary:
+      point = segment.line_segment.point.add()
+      point.x, point.y = point3d.x, point3d.y
+    segment.s = 0
+    segment.start_position.x = boundary[0].x
+    segment.start_position.y = boundary[0].y
+    segment.start_position.z = boundary[0].z
+    segment.length = length
+
+
+  def add_road_section_boundary(self, pb_road_section, lane_section):
+    left_boundary_edge = pb_road_section.boundary.outer_polygon.edge.add()
+    left_boundary_edge.type = map_lane_pb2.Road.LEFT_BOUNDARY
+    right_boundary_edge = pb_road_section.boundary.outer_polygon.edge.add()
+    right_boundary_edge.type = map_lane_pb2.Road.RIGHT_BOUNDARY
+
+    if lane_section.left and lane_section.right:
+      leftmost_boundary = lane_section.left[0].left_boundary[::-1]
+      leftmost_length = lane_section.left[0].length
+      rightmost_boundary = lane_section.right[-1].right_boundary
+      rightmost_length = lane_section.right[-1].length
+    elif lane_section.left:
+      leftmost_boundary = lane_section.left[0].left_boundary[::-1]
+      leftmost_length = lane_section.left[0].length
+      rightmost_boundary = lane_section.left[-1].right_boundary[::-1]
+      rightmost_length = lane_section.left[-1].length
+    elif lane_section.right:
+      leftmost_boundary = lane_section.right[0].left_boundary
+      leftmost_length = lane_section.right[0].length
+      rightmost_boundary = lane_section.right[-1].right_boundary
+      rightmost_length = lane_section.right[-1].length
+    else:
+      return
+
+    self.add_road_section_curve(left_boundary_edge, \
+        leftmost_boundary, leftmost_length)
+    self.add_road_section_curve(right_boundary_edge, \
+        rightmost_boundary, rightmost_length)
+
+
+  def convert_lane(self, xodr_road, pb_road):
     for idx, lane_section in enumerate(xodr_road.lanes.lane_sections):
+      pb_road_section = pb_road.section.add()
+      pb_road_section.id.id = idx
+      self.add_road_section_boundary(pb_road_section, lane_section)
+
       for lane in lane_section.left:
-        self.create_lane(xodr_road, lane_section, idx, lane)
+        pb_lane = self.create_lane(xodr_road, lane_section, idx, lane)
+        pb_road_section.lane_id.add().id = pb_lane.id.id
 
       for lane in lane_section.right:
-        self.create_lane(xodr_road, lane_section, idx, lane)
+        pb_lane = self.create_lane(xodr_road, lane_section, idx, lane)
+        pb_road_section.lane_id.add().id = pb_lane.id.id
 
 
   def convert_roads(self):
     for _, xodr_road in self.xodr_map.roads.items():
       pb_road = self.pb_map.road.add()
       pb_road.id.id = xodr_road.road_id
-      pb_road.junction_id.id = xodr_road.junction_id
+      if xodr_road.junction_id != "-1":
+        pb_road.junction_id.id = xodr_road.junction_id
 
       # The definition of road type is inconsistent
       if xodr_road.road_type.road_type is None:
@@ -334,7 +386,7 @@ class Opendrive2Apollo(Convertor):
 
       xodr_road.process_lanes()
 
-      self.convert_lane(xodr_road)
+      self.convert_lane(xodr_road, pb_road)
 
 
   def construct_junction_polygon(self, xodr_junction):
@@ -352,11 +404,15 @@ class Opendrive2Apollo(Convertor):
     for _, xodr_junction in self.xodr_map.junctions.items():
       pb_junction = self.pb_map.junction.add()
       pb_junction.id.id = xodr_junction.junction_id
-      # TODO(zero): pb_junction polygon
       polygon = self.construct_junction_polygon(xodr_junction)
       for x, y in polygon:
         pb_point = pb_junction.polygon.point.add()
         pb_point.x, pb_point.y, pb_point.z = x, y, 0
+
+
+  def convert_overlap(self):
+    # lane_overlap_info
+    pass
 
 
   def convert(self):
@@ -364,6 +420,7 @@ class Opendrive2Apollo(Convertor):
     # Don't change the order. "convert_roads" must before "convert_junctions"
     self.convert_roads()
     self.convert_junctions()
+    self.convert_overlap()
     show()
 
 

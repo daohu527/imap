@@ -29,10 +29,10 @@ We do not currently support these two formats, because the coordinates need to b
 2. debug mode support `if __debug__:`
 
 #### next
-1. add predecessor_id, successor_id, left_neighbor_forward_lane_id, right_neighbor_forward_lane_id
+1. add left_neighbor_forward_lane_id, right_neighbor_forward_lane_id
 2. lane LaneTurn
-3. junctions
-4. signal
+3. overlap
+4. signal and stopline
 
 ## refactor
 1. First parse opendrive and then use object to convert to apollo.
