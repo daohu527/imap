@@ -188,3 +188,5 @@ class Road:
     self.lanes.process_lane_sections(self.reference_line)
 
 
+  def get_cross_section(self, relation):
+    return self.lanes.get_cross_section(relation)

@@ -308,6 +308,16 @@ class LaneSection:
     for lane in self.right:
       left_boundary = lane.generate_boundary(left_boundary)
 
+  def get_cross_section(self, direction):
+    leftmost_lane = self.left[0]
+    rightmost_lane = self.right[-1]
+    if direction == "start":
+      return [leftmost_lane.left_boundary[-1], rightmost_lane.right_boundary[0]]
+    elif direction == "end":
+      return [leftmost_lane.left_boundary[0], rightmost_lane.right_boundary[-1]]
+    else:
+      return []
+
 
 # Lanes
 class Lanes:
@@ -349,3 +359,12 @@ class Lanes:
   def process_lane_sections(self, reference_line):
     for lane_section in self.lane_sections:
       lane_section.process_lane(reference_line)
+
+  def get_cross_section(self, relation):
+    if relation == "predecessor":
+      return self.lane_sections[0].get_cross_section("start")
+    elif relation == "successor":
+      return self.lane_sections[-1].get_cross_section("end")
+    else:
+      print("Unknown relation!")
+      return []
