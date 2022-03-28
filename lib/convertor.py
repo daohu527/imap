@@ -195,12 +195,14 @@ class Opendrive2Apollo(Convertor):
       # left
       if dirct == "predecessor":
         for predecessor_lane in predecessor_road.lanes.lane_sections[0].left:
-          if predecessor_lane.link.predecessor.link_id == lane.lane_id:
+          if predecessor_lane.link.predecessor and \
+             predecessor_lane.link.predecessor.link_id == lane.lane_id:
             pb_lane.predecessor_id.add().id = "road_{}_lane_{}_{}".format( \
                 predecessor_road.road_id, 0, predecessor_lane.lane_id)
       elif dirct == "successor":
         for predecessor_lane in predecessor_road.lanes.lane_sections[section_id].right:
-          if predecessor_lane.link.successor.link_id == lane.lane_id:
+          if predecessor_lane.link.successor and \
+            predecessor_lane.link.successor.link_id == lane.lane_id:
             pb_lane.predecessor_id.add().id = "road_{}_lane_{}_{}".format( \
                 predecessor_road.road_id, section_id, predecessor_lane.lane_id)
       else:
@@ -328,22 +330,12 @@ class Opendrive2Apollo(Convertor):
     right_boundary_edge = pb_road_section.boundary.outer_polygon.edge.add()
     right_boundary_edge.type = map_road_pb2.BoundaryEdge.RIGHT_BOUNDARY
 
-    if lane_section.left and lane_section.right:
-      leftmost_boundary = lane_section.left[0].left_boundary[::-1]
-      leftmost_length = lane_section.left[0].length
-      rightmost_boundary = lane_section.right[-1].right_boundary
-      rightmost_length = lane_section.right[-1].length
-    elif lane_section.left:
-      leftmost_boundary = lane_section.left[0].left_boundary[::-1]
-      leftmost_length = lane_section.left[0].length
-      rightmost_boundary = lane_section.left[-1].right_boundary[::-1]
-      rightmost_length = lane_section.left[-1].length
-    elif lane_section.right:
-      leftmost_boundary = lane_section.right[0].left_boundary
-      leftmost_length = lane_section.right[0].length
-      rightmost_boundary = lane_section.right[-1].right_boundary
-      rightmost_length = lane_section.right[-1].length
-    else:
+
+    leftmost_boundary, leftmost_length = lane_section.leftmost_boundary()
+    rightmost_boundary, rightmost_length = lane_section.rightmost_boundary()
+
+    if not leftmost_boundary or not rightmost_boundary:
+      # TODO(zero): No leftmost_boundary and rightmost_boundary?
       return
 
     self.add_road_section_curve(left_boundary_edge, \
@@ -428,4 +420,3 @@ class Opendrive2Apollo(Convertor):
 
   def save_map(self):
     write_pb_to_text_file(self.pb_map, self.output_file_name)
-

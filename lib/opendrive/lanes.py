@@ -336,6 +336,27 @@ class LaneSection:
     else:
       return []
 
+  def leftmost_boundary(self):
+    for lane in self.left:
+      if lane.lane_type == "driving":
+        return lane.right_boundary[::-1], lane.length
+
+    for lane in self.right:
+      if lane.lane_type == "driving":
+        return lane.left_boundary, lane.length
+
+    return [], 0
+
+  def rightmost_boundary(self):
+    for lane in self.right[::-1]:
+      if lane.lane_type == "driving":
+        return lane.right_boundary, lane.length
+
+    for lane in self.left[::-1]:
+      if lane.lane_type == "driving":
+        return lane.left_boundary[::-1], lane.length
+
+    return [], 0
 
 # Lanes
 class Lanes:

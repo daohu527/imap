@@ -178,6 +178,9 @@ class Road:
       points = geometry.sampling(SAMPLING_LENGTH)
       self.reference_line.extend(points)
 
+    assert len(self.reference_line) != 0, \
+        "Road {} reference line is empty!".format(self.road_id)
+
   def add_offset_to_reference_line(self):
     for idx in range(len(self.reference_line)):
       offset = self.lanes.get_offset_by_s(self.reference_line[idx].s)
