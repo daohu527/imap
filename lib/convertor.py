@@ -23,7 +23,7 @@ from lib.opendrive.map import Map
 from lib.proto_utils import write_pb_to_text_file
 
 from lib.draw import draw_line, show
-from convex_hull import convex_hull
+from lib.convex_hull import convex_hull
 
 
 def to_pb_lane_type(open_drive_type):
@@ -77,8 +77,6 @@ class Opendrive2Apollo(Convertor):
 
     self.pb_map = map_pb2.Map()
     self.output_file_name = output_file_name
-
-    self.roads_to_junction = {}
 
 
   def set_parameters(self, only_driving = True):
@@ -342,8 +340,9 @@ class Opendrive2Apollo(Convertor):
   def construct_junction_polygon(self, xodr_junction):
     points = []
     for road, relation in xodr_junction.connected_roads:
-      line = road.get_cross_section(relation)
-      points.extend(line)
+      start, end = road.get_cross_section(relation)
+      points.append([start.x, start.y])
+      points.append([end.x, end.y])
 
     # order
     return convex_hull(points)
@@ -355,15 +354,16 @@ class Opendrive2Apollo(Convertor):
       pb_junction.id.id = xodr_junction.junction_id
       # TODO(zero): pb_junction polygon
       polygon = self.construct_junction_polygon(xodr_junction)
-      for point3d in polygon:
+      for x, y in polygon:
         pb_point = pb_junction.polygon.point.add()
-        pb_point.x, pb_point.y, pb_point.z = point3d.x, point3d.y, 0
+        pb_point.x, pb_point.y, pb_point.z = x, y, 0
 
 
   def convert(self):
     self.convert_header()
-    self.convert_junctions()
+    # Don't change the order. "convert_roads" must before "convert_junctions"
     self.convert_roads()
+    self.convert_junctions()
     show()
 
 
