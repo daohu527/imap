@@ -312,10 +312,10 @@ class LaneSection:
     if direction == "start":
       if self.left and self.right:
         leftmost_lane, rightmost_lane = self.left[0], self.right[-1]
-        return [leftmost_lane.left_boundary[-1], rightmost_lane.right_boundary[0]]
+        return [leftmost_lane.right_boundary[-1], rightmost_lane.right_boundary[0]]
       elif self.left:
         leftmost_lane, rightmost_lane = self.left[0], self.left[-1]
-        return [leftmost_lane.left_boundary[-1], rightmost_lane.right_boundary[-1]]
+        return [leftmost_lane.right_boundary[-1], rightmost_lane.left_boundary[-1]]
       elif self.right:
         leftmost_lane, rightmost_lane = self.right[0], self.right[-1]
         return [leftmost_lane.left_boundary[0], rightmost_lane.right_boundary[0]]
@@ -324,10 +324,10 @@ class LaneSection:
     elif direction == "end":
       if self.left and self.right:
         leftmost_lane, rightmost_lane = self.left[0], self.right[-1]
-        return [leftmost_lane.left_boundary[0], rightmost_lane.right_boundary[-1]]
+        return [leftmost_lane.right_boundary[0], rightmost_lane.right_boundary[-1]]
       elif self.left:
         leftmost_lane, rightmost_lane = self.left[0], self.left[-1]
-        return [leftmost_lane.left_boundary[0], rightmost_lane.right_boundary[0]]
+        return [leftmost_lane.right_boundary[0], rightmost_lane.left_boundary[0]]
       elif self.right:
         leftmost_lane, rightmost_lane = self.right[0], self.right[-1]
         return [leftmost_lane.left_boundary[-1], rightmost_lane.right_boundary[-1]]
