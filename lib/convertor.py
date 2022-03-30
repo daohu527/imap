@@ -404,6 +404,22 @@ class Opendrive2Apollo(Convertor):
         pb_point.x, pb_point.y, pb_point.z = x, y, 0
 
 
+  def convert_signal(self):
+    for _, xodr_road in self.xodr_map.roads.items():
+      for signal in xodr_road.signals.signals:
+        pb_signal = self.pb_map.signal.add()
+        pb_signal.id.id = signal.signal_id
+        # pb_signal.boundary
+        # pb_subsignal = pb_signal.subsignal.add()
+        # pb_subsignal.id.id =
+        # pb_subsignal.type =
+        # pb_subsignal.location =
+
+        # pb_signal.type
+        # pb_signal.stop_line
+        # pb_signal.sign_info
+
+
   def convert_overlap(self):
     # lane_overlap_info
     pass
@@ -414,6 +430,7 @@ class Opendrive2Apollo(Convertor):
     # Don't change the order. "convert_roads" must before "convert_junctions"
     self.convert_roads()
     self.convert_junctions()
+    self.convert_signal()
     self.convert_overlap()
     show()
 
