@@ -21,6 +21,8 @@ from lib.opendrive.common import convert_speed
 from lib.opendrive.plan_view import PlanView
 from lib.opendrive.profile import ElevationProfile, LateralProfile
 from lib.opendrive.lanes import Lanes
+from lib.opendrive.signals import Signals
+from lib.opendrive.objects import Objects
 
 
 GEOMETRY_SKIP_LENGTH = 0.01
@@ -108,6 +110,8 @@ class Road:
     self.elevation_profile = ElevationProfile()
     self.lateral_profile = LateralProfile()
     self.lanes = Lanes()
+    self.objects = Objects()
+    self.signals = Signals()
 
     # private
     self.reference_line = []
@@ -166,6 +170,14 @@ class Road:
     raw_lanes = raw_road.find('lanes')
     assert raw_lanes is not None, "Road {} has no lanes!".format(self.road_id)
     self.lanes.parse_from(raw_lanes)
+
+    # objects
+    raw_objects = raw_road.find('objects')
+    self.objects.parse_from(raw_objects)
+
+    # signals
+    raw_signals = raw_road.find('signals')
+    self.signals.parse_from(raw_signals)
 
     # post processing
     self.post_processing()
