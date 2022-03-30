@@ -205,3 +205,8 @@ class Road:
 
   def get_cross_section(self, relation):
     return self.lanes.get_cross_section(relation)
+
+  def get_xy_by_s(self, s):
+    for geometry in self.plan_view.geometrys[::-1]:
+      if s >= geometry.s:
+        return geometry.x, geometry.y

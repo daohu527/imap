@@ -409,7 +409,8 @@ class Opendrive2Apollo(Convertor):
       for signal in xodr_road.signals.signals:
         pb_signal = self.pb_map.signal.add()
         pb_signal.id.id = signal.signal_id
-        # pb_signal.boundary
+        x, y = xodr_road.get_xy_by_s(signal.s)
+        pb_signal.boundary = signal.get_boundary(x, y)
         # pb_subsignal = pb_signal.subsignal.add()
         # pb_subsignal.id.id =
         # pb_subsignal.type =

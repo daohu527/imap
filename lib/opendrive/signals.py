@@ -40,6 +40,10 @@ class Signal:
     self.height = height
     self.width = width
 
+    # private
+    self.boundary = None
+
+
   def parse_from(self, raw_signal):
     if raw_signal is not None:
       self.name = raw_signal.attrib.get('name')
@@ -61,6 +65,17 @@ class Signal:
         self.height = float(raw_signal.attrib.get('height'))
       if raw_signal.attrib.get('width') is not None:
         self.width = float(raw_signal.attrib.get('width'))
+      self.generate_boundary()
+
+  def generate_boundary(self):
+    if self.width and self.height:
+      self.boundary = [[0, self.width/2, 0], \
+                       [0, -self.width/2, 0], \
+                       [0, -self.width/2, self.height], \
+                       [0, self.width/2, self.height]]
+
+  def get_boundary(self, x, y):
+    pass
 
 
 class Signals:
