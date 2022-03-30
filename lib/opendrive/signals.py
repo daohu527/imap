@@ -50,15 +50,17 @@ class Signal:
       self.hOffset = float(raw_signal.attrib.get('hOffset'))
       self.roll = float(raw_signal.attrib.get('roll'))
       self.pitch = float(raw_signal.attrib.get('pitch'))
-      self.orientation = float(raw_signal.attrib.get('orientation'))
+      self.orientation = raw_signal.attrib.get('orientation')
       self.dynamic = raw_signal.attrib.get('dynamic')
       self.country = raw_signal.attrib.get('country')
       self.signal_type = float(raw_signal.attrib.get('type'))
       self.subtype = float(raw_signal.attrib.get('subtype'))
       self.value = float(raw_signal.attrib.get('value'))
       self.text = raw_signal.attrib.get('text')
-      self.height = float(raw_signal.attrib.get('height'))
-      self.width = float(raw_signal.attrib.get('width'))
+      if raw_signal.attrib.get('height') is not None:
+        self.height = float(raw_signal.attrib.get('height'))
+      if raw_signal.attrib.get('width') is not None:
+        self.width = float(raw_signal.attrib.get('width'))
 
 
 class Signals:

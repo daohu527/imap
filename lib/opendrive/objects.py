@@ -45,7 +45,7 @@ class Object:
       self.hdg = float(raw_object.attrib.get('hdg'))
       self.roll = float(raw_object.attrib.get('roll'))
       self.pitch = float(raw_object.attrib.get('pitch'))
-      self.orientation = float(raw_object.attrib.get('orientation'))
+      self.orientation = raw_object.attrib.get('orientation')
       self.object_type = float(raw_object.attrib.get('type'))
       self.height = float(raw_object.attrib.get('height'))
       self.width = float(raw_object.attrib.get('width'))
