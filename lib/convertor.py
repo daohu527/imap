@@ -84,8 +84,10 @@ class Opendrive2Apollo(Convertor):
 
 
   def convert_header(self):
-    self.pb_map.header.version = self.xodr_map.header.version
-    self.pb_map.header.date = self.xodr_map.header.date
+    if self.xodr_map.header.version:
+      self.pb_map.header.version = self.xodr_map.header.version
+    if self.xodr_map.header.date:
+      self.pb_map.header.date = self.xodr_map.header.date
     proj = self.xodr_map.header.parse_geo_reference()
     if proj is not None:
       self.pb_map.header.projection.proj = proj
@@ -96,12 +98,18 @@ class Opendrive2Apollo(Convertor):
 
     # TODO(zero): Inconsistent definitions
     # self.pb_map.header.district = self.xodr_map.header.name
-    self.pb_map.header.rev_major = self.xodr_map.header.rev_major
-    self.pb_map.header.rev_minor = self.xodr_map.header.rev_minor
-    self.pb_map.header.left = self.xodr_map.header.west
-    self.pb_map.header.right = self.xodr_map.header.east
-    self.pb_map.header.top = self.xodr_map.header.north
-    self.pb_map.header.bottom = self.xodr_map.header.south
+    if self.xodr_map.header.rev_major:
+      self.pb_map.header.rev_major = self.xodr_map.header.rev_major
+    if self.xodr_map.header.rev_minor:
+      self.pb_map.header.rev_minor = self.xodr_map.header.rev_minor
+    if self.xodr_map.header.west:
+      self.pb_map.header.left = self.xodr_map.header.west
+    if self.xodr_map.header.east:
+      self.pb_map.header.right = self.xodr_map.header.east
+    if self.xodr_map.header.north:
+      self.pb_map.header.top = self.xodr_map.header.north
+    if self.xodr_map.header.south:
+      self.pb_map.header.bottom = self.xodr_map.header.south
     self.pb_map.header.vendor = self.xodr_map.header.vendor
 
 

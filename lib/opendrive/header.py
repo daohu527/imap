@@ -44,13 +44,20 @@ class Header:
   def parse_from(self, raw_header):
     self.rev_major = raw_header.attrib.get('revMajor').encode()
     self.rev_minor = raw_header.attrib.get('revMinor').encode()
-    self.name = raw_header.attrib.get('name').encode()
-    self.version = raw_header.attrib.get('version').encode()
-    self.date = raw_header.attrib.get('date').encode()
-    self.east = float(raw_header.attrib.get('east'))
-    self.west = float(raw_header.attrib.get('west'))
-    self.south = float(raw_header.attrib.get('south'))
-    self.north = float(raw_header.attrib.get('north'))
+    if raw_header.attrib.get('name') is not None:
+      self.name = raw_header.attrib.get('name').encode()
+    if raw_header.attrib.get('version') is not None:
+      self.version = raw_header.attrib.get('version').encode()
+    if raw_header.attrib.get('date') is not None:
+      self.date = raw_header.attrib.get('date').encode()
+    if raw_header.attrib.get('east') is not None:
+      self.east = float(raw_header.attrib.get('east'))
+    if raw_header.attrib.get('west') is not None:
+      self.west = float(raw_header.attrib.get('west'))
+    if raw_header.attrib.get('south') is not None:
+      self.south = float(raw_header.attrib.get('south'))
+    if raw_header.attrib.get('north') is not None:
+      self.north = float(raw_header.attrib.get('north'))
     self.vendor = raw_header.attrib.get('vendor').encode()
 
     raw_geo_reference = raw_header.find("geoReference")

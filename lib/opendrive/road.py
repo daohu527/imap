@@ -34,6 +34,8 @@ class Speed:
     self.unit = unit
 
   def parse_from(self, raw_speed):
+    if raw_speed is None:
+      return
     raw_max_speed = raw_speed.attrib.get('max')
     self.unit = raw_speed.attrib.get('unit')
     if raw_max_speed == 'no limit' or raw_max_speed == 'undefined':
@@ -183,8 +185,9 @@ class Road:
 
   def add_offset_to_reference_line(self):
     for idx in range(len(self.reference_line)):
-      offset = self.lanes.get_offset_by_s(self.reference_line[idx].s)
-      self.reference_line[idx].shift_t(offset)
+      if self.lanes.have_offset():
+        offset = self.lanes.get_offset_by_s(self.reference_line[idx].s)
+        self.reference_line[idx].shift_t(offset)
 
   def process_lanes(self):
     # generate boundary
