@@ -385,6 +385,9 @@ class Lanes:
       self.add_lane_section(lane_section)
       i += 1
 
+  def have_offset(self):
+    return len(self.lane_offsets) != 0
+
   def get_offset_by_s(self, s):
     idx = binary_search([lane_offset.s for lane_offset in self.lane_offsets], s)
     a = self.lane_offsets[idx].a
