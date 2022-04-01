@@ -19,10 +19,9 @@ If you encounter problems, you can try uninstalling and then reinstalling to ens
 
 #### Install
 There are 2 ways to install imap.
-1. Install matplotlib and protobuf.
+1. Install by requirements.
 ```
-pip install -U matplotlib
-pip install protobuf
+pip3 install -r requirements.txt
 ```
 
 2. Or you can install conda first, then install protobuf. Use `conda install protobuf` to install will fail, I haven't found the reason yet. Replace with the following command will work.

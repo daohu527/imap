@@ -1,0 +1,2 @@
+matplotlib  >= 2.2.5
+protobuf >= 3.17.3
