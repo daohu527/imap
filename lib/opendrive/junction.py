@@ -27,18 +27,45 @@ class Link:
 
 
 class Connection:
-  def __init__(self, connection_id, connection_type, incoming_road, \
-               connecting_road, contact_point):
+  def __init__(self, connection_id = None, connection_type = None, \
+               incoming_road = None, connecting_road = None, \
+               contact_point = None):
     self.connection_id = connection_id
     self.connection_type = connection_type
     self.incoming_road = incoming_road
     self.connecting_road = connecting_road
     self.contact_point = contact_point
-    self.lane_link = Link()
+    self.lane_links = []
 
     # private
     self.incoming_road_obj = None
     self.connecting_road_obj = None
+
+  def parse_from(self, raw_connection):
+    if raw_connection is None:
+      return
+
+    self.connection_id = raw_connection.attrib.get('id')
+    self.connection_type = raw_connection.attrib.get('type')
+    self.incoming_road = raw_connection.attrib.get('incomingRoad')
+    self.connecting_road = raw_connection.attrib.get('connectingRoad')
+    self.contact_point = raw_connection.attrib.get('contactPoint')
+
+    for raw_lane_link in raw_connection.iter('laneLink'):
+      lane_link = Link()
+      lane_link.parse_from(raw_lane_link)
+      self.lane_links.append(lane_link)
+
+  def incoming_lane_link(self, road_id, lane_id):
+    if self.incoming_road != road_id:
+      return None
+
+    for lane_link in self.lane_links:
+      if lane_link.from_id == lane_id:
+        return lane_link
+
+    return None
+
 
 class Junction:
   def __init__(self, junction_id = None, name = None, junction_type = None):
@@ -60,16 +87,8 @@ class Junction:
     self.junction_type = raw_junction.attrib.get('type')
 
     for raw_connection in raw_junction.iter('connection'):
-      connection_id = raw_connection.attrib.get('id')
-      connection_type = raw_connection.attrib.get('type')
-      incoming_road = raw_connection.attrib.get('incomingRoad')
-      connecting_road = raw_connection.attrib.get('connectingRoad')
-      contact_point = raw_connection.attrib.get('contactPoint')
-      connection = Connection(connection_id, connection_type, incoming_road, \
-                      connecting_road, contact_point)
-
-      raw_lane_link = raw_connection.find('laneLink')
-      connection.lane_link.parse_from(raw_lane_link)
+      connection = Connection()
+      connection.parse_from(raw_connection)
       self.add_connection(connection)
 
   def get_predecessors(self, road_id):

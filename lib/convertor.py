@@ -224,11 +224,12 @@ class Opendrive2Apollo(Convertor):
       if predecessor_junction is not None:
         # incoming_road
         for connection in predecessor_junction.connections:
-          if connection.lane_link.from_id == lane.lane_id and \
-              connection.incoming_road == xodr_road.road_id:
+          lane_link = connection.incoming_lane_link(xodr_road.road_id, \
+                          lane.lane_id)
+          if lane_link is not None:
             section_id = 0
             pb_lane.successor_id.add().id = "road_{}_lane_{}_{}".format( \
-                connection.connecting_road, section_id, connection.lane_link.to_id)
+                connection.connecting_road, section_id, lane_link.to_id)
         # outcoming_road
         predecessors = predecessor_junction.get_predecessors(xodr_road.road_id)
         self.outcoming_road_relationships(pb_lane, lane, predecessors, xodr_road)
@@ -238,11 +239,12 @@ class Opendrive2Apollo(Convertor):
       if successor_junction is not None:
         # incoming_road
         for connection in successor_junction.connections:
-          if connection.lane_link.from_id == lane.lane_id and \
-              connection.incoming_road == xodr_road.road_id:
+          lane_link = connection.incoming_lane_link(xodr_road.road_id, \
+                          lane.lane_id)
+          if lane_link is not None:
             section_id = 0
             pb_lane.successor_id.add().id = "road_{}_lane_{}_{}".format( \
-                connection.connecting_road, section_id, connection.lane_link.to_id)
+                connection.connecting_road, section_id, lane_link.to_id)
         # outcoming_road
         predecessors = successor_junction.get_predecessors(xodr_road.road_id)
         self.outcoming_road_relationships(pb_lane, lane, predecessors, xodr_road)
