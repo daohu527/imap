@@ -294,7 +294,7 @@ class LaneSection:
 
     if self.left and self.right and is_adjacent(self.center.road_marks):
       self.left[-1].left_neighbor_reverse.append(self.right[0].lane_id)
-      self.right[0].left_neighbor_reverse.append(self.right[0].lane_id)
+      self.right[0].left_neighbor_reverse.append(self.left[-1].lane_id)
 
 
   def process_lane(self, reference_line):
