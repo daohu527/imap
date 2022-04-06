@@ -280,21 +280,23 @@ class LaneSection:
   def add_neighbors(self):
     n = len(self.left)
     for idx in range(n):
-      if idx+1 < n:
+      if idx+1 < n and self.left[idx+1].lane_type == "driving":
         self.left[idx].left_neighbor_forward.append(self.left[idx+1].lane_id)
-      if idx > 0:
+      if idx > 0 and self.left[idx-1].lane_type == "driving":
         self.left[idx].right_neighbor_forward.append(self.left[idx-1].lane_id)
 
     n = len(self.right)
     for idx in range(n):
-      if idx+1 < n:
+      if idx+1 < n and self.right[idx+1].lane_type == "driving":
         self.right[idx].right_neighbor_forward.append(self.right[idx+1].lane_id)
-      if idx > 0:
+      if idx > 0 and self.right[idx-1].lane_type == "driving":
         self.right[idx].left_neighbor_forward.append(self.right[idx-1].lane_id)
 
     if self.left and self.right and is_adjacent(self.center.road_marks):
-      self.left[-1].left_neighbor_reverse.append(self.right[0].lane_id)
-      self.right[0].left_neighbor_reverse.append(self.right[0].lane_id)
+      if self.right[0].lane_type == "driving":
+        self.left[-1].left_neighbor_reverse.append(self.right[0].lane_id)
+      if self.left[-1].lane_type == "driving":
+        self.right[0].left_neighbor_reverse.append(self.left[-1].lane_id)
 
 
   def process_lane(self, reference_line):
