@@ -435,7 +435,7 @@ class Opendrive2Apollo(Convertor):
     self.convert_roads()
     self.convert_junctions()
     self.convert_overlap()
-    show()
+    # show()
 
 
   def save_map(self):
