@@ -20,7 +20,10 @@ from modules.map.proto import map_road_pb2
 from modules.map.proto import map_lane_pb2
 
 from imap.lib.opendrive.map import Map
-from imap.lib.proto_utils import write_pb_to_text_file
+from imap.lib.proto_utils import (
+  write_pb_to_text_file,
+  write_pb_to_bin_file
+)
 
 from imap.lib.draw import draw_line, show
 from imap.lib.convex_hull import convex_hull
@@ -76,8 +79,12 @@ class Opendrive2Apollo(Convertor):
     self.xodr_map.load(input_file_name)
 
     self.pb_map = map_pb2.Map()
-    self.output_file_name = output_file_name
+    self.output_file_name = self._get_file_name(output_file_name)
 
+  def _get_file_name(self, file_name):
+    if not file_name.endswith((".txt", ".bin")):
+      print('Unsupported file format in {}'.format(file_name))
+    return file_name.rsplit('.', 1)[0]
 
   def set_parameters(self, only_driving = True):
     self.only_driving = only_driving
@@ -430,3 +437,4 @@ class Opendrive2Apollo(Convertor):
 
   def save_map(self):
     write_pb_to_text_file(self.pb_map, self.output_file_name)
+    write_pb_to_bin_file(self.pb_map, self.output_file_name)
