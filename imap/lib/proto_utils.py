@@ -35,8 +35,18 @@ import google.protobuf.text_format as text_format
 
 def write_pb_to_text_file(topic_pb, file_path):
     """write pb message to file"""
-    with open(file_path, 'w') as f:
+    with open("{}.txt".format(file_path), 'w') as f:
         f.write(str(topic_pb))
+
+def write_pb_to_bin_file(topic_pb, file_path):
+    """write pb message to file
+
+    Args:
+        topic_pb ([object]): [protobuf file]
+        file_path ([string]): [file path]
+    """
+    with open("{}.bin".format(file_path), 'wb') as f:
+        f.write(topic_pb.SerializeToString())
 
 
 def get_pb_from_text_file(filename, pb_value):
