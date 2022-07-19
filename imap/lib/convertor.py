@@ -81,6 +81,10 @@ class Opendrive2Apollo(Convertor):
     self.pb_map = map_pb2.Map()
     self.output_file_name = self._get_file_name(output_file_name)
 
+  def _get_file_name(self, file_name):
+    if not file_name.endswith((".txt", ".bin")):
+      print('Unsupported file format in {}'.format(file_name))
+    return file_name.rsplit('.', 1)[0]
 
   def _get_file_name(self, file_name):
     return file_name.split('.')[0]
