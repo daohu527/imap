@@ -86,6 +86,9 @@ class Opendrive2Apollo(Convertor):
       print('Unsupported file format in {}'.format(file_name))
     return file_name.rsplit('.', 1)[0]
 
+  def _get_file_name(self, file_name):
+    return file_name.split('.')[0]
+
   def set_parameters(self, only_driving = True):
     self.only_driving = only_driving
 
