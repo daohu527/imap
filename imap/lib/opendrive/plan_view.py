@@ -43,7 +43,7 @@ class Geometry:
 
     points = []
     for i in range(sample_count):
-      s, t, h = i * delta_s, 0, 0
+      s, t, h = min(i * delta_s, self.length), 0, 0
       x, y, z = tf.transform(s, t, h)
 
       absolute_s = self.s + s
@@ -74,7 +74,7 @@ class Spiral(Geometry):
 
     points = []
     for i in range(sample_count):
-      local_s = i * delta_s
+      local_s = min(i * delta_s, self.length)
       s, t, theta = odr_spiral(local_s, cdot)
       x, y, z = tf.transform(s, t, 0.0)
 
@@ -103,7 +103,7 @@ class Arc(Geometry):
 
     points = []
     for i in range(sample_count):
-      local_s = i * delta_s
+      local_s = min(i * delta_s, self.length)
       s, t, theta = odr_arc(local_s, self.curvature)
       x, y, z = tf.transform(s, t, 0.0)
 
@@ -136,7 +136,7 @@ class Poly3(Geometry):
 
   def sampling(self, delta_s):
     sample_count = math.ceil(self.length / delta_s) + 1
-    pass
+    # Todo(zero): complete function
 
 
 class ParamPoly3(Geometry):
@@ -170,7 +170,7 @@ class ParamPoly3(Geometry):
 
   def sampling(self, delta_s):
     sample_count = math.ceil(self.length / delta_s) + 1
-    pass
+    # Todo(zero): complete function
 
 
 class PlanView:
