@@ -79,11 +79,13 @@ class Opendrive2Apollo(Convertor):
     self.xodr_map.load(input_file_name)
 
     self.pb_map = map_pb2.Map()
-    self.output_file_name = self._get_file_name(output_file_name)
+
+    if output_file_name and output_file_name.endswith((".txt", ".bin")):
+      self.output_file_name = self._get_file_name(output_file_name)
+    else:
+      self.output_file_name = None
 
   def _get_file_name(self, file_name):
-    if not file_name.endswith((".txt", ".bin")):
-      print('Unsupported file format in {}'.format(file_name))
     return file_name.rsplit('.', 1)[0]
 
   def _get_file_name(self, file_name):
@@ -435,7 +437,10 @@ class Opendrive2Apollo(Convertor):
     self.convert_roads()
     self.convert_junctions()
     self.convert_overlap()
-    # show()
+
+    # Todo(zero): display xodr map
+    if self.output_file_name is None:
+      show()
 
 
   def save_map(self):
