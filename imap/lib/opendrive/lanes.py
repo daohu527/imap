@@ -109,15 +109,17 @@ class Width:
 
 class RoadMark:
   def __init__(self, sOffset = None, roadmark_type = None, material = None, \
-               width = None, lane_change = None):
+               color = None, width = None, lane_change = None):
     self.sOffset = sOffset
     self.roadmark_type = roadmark_type
     self.material = material
+    self.color = color
     self.width = width
     self.lane_change = lane_change
 
   def parse_from(self, raw_road_mark):
     self.sOffset = float(raw_road_mark.attrib.get("sOffset"))
+    self.color = raw_road_mark.attrib.get("color")
     self.roadmark_type = raw_road_mark.attrib.get("type")
     # self.width = float(raw_road_mark.attrib.get("width"))
     self.lane_change = raw_road_mark.attrib.get("lane_change")
@@ -137,6 +139,10 @@ class Speed:
       self.unit = raw_speed.attrib.get("unit")
       self.max_v = convert_speed(self.raw_max_v, self.unit)
 
+class LaneBoundaryType:
+  def __init__(self) -> None:
+    self.boundary_type = None
+    self.color = None
 
 class Lane:
   def __init__(self, lane_id = None, lane_type = None, level = None, \
@@ -158,7 +164,9 @@ class Lane:
     self.left_neighbor_reverse = []
     self.right_neighbor_reverse = []
     self.left_boundary = []
+    self.left_boundary_type = LaneBoundaryType()
     self.right_boundary = []
+    self.right_boundary_type = LaneBoundaryType()
     self.center_line = []
 
 
@@ -226,6 +234,11 @@ class Lane:
       draw_line(self.right_boundary)
     return self.right_boundary
 
+  def generate_boundary_type(self, left_boundary_type) -> str:
+    self.left_boundary_type = left_boundary_type
+    self.right_boundary_type.boundary_type = self.road_marks[0].roadmark_type
+    self.right_boundary_type.color = self.road_marks[0].color
+    return self.right_boundary_type
 
 class LaneSection:
   def __init__(self, s = None, single_side = None):
@@ -301,14 +314,18 @@ class LaneSection:
 
   def process_lane(self, reference_line):
     left_boundary = reference_line.copy()
+    left_boundary_type = self.center.generate_boundary_type(None)
     # The left lane is opposite to the reference line
     left_boundary.reverse()
     for lane in self.left[::-1]:
       left_boundary = lane.generate_boundary(left_boundary)
+      left_boundary_type = lane.generate_boundary_type(left_boundary_type)
 
     left_boundary = reference_line.copy()
+    left_boundary_type = self.center.generate_boundary_type(None)
     for lane in self.right:
       left_boundary = lane.generate_boundary(left_boundary)
+      left_boundary_type = lane.generate_boundary_type(left_boundary_type)
 
   def get_cross_section(self, direction):
     if direction == "start":
