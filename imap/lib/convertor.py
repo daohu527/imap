@@ -64,9 +64,9 @@ def to_pb_lane_type(open_drive_type):
   elif lower_type == 'connectingRamp': # not support
     return map_lane_pb2.Lane.NONE
 
-def to_pb_boundary_type(left_boundary_type):
-  lower_type = left_boundary_type.boundary_type.lower()
-  lower_color = left_boundary_type.color.lower()
+def to_pb_boundary_type(opendrive_boundary_type):
+  lower_type = opendrive_boundary_type.boundary_type.lower()
+  lower_color = opendrive_boundary_type.color.lower()
 
   # Table 38. Attributes of the road lanes laneSection lcr lane roadMark element
   # e_roadMarkColor & e_roadMarkType
@@ -85,6 +85,9 @@ def to_pb_boundary_type(left_boundary_type):
     elif lower_color == 'white':
       return map_lane_pb2.LaneBoundaryType.SOLID_WHITE
 
+  if lower_type == 'curb':
+    return map_lane_pb2.LaneBoundaryType.CURB
+
   return map_lane_pb2.LaneBoundaryType.UNKNOWN
 
 class Convertor:
@@ -102,20 +105,15 @@ class Opendrive2Apollo(Convertor):
 
     self.pb_map = map_pb2.Map()
 
-    if output_file_name and output_file_name.endswith((".txt", ".bin")):
-      self.output_file_name = self._get_file_name(output_file_name)
-    else:
-      self.output_file_name = None
+    self.output_file_name = self._get_file_name(output_file_name)
 
   def _get_file_name(self, file_name):
-    return file_name.rsplit('.', 1)[0]
-
-  def _get_file_name(self, file_name):
-    return file_name.split('.')[0]
+    if file_name and file_name.endswith((".txt", ".bin")):
+      return file_name.rsplit('.', 1)[0]
+    return None
 
   def set_parameters(self, only_driving = True):
     self.only_driving = only_driving
-
 
   def convert_header(self):
     if self.xodr_map.header.version:
@@ -169,9 +167,10 @@ class Opendrive2Apollo(Convertor):
     segment.start_position.z = lane.left_boundary[0].z
     segment.length = pb_lane.length
     pb_lane.left_boundary.length = pb_lane.length
+    pb_boundary_type = to_pb_boundary_type(lane.left_boundary_type)
     boundary_type = pb_lane.left_boundary.boundary_type.add()
-    left_boundary_type = boundary_type.types().add()
-    left_boundary_type = to_pb_boundary_type(lane.left_boundary_type)
+    boundary_type.s = 0
+    boundary_type.types.append(pb_boundary_type)
 
     # 2. center line
     segment = pb_lane.central_curve.segment.add()
@@ -195,9 +194,10 @@ class Opendrive2Apollo(Convertor):
     segment.start_position.z = lane.right_boundary[0].z
     segment.length = pb_lane.length
     pb_lane.right_boundary.length = pb_lane.length
+    pb_boundary_type = to_pb_boundary_type(lane.right_boundary_type)
     boundary_type = pb_lane.right_boundary.boundary_type.add()
-    right_boundary_type = boundary_type.types().add()
-    right_boundary_type = to_pb_boundary_type(lane.right_boundary_type)
+    boundary_type.s = 0
+    boundary_type.types.append(pb_boundary_type)
 
   def add_lane_sample(self, pb_lane, lane):
     cur_lane_id = int(lane.lane_id)
