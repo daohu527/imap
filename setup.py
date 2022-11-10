@@ -23,7 +23,7 @@ setuptools.setup(
     package_dir={"": "."},
     packages=setuptools.find_packages(where="."),
     install_requires=[
-        'protobuf',
+        'protobuf<=3.19.4',
         'matplotlib',
         'record_msg',
     ],
