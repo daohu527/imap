@@ -127,6 +127,7 @@ class Poly3(Geometry):
     self.c = c
     self.d = d
     self.start_position = np.array(x, y)
+    self.interval = 0.5
 
   def parse_from(self, raw_geometry):
     super().parse_from(raw_geometry)
