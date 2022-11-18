@@ -20,6 +20,8 @@ import math
 from imap.lib.transform import Transform
 from imap.lib.common import Point3d
 from imap.lib.odr_spiral import odr_spiral, odr_arc
+import numpy as np
+
 
 class Geometry:
   def __init__(self, s = None, x = None, y = None, hdg = None, length = None):
