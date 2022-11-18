@@ -124,6 +124,7 @@ class Poly3(Geometry):
     self.b = b
     self.c = c
     self.d = d
+    self.start_position = np.array(x, y)
 
   def parse_from(self, raw_geometry):
     super().parse_from(raw_geometry)
@@ -133,10 +134,51 @@ class Poly3(Geometry):
     self.b = float(raw_poly3.attrib.get('b'))
     self.c = float(raw_poly3.attrib.get('c'))
     self.d = float(raw_poly3.attrib.get('d'))
+    self.start_position = np.array([float(raw_geometry.attrib.get('x')), float(raw_geometry.attrib.get('y'))])
 
   def sampling(self, delta_s):
-    sample_count = math.ceil(self.length / delta_s) + 1
+    # sample_count = math.ceil(self.length / delta_s) + 1
     # Todo(zero): complete function
+    # xl add
+    pts = []
+    for s_pos in self.calc_interpolates(0, self.length):
+        pos, tangent = self.calc_position(s_pos)
+
+        x = pos[0]
+        y = pos[1]
+        z = 0
+        absolute_s = self.s + s_pos
+
+        point3d = Point3d(x, y, z, absolute_s)
+        point3d.set_rotate(tangent)
+        pts.append(point3d)
+    return pts
+
+  # xl
+  def calc_interpolates(self, pos_offset0, pos_offset1):
+      vals = []
+      p0 = pos_offset0
+      p1 = pos_offset1
+      if p1 > p0:
+          vals = np.append(np.arange(p0, p1, self.interval), p1)
+      return vals
+
+  # xl
+  def calc_position(self, s_pos):
+      # Calculate new point in s_pos/t coordinate system
+      coeffs = [self.a, self.b, self.c, self.d]
+
+      t = np.polynomial.polynomial.polyval(s_pos, coeffs)
+
+      # Rotate and translate
+      srot = s_pos * np.cos(self.hdg) - t * np.sin(self.hdg)
+      trot = s_pos * np.sin(self.hdg) + t * np.cos(self.hdg)
+
+      # Derivate to get heading change
+      dCoeffs = coeffs[1:] * np.array(np.arange(1, len(coeffs)))
+      tangent = np.polynomial.polynomial.polyval(s_pos, dCoeffs)
+
+      return self.start_position + np.array([srot, trot]), self.hdg + tangent
 
 
 class ParamPoly3(Geometry):
