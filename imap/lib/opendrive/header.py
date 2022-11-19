@@ -58,7 +58,8 @@ class Header:
       self.south = float(raw_header.attrib.get('south'))
     if raw_header.attrib.get('north') is not None:
       self.north = float(raw_header.attrib.get('north'))
-    self.vendor = raw_header.attrib.get('vendor').encode()
+    if raw_header.attrib.get('vendor') is not None:
+      self.vendor = raw_header.attrib.get('vendor').encode()
 
     raw_geo_reference = raw_header.find("geoReference")
     self.geo_reference.parse_from(raw_geo_reference)
