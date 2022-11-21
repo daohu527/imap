@@ -17,9 +17,10 @@
 
 import math
 
-from imap.lib.transform import Transform
 from imap.lib.common import Point3d
 from imap.lib.odr_spiral import odr_spiral, odr_arc
+from imap.lib.polynoms import cubic_polynoms
+from imap.lib.transform import Transform
 
 class Geometry:
   def __init__(self, s = None, x = None, y = None, hdg = None, length = None):
@@ -136,7 +137,20 @@ class Poly3(Geometry):
 
   def sampling(self, delta_s):
     sample_count = math.ceil(self.length / delta_s) + 1
-    # Todo(zero): complete function
+    tf = Transform(self.x, self.y, 0, self.hdg, 0, 0)
+
+    points = []
+    for i in range(sample_count):
+      local_s = min(i * delta_s, self.length)
+      s, t, theta = cubic_polynoms(self.a, self.b, self.c, self.d, local_s)
+      x, y, z = tf.transform(s, t, 0.0)
+
+      absolute_s = self.s + local_s
+
+      point3d = Point3d(x, y, z, absolute_s)
+      point3d.set_rotate(self.hdg + theta)
+      points.append(point3d)
+    return points
 
 
 class ParamPoly3(Geometry):
@@ -169,8 +183,24 @@ class ParamPoly3(Geometry):
     self.pRange = raw_param_poly3.attrib.get('pRange')
 
   def sampling(self, delta_s):
+    # todo(zero): need to deal with pRange==normalized
     sample_count = math.ceil(self.length / delta_s) + 1
-    # Todo(zero): complete function
+    tf = Transform(self.x, self.y, 0, self.hdg, 0, 0)
+
+    points = []
+    for i in range(sample_count):
+      local_s = min(i * delta_s, self.length)
+      s, t, theta = parametric_cubic_curve(
+        self.aU, self.bU, self.cU, self.dU,
+        self.aV, self.bV, self.cV, self.dV, local_s)
+      x, y, z = tf.transform(s, t, 0.0)
+
+      absolute_s = self.s + local_s
+
+      point3d = Point3d(x, y, z, absolute_s)
+      point3d.set_rotate(self.hdg + theta)
+      points.append(point3d)
+    return points
 
 
 class PlanView:
