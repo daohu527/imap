@@ -65,6 +65,10 @@ def to_pb_lane_type(open_drive_type):
     return map_lane_pb2.Lane.NONE
 
 def to_pb_boundary_type(opendrive_boundary_type):
+  if (opendrive_boundary_type.boundary_type is None or
+      opendrive_boundary_type.color is None):
+    return map_lane_pb2.LaneBoundaryType.UNKNOWN
+
   lower_type = opendrive_boundary_type.boundary_type.lower()
   lower_color = opendrive_boundary_type.color.lower()
 
@@ -142,7 +146,8 @@ class Opendrive2Apollo(Convertor):
       self.pb_map.header.top = self.xodr_map.header.north
     if self.xodr_map.header.south:
       self.pb_map.header.bottom = self.xodr_map.header.south
-    self.pb_map.header.vendor = self.xodr_map.header.vendor
+    if self.xodr_map.header.vendor:
+      self.pb_map.header.vendor = self.xodr_map.header.vendor
 
 
   def add_basic_info(self, pb_lane, xodr_road, idx, lane):
