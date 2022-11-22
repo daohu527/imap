@@ -19,7 +19,7 @@ import math
 
 from imap.lib.common import Point3d
 from imap.lib.odr_spiral import odr_spiral, odr_arc
-from imap.lib.polynoms import cubic_polynoms
+from imap.lib.polynoms import cubic_polynoms, parametric_cubic_curve
 from imap.lib.transform import Transform
 
 class Geometry:
