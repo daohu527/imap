@@ -17,11 +17,10 @@
 
 import math
 
-from imap.lib.transform import Transform
 from imap.lib.common import Point3d
 from imap.lib.odr_spiral import odr_spiral, odr_arc
-import numpy as np
-
+from imap.lib.polynoms import cubic_polynoms
+from imap.lib.transform import Transform
 
 class Geometry:
   def __init__(self, s = None, x = None, y = None, hdg = None, length = None):
@@ -140,48 +139,21 @@ class Poly3(Geometry):
     self.start_position = np.array([float(raw_geometry.attrib.get('x')), float(raw_geometry.attrib.get('y'))])
 
   def sampling(self, delta_s):
-    # sample_count = math.ceil(self.length / delta_s) + 1
-    # Todo(zero): complete function
-    # xl add
-    pts = []
-    for s_pos in self.calc_interpolates(0, self.length):
-        pos, tangent = self.calc_position(s_pos)
+    sample_count = math.ceil(self.length / delta_s) + 1
+    tf = Transform(self.x, self.y, 0, self.hdg, 0, 0)
 
-        x = pos[0]
-        y = pos[1]
-        z = 0
-        absolute_s = self.s + s_pos
+    points = []
+    for i in range(sample_count):
+      local_s = min(i * delta_s, self.length)
+      s, t, theta = cubic_polynoms(self.a, self.b, self.c, self.d, local_s)
+      x, y, z = tf.transform(s, t, 0.0)
 
-        point3d = Point3d(x, y, z, absolute_s)
-        point3d.set_rotate(tangent)
-        pts.append(point3d)
-    return pts
+      absolute_s = self.s + local_s
 
-  # xl
-  def calc_interpolates(self, pos_offset0, pos_offset1):
-      vals = []
-      p0 = pos_offset0
-      p1 = pos_offset1
-      if p1 > p0:
-          vals = np.append(np.arange(p0, p1, self.interval), p1)
-      return vals
-
-  # xl
-  def calc_position(self, s_pos):
-      # Calculate new point in s_pos/t coordinate system
-      coeffs = [self.a, self.b, self.c, self.d]
-
-      t = np.polynomial.polynomial.polyval(s_pos, coeffs)
-
-      # Rotate and translate
-      srot = s_pos * np.cos(self.hdg) - t * np.sin(self.hdg)
-      trot = s_pos * np.sin(self.hdg) + t * np.cos(self.hdg)
-
-      # Derivate to get heading change
-      dCoeffs = coeffs[1:] * np.array(np.arange(1, len(coeffs)))
-      tangent = np.polynomial.polynomial.polyval(s_pos, dCoeffs)
-
-      return self.start_position + np.array([srot, trot]), self.hdg + tangent
+      point3d = Point3d(x, y, z, absolute_s)
+      point3d.set_rotate(self.hdg + theta)
+      points.append(point3d)
+    return points
 
 
 class ParamPoly3(Geometry):
@@ -214,8 +186,24 @@ class ParamPoly3(Geometry):
     self.pRange = raw_param_poly3.attrib.get('pRange')
 
   def sampling(self, delta_s):
+    # todo(zero): need to deal with pRange==normalized
     sample_count = math.ceil(self.length / delta_s) + 1
-    # Todo(zero): complete function
+    tf = Transform(self.x, self.y, 0, self.hdg, 0, 0)
+
+    points = []
+    for i in range(sample_count):
+      local_s = min(i * delta_s, self.length)
+      s, t, theta = parametric_cubic_curve(
+        self.aU, self.bU, self.cU, self.dU,
+        self.aV, self.bV, self.cV, self.dV, local_s)
+      x, y, z = tf.transform(s, t, 0.0)
+
+      absolute_s = self.s + local_s
+
+      point3d = Point3d(x, y, z, absolute_s)
+      point3d.set_rotate(self.hdg + theta)
+      points.append(point3d)
+    return points
 
 
 class PlanView:

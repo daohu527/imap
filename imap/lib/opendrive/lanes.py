@@ -236,8 +236,9 @@ class Lane:
 
   def generate_boundary_type(self, left_boundary_type) -> str:
     self.left_boundary_type = left_boundary_type
-    self.right_boundary_type.boundary_type = self.road_marks[0].roadmark_type
-    self.right_boundary_type.color = self.road_marks[0].color
+    if self.road_marks:
+      self.right_boundary_type.boundary_type = self.road_marks[0].roadmark_type
+      self.right_boundary_type.color = self.road_marks[0].color
     return self.right_boundary_type
 
 class LaneSection:
