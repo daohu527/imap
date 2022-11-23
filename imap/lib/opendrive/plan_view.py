@@ -183,16 +183,23 @@ class ParamPoly3(Geometry):
     self.pRange = raw_param_poly3.attrib.get('pRange')
 
   def sampling(self, delta_s):
-    # todo(zero): need to deal with pRange==normalized
     sample_count = math.ceil(self.length / delta_s) + 1
     tf = Transform(self.x, self.y, 0, self.hdg, 0, 0)
 
     points = []
     for i in range(sample_count):
       local_s = min(i * delta_s, self.length)
-      s, t, theta = parametric_cubic_curve(
-        self.aU, self.bU, self.cU, self.dU,
-        self.aV, self.bV, self.cV, self.dV, local_s)
+      if pRange == "arcLength":
+        s, t, theta = parametric_cubic_curve(
+          self.aU, self.bU, self.cU, self.dU,
+          self.aV, self.bV, self.cV, self.dV, local_s)
+      elif pRange == "normalized":
+        s, t, theta = parametric_cubic_curve(
+          self.aU, self.bU, self.cU, self.dU,
+          self.aV, self.bV, self.cV, self.dV, local_s/self.length)
+      else:
+        print("Unsupported pRange type: {}".format(pRange))
+        return []
       x, y, z = tf.transform(s, t, 0.0)
 
       absolute_s = self.s + local_s
