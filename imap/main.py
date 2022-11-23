@@ -60,8 +60,8 @@ def main(args=sys.argv):
         "-o", "--output", action="store", type=str, required=False,
         help="map output path")
     parser.add_argument(
-        "-s", "--sampling", action="store", type=int, required=False,
-        default=1, help="sampling length")
+        "-s", "--sampling", action="store", type=float, required=False,
+        default=1.0, help="sampling length")
     parser.add_argument(
         "-d", "--debug", action="store", type=bool, required=False,
         nargs='?', const=True, default=False, help="debug mode")
