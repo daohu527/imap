@@ -116,6 +116,9 @@ class Opendrive2Apollo(Convertor):
     self.xodr_map = Map()
     self.xodr_map.load(input_file_name)
 
+    # lhd for saving figure
+    self.input_file_name = input_file_name
+
     self.pb_map = map_pb2.Map()
 
     self.output_file_name = self._get_file_name(output_file_name)
@@ -503,7 +506,9 @@ class Opendrive2Apollo(Convertor):
       xodr_road.generate_reference_line()
       xodr_road.add_offset_to_reference_line()
       # Todo(zero):
-      draw_line(xodr_road.reference_line, 'r')
+      # original: draw_line(xodr_road.reference_line, 'r')
+      draw_line(xodr_road.reference_line, 'r', \
+        reference_line = True, label = "reference line " + str(pb_road.id.id))
 
       xodr_road.process_lanes()
 
@@ -559,7 +564,7 @@ class Opendrive2Apollo(Convertor):
 
     # Todo(zero): display xodr map
     if self.output_file_name is None:
-      show()
+      show(save = True, path = self.input_file_name.replace("xodr/", "images/").replace(".xodr", ".png"))
 
 
   def save_map(self):

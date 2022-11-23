@@ -20,7 +20,7 @@ import matplotlib.pyplot as plt
 
 from imap.map import Map
 
-fig, ax = plt.subplots()
+fig, ax = plt.subplots(figsize=(20, 20))
 # plt.gca().set_aspect('equal', adjustable='box')
 
 
@@ -54,14 +54,29 @@ def add_editor():
   fig.canvas.mpl_connect('motion_notify_event', editor.on_motion)
 
 
-def draw_line(line, color = None):
+def draw_line(line, color = None, reference_line = False, label= ""):
   x = [point.x for point in line]
   y = [point.y for point in line]
-  if color:
-    ax.plot(x, y, color)
-  else:
-    ax.plot(x, y)
 
-def show():
+  if reference_line:
+    linewidth = 10
+    alpha = 0.5
+    linestyle = "dashed"
+    color = 'r' if color == None else color
+    ax.plot(x, y, linestyle = linestyle, \
+      linewidth = linewidth, alpha = alpha, label = label)
+  else:
+    if color:
+      ax.plot(x, y, color, label = label)
+    else:
+      ax.plot(x, y, label = label)
+
+
+def show(save = False, path = None):
   # show map
+  ax.legend()
+  ax.axis('equal')
+  if save: 
+    print(path, "saved")
+    plt.savefig(path)
   plt.show()
