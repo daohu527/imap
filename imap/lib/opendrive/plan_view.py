@@ -67,22 +67,25 @@ class Spiral(Geometry):
     self.curv_start = float(raw_spiral.attrib.get('curvStart'))
     self.curv_end = float(raw_spiral.attrib.get('curvEnd'))
 
+    self.cdot = (self.curv_end - self.curv_start) / self.length
+    self.s0_spiral = self.curv_start / self.cdot
+    self.s0, self.t0, self.theta0 = odr_spiral(self.s0_spiral, self.cdot)
+
   def sampling(self, delta_s):
     sample_count = math.ceil(self.length / delta_s) + 1
-    cdot = (self.curv_end - self.curv_start) / self.length
 
-    tf = Transform(self.x, self.y, 0, self.hdg, 0, 0)
+    tf = Transform(self.x, self.y, 0, self.hdg - self.theta0, 0, 0)
 
     points = []
     for i in range(sample_count):
       local_s = min(i * delta_s, self.length)
-      s, t, theta = odr_spiral(local_s, cdot)
-      x, y, z = tf.transform(s, t, 0.0)
+      s, t, theta = odr_spiral(local_s + self.s0_spiral, self.cdot)
+      x, y, z = tf.transform(s - self.s0, t - self.t0, 0.0)
 
       absolute_s = self.s + local_s
 
       point3d = Point3d(x, y, z, absolute_s)
-      point3d.set_rotate(self.hdg + theta)
+      point3d.set_rotate(self.hdg + theta - self.theta0)
       points.append(point3d)
     return points
 

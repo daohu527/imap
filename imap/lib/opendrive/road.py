@@ -17,6 +17,8 @@
 
 import math
 
+import imap.global_var as global_var
+
 from imap.lib.opendrive.common import convert_speed
 from imap.lib.opendrive.plan_view import PlanView
 from imap.lib.opendrive.profile import ElevationProfile, LateralProfile
@@ -24,7 +26,6 @@ from imap.lib.opendrive.lanes import Lanes
 
 
 GEOMETRY_SKIP_LENGTH = 0.01
-SAMPLING_LENGTH = 1.0
 
 
 # Type
@@ -177,7 +178,8 @@ class Road:
       if geometry.length < GEOMETRY_SKIP_LENGTH:
         continue
 
-      points = geometry.sampling(SAMPLING_LENGTH)
+      sampling_length = global_var.get_element_value("sampling_length")
+      points = geometry.sampling(sampling_length)
       self.reference_line.extend(points)
 
     assert len(self.reference_line) != 0, \

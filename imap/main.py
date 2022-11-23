@@ -59,12 +59,19 @@ def main(args=sys.argv):
     parser.add_argument(
         "-o", "--output", action="store", type=str, required=False,
         help="map output path")
-
+    parser.add_argument(
+        "-s", "--sampling", action="store", type=int, required=False,
+        default=1, help="sampling length")
+    parser.add_argument(
+        "-d", "--debug", action="store", type=bool, required=False,
+        nargs='?', const=True, default=False, help="debug mode")
 
     args = parser.parse_args(args[1:])
 
     # 1. Init global var
     global_var._init()
+    global_var.set_element_vaule("sampling_length", args.sampling)
+    global_var.set_element_vaule("debug_mode", args.debug)
 
     # 2. show map
     if args.map is not None:

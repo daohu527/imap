@@ -17,6 +17,8 @@
 
 import math
 
+import imap.global_var as global_var
+
 from imap.lib.common import shift_t
 from imap.lib.draw import draw_line
 
@@ -225,13 +227,14 @@ class Lane:
       cpoint3d = shift_t(point3d, width * self.direction / 2)
       self.center_line.append(cpoint3d)
 
-    # TODO(zero): debug use
-    if self.lane_type == "driving":
-      draw_line(self.left_boundary, 'g')
-      draw_line(self.right_boundary, 'g')
-    else:
-      draw_line(self.left_boundary)
-      draw_line(self.right_boundary)
+    debug_mode = global_var.get_element_value("debug_mode")
+    if not debug_mode:
+      if self.lane_type == "driving":
+        draw_line(self.left_boundary, 'g')
+        draw_line(self.right_boundary, 'g')
+      else:
+        draw_line(self.left_boundary)
+        draw_line(self.right_boundary)
     return self.right_boundary
 
   def generate_boundary_type(self, left_boundary_type) -> str:
