@@ -6,6 +6,11 @@ __pycache__/
 # C extensions
 *.so
 
+# lhd
+.vscode/
+xodr/
+images/
+
 # Distribution / packaging
 .Python
 imap/data/
