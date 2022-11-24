@@ -10,6 +10,8 @@ __pycache__/
 .vscode/
 xodr/
 images/
+apollo_map/
+*.zip
 
 # Distribution / packaging
 .Python
