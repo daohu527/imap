@@ -17,7 +17,9 @@
 
 
 import argparse
+import logging
 import sys
+from pathlib import Path
 
 import imap.global_var as global_var
 
@@ -27,14 +29,15 @@ from imap.lib.convertor import Opendrive2Apollo
 
 def convert_map_format(input_path, output_path):
     opendrive2apollo = Opendrive2Apollo(input_path, output_path)
-    opendrive2apollo.set_parameters(only_driving=True)
+    # todo(zero): only lane type is driving add relationship!!!
+    opendrive2apollo.set_parameters(only_driving=False)
     opendrive2apollo.convert()
     opendrive2apollo.save_map()
 
 
 def show_open_drive_map(map_file):
     opendrive2apollo = Opendrive2Apollo(map_file)
-    opendrive2apollo.set_parameters(only_driving=True)
+    opendrive2apollo.set_parameters(only_driving=False)
     opendrive2apollo.convert()
 
 
@@ -75,6 +78,10 @@ def main(args=sys.argv):
 
     # 2. show map
     if args.map is not None:
+        map_file = Path(args.map)
+        if not map_file.is_file():
+            logging.error("File not exist! '{}'".format(args.map))
+            return
         suffix = args.map.split(".")[1]
         if suffix == "bin" or suffix == "txt":
             add_editor()
@@ -84,6 +91,10 @@ def main(args=sys.argv):
         else:
             pass
 
-    # 3. convert opendrive map to apllo
+    # 3. convert opendrive map to apollo
     if args.format is not None:
+        map_file = Path(args.input)
+        if not map_file.is_file():
+            logging.error("File not exist! '{}'".format(args.input))
+            return
         convert_map_format(args.input, args.output)

@@ -15,6 +15,8 @@
 # limitations under the License.
 
 
+import logging
+
 from modules.map.proto import map_pb2
 from modules.map.proto import map_road_pb2
 from modules.map.proto import map_lane_pb2
@@ -26,7 +28,7 @@ from imap.lib.proto_utils import (
 )
 
 from imap.lib.draw import draw_line, show
-from imap.lib.convex_hull import convex_hull
+from imap.lib.convex_hull import convex_hull, aabb_box
 
 
 def to_pb_lane_type(open_drive_type):
@@ -436,23 +438,39 @@ class Opendrive2Apollo(Convertor):
 
       self.convert_lane(xodr_road, pb_road)
 
+  def _is_valid_junction(self, xodr_junction):
+    connecting_roads = set()
+    incoming_roads = set()
+    for connection in xodr_junction.connections:
+      connecting_roads.add(connection.connecting_road)
+      incoming_roads.add(connection.incoming_road)
+
+    return len(connecting_roads) != 1 and len(incoming_roads) != 1
 
   def construct_junction_polygon(self, xodr_junction):
+    if not self._is_valid_junction(xodr_junction):
+      return []
+
     points = []
     for road, relation in xodr_junction.connected_roads:
       start, end = road.get_cross_section(relation)
       points.append([start.x, start.y])
       points.append([end.x, end.y])
 
-    # order
-    return convex_hull(points)
+    # convex_hull will not fully covered, so we change to aabb_box
+    return aabb_box(points)
 
 
   def convert_junctions(self):
     for _, xodr_junction in self.xodr_map.junctions.items():
+      polygon = self.construct_junction_polygon(xodr_junction)
+      if len(polygon) < 3:
+        logging.warning(
+          "junction {} polygon size < 3.".format(xodr_junction.junction_id))
+        continue
+
       pb_junction = self.pb_map.junction.add()
       pb_junction.id.id = xodr_junction.junction_id
-      polygon = self.construct_junction_polygon(xodr_junction)
       for x, y in polygon:
         pb_point = pb_junction.polygon.point.add()
         pb_point.x, pb_point.y, pb_point.z = x, y, 0

@@ -17,6 +17,7 @@
 # hull.py
 # Graham Scan - Tom Switzer <thomas.switzer@gmail.com>
 
+import math
 from functools import reduce
 
 TURN_LEFT, TURN_RIGHT, TURN_NONE = (1, -1, 0)
@@ -42,6 +43,19 @@ def convex_hull(points):
     u = reduce(_keep_left, reversed(points), [])
     return l.extend(u[i] for i in range(1, len(u) - 1)) or l
 
+def aabb_box(points):
+    if not points:
+        return []
+    x_min, y_min = points[0]
+    x_max, y_max = points[0]
+    for x, y in points:
+        x_min = min(x_min, x)
+        y_min = min(y_min, y)
+        x_max = max(x_max, x)
+        y_max = max(y_max, y)
+    if math.isclose(x_min, x_max) or math.isclose(y_min, y_max):
+        return []
+    return [[x_min, y_min], [x_min, y_max], [x_max, y_max], [x_max, y_min]]
 
 if __name__ == '__main__':
     points = [[0,0],[0,1],[1,0],[1,1],[2,2]]
