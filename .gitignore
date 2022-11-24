@@ -12,6 +12,7 @@ xodr/
 images/
 apollo_map/
 *.zip
+temp/
 
 # Distribution / packaging
 .Python
