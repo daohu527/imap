@@ -462,8 +462,11 @@ class Opendrive2Apollo(Convertor):
       points.append([start.x, start.y])
       points.append([end.x, end.y])
 
-    # convex_hull will not fully covered, so we change to aabb_box
-    return aabb_box(points)
+    # when point <= 4 convex_hull will not fully covered, so we change to aabb_box
+    if len(points) <= 4:
+      return aabb_box(points)
+    else:
+      return convex_hull(points)
 
 
   def convert_junctions(self):
