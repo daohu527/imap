@@ -9,6 +9,7 @@ __pycache__/
 # lhd
 .vscode/
 xodr/
+online/
 images/
 apollo_map/
 *.zip
