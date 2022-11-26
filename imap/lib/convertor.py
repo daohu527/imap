@@ -482,7 +482,8 @@ class Opendrive2Apollo(Convertor):
       # todo(zero): ref 2.3.7. Specific examples of OpenDRIVE objects
       # need to check 'signal.type'
       pb_signal = self.pb_map.signal.add()
-      pb_signal.id.id = "signal_{}".format(signal.id)
+      # add road_id to avoid duplication
+      pb_signal.id.id = "signal_{}_{}".format(xodr_road.road_id, signal.id)
       # todo(zero): needs to be completed(boundary\subsignal\type)
       self._construct_signal_stopline(pb_last_right_section, pb_signal)
       for pb_lane in pb_last_right_section:
