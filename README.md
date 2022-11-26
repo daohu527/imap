@@ -16,7 +16,7 @@ Imap is a tool for visualize and convert format of the hd-map. This project was 
 #### Install
 You can install imap by following cmd.
 ```
-pip install imap_box
+pip3 install imap_box
 ```
 
 ## Example
