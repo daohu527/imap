@@ -1,10 +1,10 @@
 #!/home/haodong/Applications/Miniconda/Miniconda/envs/imap/bin/python
-# EASY-INSTALL-ENTRY-SCRIPT: 'imap-box==0.1.2','console_scripts','imap'
+# EASY-INSTALL-ENTRY-SCRIPT: 'imap-box==0.1.4','console_scripts','imap'
 import re
 import sys
 
 # for compatibility with easy_install; see #2198
-__requires__ = 'imap-box==0.1.2'
+__requires__ = 'imap-box==0.1.4'
 
 try:
     from importlib.metadata import distribution
@@ -30,4 +30,4 @@ globals().setdefault('load_entry_point', importlib_load_entry_point)
 
 if __name__ == '__main__':
     sys.argv[0] = re.sub(r'(-script\.pyw?|\.exe)?$', '', sys.argv[0])
-    sys.exit(load_entry_point('imap-box==0.1.2', 'console_scripts', 'imap')())
+    sys.exit(load_entry_point('imap-box==0.1.4', 'console_scripts', 'imap')())
