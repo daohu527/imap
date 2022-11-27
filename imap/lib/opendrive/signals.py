@@ -60,6 +60,9 @@ class Signals():
     self.signals = []
 
   def parse_from(self, raw_signals):
+    if raw_signals is None:
+      return
+
     for raw_signal in raw_signals.iter('signal'):
       signal = Signal()
       signal.parse_from(raw_signal)
