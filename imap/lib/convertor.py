@@ -16,10 +16,13 @@
 
 
 import logging
+import math
 
 from modules.map.proto import map_pb2
 from modules.map.proto import map_road_pb2
 from modules.map.proto import map_lane_pb2
+
+import imap.global_var as global_var
 
 from imap.lib.opendrive.map import Map
 from imap.lib.proto_utils import (
@@ -29,6 +32,10 @@ from imap.lib.proto_utils import (
 
 from imap.lib.draw import draw_line, show
 from imap.lib.convex_hull import convex_hull, aabb_box
+
+
+# Distance between stop line and pedestrian crossing
+STOP_LINE_DISTANCE = 1.0
 
 
 def to_pb_lane_type(open_drive_type):
@@ -415,11 +422,75 @@ class Opendrive2Apollo(Convertor):
         if pb_lane is not None:
           pb_road_section.lane_id.add().id = pb_lane.id.id
 
+      pb_last_right_section = []
       for lane in lane_section.right:
         pb_lane = self.create_lane(xodr_road, lane_section, idx, lane)
         if pb_lane is not None:
           pb_road_section.lane_id.add().id = pb_lane.id.id
+          # add right lane
+          pb_last_right_section.append(pb_lane)
+    return pb_last_right_section
 
+  def construct_signal_overlap(self, pb_lane, pb_signal):
+    # lane_overlap_info
+    pb_overlap = self.pb_map.overlap.add()
+    pb_overlap.id.id = "{}_{}".format(pb_lane.id.id, pb_signal.id.id)
+    # lane_overlap_info
+    pb_object = pb_overlap.object.add()
+    pb_object.id.id = pb_lane.id.id
+    # todo(zero): need to complete
+    # pb_object.lane_overlap_info.start_s
+    # pb_object.lane_overlap_info.end_s
+
+    # signal_overlap_info
+    pb_object = pb_overlap.object.add()
+    pb_object.id.id = pb_signal.id.id
+
+    # add overlap to lane and signal
+    pb_lane_overlap_id = pb_lane.overlap_id.add()
+    pb_lane_overlap_id.id = pb_overlap.id.id
+
+    pb_signal_overlap_id = pb_signal.overlap_id.add()
+    pb_signal_overlap_id.id = pb_overlap.id.id
+
+  def _construct_signal_stopline(self, last_section_lanes, pb_signal):
+    if len(last_section_lanes) == 1:
+      pb_left_lane = pb_right_lane = last_section_lanes[0]
+    else:
+      pb_left_lane, pb_right_lane = last_section_lanes[0], last_section_lanes[-1]
+    left_segment = pb_left_lane.left_boundary.curve.segment[-1].line_segment
+    right_segment = pb_right_lane.right_boundary.curve.segment[-1].line_segment
+
+    sampling_length = global_var.get_element_value("sampling_length")
+    index = math.ceil(STOP_LINE_DISTANCE/sampling_length)
+    pb_stop_line = pb_signal.stop_line.add()
+    pb_segment = pb_stop_line.segment.add()
+
+    if len(left_segment.point) < index:
+      point = pb_segment.line_segment.point.add()
+      point.CopyFrom(left_segment.point[-1])
+      point = pb_segment.line_segment.point.add()
+      point.CopyFrom(right_segment.point[-1])
+    else:
+      point = pb_segment.line_segment.point.add()
+      point.CopyFrom(left_segment.point[-index])
+      point = pb_segment.line_segment.point.add()
+      point.CopyFrom(right_segment.point[-index])
+
+  def convert_signal(self, xodr_road, pb_last_right_section):
+    if not pb_last_right_section:
+      return
+
+    for signal in xodr_road.signals.signals:
+      # todo(zero): ref 2.3.7. Specific examples of OpenDRIVE objects
+      # need to check 'signal.type'
+      pb_signal = self.pb_map.signal.add()
+      # add road_id to avoid duplication
+      pb_signal.id.id = "signal_{}_{}".format(xodr_road.road_id, signal.id)
+      # todo(zero): needs to be completed(boundary\subsignal\type)
+      self._construct_signal_stopline(pb_last_right_section, pb_signal)
+      for pb_lane in pb_last_right_section:
+        self.construct_signal_overlap(pb_lane, pb_signal)
 
   def convert_roads(self):
     for _, xodr_road in self.xodr_map.roads.items():
@@ -441,7 +512,9 @@ class Opendrive2Apollo(Convertor):
 
       xodr_road.process_lanes()
 
-      self.convert_lane(xodr_road, pb_road)
+      pb_last_right_section = self.convert_lane(xodr_road, pb_road)
+      # Todo(zero): need to complete signal
+      # self.convert_signal(xodr_road, pb_last_right_section)
 
   def _is_valid_junction(self, xodr_junction):
     connecting_roads = set()
@@ -483,18 +556,11 @@ class Opendrive2Apollo(Convertor):
         pb_point = pb_junction.polygon.point.add()
         pb_point.x, pb_point.y, pb_point.z = x, y, 0
 
-
-  def convert_overlap(self):
-    # lane_overlap_info
-    pass
-
-
   def convert(self):
     self.convert_header()
     # Don't change the order. "convert_roads" must before "convert_junctions"
     self.convert_roads()
     self.convert_junctions()
-    self.convert_overlap()
 
     # Todo(zero): display xodr map
     if self.output_file_name is None:

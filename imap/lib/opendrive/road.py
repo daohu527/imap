@@ -23,6 +23,7 @@ from imap.lib.opendrive.common import convert_speed
 from imap.lib.opendrive.plan_view import PlanView
 from imap.lib.opendrive.profile import ElevationProfile, LateralProfile
 from imap.lib.opendrive.lanes import Lanes
+from imap.lib.opendrive.signals import Signals
 
 
 GEOMETRY_SKIP_LENGTH = 0.01
@@ -111,6 +112,7 @@ class Road:
     self.elevation_profile = ElevationProfile()
     self.lateral_profile = LateralProfile()
     self.lanes = Lanes()
+    self.signals = Signals()
 
     # private
     self.reference_line = []
@@ -169,6 +171,10 @@ class Road:
     raw_lanes = raw_road.find('lanes')
     assert raw_lanes is not None, "Road {} has no lanes!".format(self.road_id)
     self.lanes.parse_from(raw_lanes)
+
+    # signals
+    raw_signals = raw_road.find('signals')
+    self.signals.parse_from(raw_signals)
 
     # post processing
     self.post_processing()
