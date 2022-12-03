@@ -109,7 +109,7 @@ class Arc(Geometry):
     for i in range(sample_count):
       local_s = min(i * delta_s, self.length)
       s, t, theta = odr_arc(local_s, self.curvature)
-      x, y, z = tf.transform(s, t, 0)
+      x, y, z = tf.transform(s, t, 0.0)
 
       # get elevation
       absolute_s = self.s + local_s
@@ -146,7 +146,7 @@ class Poly3(Geometry):
     for i in range(sample_count):
       local_s = min(i * delta_s, self.length)
       s, t, theta = cubic_polynoms(self.a, self.b, self.c, self.d, local_s)
-      x, y, z = tf.transform(s, t, 0)
+      x, y, z = tf.transform(s, t, 0.0)
 
       absolute_s = self.s + local_s
 
@@ -203,7 +203,7 @@ class ParamPoly3(Geometry):
       else:
         print("Unsupported pRange type: {}".format(self.pRange))
         return []
-      x, y, z = tf.transform(s, t, 0)
+      x, y, z = tf.transform(s, t, 0.0)
 
       absolute_s = self.s + local_s
 
