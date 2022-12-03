@@ -564,7 +564,7 @@ class Opendrive2Apollo(Convertor):
         pb_point = pb_junction.polygon.point.add()
         pb_point.x, pb_point.y, pb_point.z = x, y, 0
 
-  def convert(self):
+  def convert(self, save_fig):
     self.convert_header()
     # Don't change the order. "convert_roads" must before "convert_junctions"
     self.convert_roads()
@@ -572,7 +572,7 @@ class Opendrive2Apollo(Convertor):
 
     # Todo(zero): display xodr map
     if self.output_file_name is None:
-      show(save = True, path = self.input_file_name.replace("xodr/", "images/").replace(".xodr", ".png"))
+      show(save = save_fig, path = self.input_file_name.replace("xodr/", "images/").replace(".xodr", ".png"))
 
 
   def save_map(self):

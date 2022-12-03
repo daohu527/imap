@@ -35,10 +35,10 @@ def convert_map_format(input_path, output_path):
     opendrive2apollo.save_map()
 
 
-def show_open_drive_map(map_file):
+def show_open_drive_map(map_file, save_fig):
     opendrive2apollo = Opendrive2Apollo(map_file)
     opendrive2apollo.set_parameters(only_driving=False)
-    opendrive2apollo.convert()
+    opendrive2apollo.convert(save_fig)
 
 
 def main(args=sys.argv):
@@ -49,6 +49,9 @@ def main(args=sys.argv):
     parser.add_argument(
         "-m", "--map", action="store", type=str, required=False,
         help="Specify the map file in txt or binary format")
+    parser.add_argument(
+        "-sf", "--save_figure", action="store", type=bool, required=False,
+        default=False, help="Whether to save the visualization figure (only for .xodr suffix)")
     parser.add_argument(
         "-l", "--lane", action="store", type=str, required=False,
         help="Find lane by lane id")
@@ -87,7 +90,7 @@ def main(args=sys.argv):
             add_editor()
             show_map(args.map, args.lane)
         elif suffix == "xodr":
-            show_open_drive_map(args.map)
+            show_open_drive_map(args.map, args.save_figure)
         else:
             pass
 
