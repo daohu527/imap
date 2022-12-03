@@ -25,7 +25,7 @@ import imap.global_var as global_var
 
 from imap.lib.draw import add_editor, show_map
 from imap.lib.convertor import Opendrive2Apollo
-from imap.lib.opendrive.plan_view import set_z_origin
+from imap.lib.opendrive.plan_view import set_z_origin_and_axis
 
 
 def convert_map_format(input_path, output_path):
@@ -54,7 +54,10 @@ def main(args=sys.argv):
         "-sf", "--save_figure", action="store", type=bool, required=False,
         default=False, help="Whether to save the visualization figure (only for .xodr suffix)")
     parser.add_argument(
-        "-z", "--z_origin", action="store", type=int, required=False,
+        "-z", "--z_axis", action="store", type=bool, required=False,
+        default=False, help="Whether to extract z-axis coordination information to apollo hd-map")
+    parser.add_argument(
+        "-zo", "--z_origin", action="store", type=int, required=False,
         default=0, help="Increase the global height, because negative height will not be viewed in dreamview (only for .xodr suffix)")
     parser.add_argument(
         "-l", "--lane", action="store", type=str, required=False,
@@ -104,5 +107,5 @@ def main(args=sys.argv):
         if not map_file.is_file():
             logging.error("File not exist! '{}'".format(args.input))
             return
-        set_z_origin(args.z_origin)
+        set_z_origin_and_axis(args.z_origin, args.z_axis)
         convert_map_format(args.input, args.output)
