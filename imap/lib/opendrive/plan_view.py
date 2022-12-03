@@ -23,12 +23,10 @@ from imap.lib.polynoms import cubic_polynoms, parametric_cubic_curve
 from imap.lib.transform import Transform
 
 Z_ORIGIN = 0
-Z_AXIS = False
 
-def set_z_origin_and_axis(z_origin, z_axis):
-  global Z_ORIGIN, Z_AXIS
+def set_z_origin(z_origin):
+  global Z_ORIGIN
   Z_ORIGIN = z_origin
-  Z_AXIS = z_axis
 
 class Geometry:
   def __init__(self, s = None, x = None, y = None, hdg = None, length = None):
@@ -117,12 +115,7 @@ class Arc(Geometry):
     for i in range(sample_count):
       local_s = min(i * delta_s, self.length)
       s, t, theta = odr_arc(local_s, self.curvature)
-      # lhd 2022/12/03 for 3D view
-      if Z_AXIS:
-        x, y, z = tf.transform(s, t, theta) 
-      else:
-        x, y, z = tf.transform(s, t, 0.0)
-        z = 0
+      x, y, z = tf.transform(s, t, theta)
 
       # get elevation
       absolute_s = self.s + local_s
@@ -159,12 +152,7 @@ class Poly3(Geometry):
     for i in range(sample_count):
       local_s = min(i * delta_s, self.length)
       s, t, theta = cubic_polynoms(self.a, self.b, self.c, self.d, local_s)
-      # lhd 2022/12/03 for 3D view
-      if Z_AXIS:
-        x, y, z = tf.transform(s, t, theta) 
-      else:
-        x, y, z = tf.transform(s, t, 0.0)
-        z = 0
+      x, y, z = tf.transform(s, t, theta)
 
       absolute_s = self.s + local_s
 
@@ -221,12 +209,7 @@ class ParamPoly3(Geometry):
       else:
         print("Unsupported pRange type: {}".format(self.pRange))
         return []
-      # lhd 2022/12/03 for 3D view
-      if Z_AXIS:
-        x, y, z = tf.transform(s, t, theta) 
-      else:
-        x, y, z = tf.transform(s, t, 0.0)
-        z = 0
+      x, y, z = tf.transform(s, t, theta)
 
       absolute_s = self.s + local_s
 
