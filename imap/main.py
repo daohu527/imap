@@ -56,9 +56,6 @@ def main(args=sys.argv):
         "-z", "--z_axis", action="store", type=bool, required=False,
         default=False, help="Whether to extract z-axis coordination information to apollo hd-map")
     parser.add_argument(
-        "-zo", "--z_origin", action="store", type=int, required=False,
-        default=0, help="Increase the global height, because negative height will not be viewed in dreamview (only for .xodr suffix)")
-    parser.add_argument(
         "-l", "--lane", action="store", type=str, required=False,
         help="Find lane by lane id")
 
