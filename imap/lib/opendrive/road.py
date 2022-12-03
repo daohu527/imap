@@ -187,6 +187,7 @@ class Road:
       sampling_length = global_var.get_element_value("sampling_length")
       points = geometry.sampling(sampling_length)
       self.reference_line.extend(points)
+      self.lanes.generate_reference_line(geometry)
 
     assert len(self.reference_line) != 0, \
         "Road {} reference line is empty!".format(self.road_id)
@@ -199,7 +200,7 @@ class Road:
 
   def process_lanes(self):
     # generate boundary
-    self.lanes.process_lane_sections(self.reference_line)
+    self.lanes.process_lane_sections()
 
 
   def get_cross_section(self, relation):

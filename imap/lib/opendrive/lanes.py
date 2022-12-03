@@ -23,6 +23,7 @@ from imap.lib.common import shift_t
 from imap.lib.draw import draw_line
 
 from imap.lib.opendrive.common import convert_speed
+import imap.lib.opendrive.road
 
 
 def binary_search(arr, val):
@@ -216,10 +217,10 @@ class Lane:
     ds = s - self.widths[idx].sOffset
     return a + b*ds + c*ds**2 + d*ds**3
 
-  def generate_boundary(self, left_boundary):
+  def generate_boundary(self, left_boundary, start_s):
     self.left_boundary = left_boundary
     for point3d in left_boundary:
-      width = self.get_width_by_s(point3d.s)
+      width = self.get_width_by_s((point3d.s - start_s))
 
       rpoint3d = shift_t(point3d, width * self.direction)
       self.right_boundary.append(rpoint3d)
@@ -231,7 +232,7 @@ class Lane:
     if not debug_mode:
       if self.lane_type == "driving":
         draw_line(self.left_boundary, 'g')
-        draw_line(self.right_boundary, 'g')
+        draw_line(self.right_boundary, 'r')
       else:
         draw_line(self.left_boundary)
         draw_line(self.right_boundary)
@@ -254,6 +255,7 @@ class LaneSection:
 
     # private
     self.end_s = None
+    self.reference_line = []
 
   def add_left_lane(self, lane):
     self.left.append(lane)
@@ -315,20 +317,27 @@ class LaneSection:
       if self.left[-1].lane_type == "driving":
         self.right[0].left_neighbor_reverse.append(self.left[-1].lane_id)
 
+  def generate_reference_line(self, geometry):
+    assert (self.end_s - self.s) >= imap.lib.opendrive.road.GEOMETRY_SKIP_LENGTH, \
+        "Lane {} length {} < GEOMETRY_SKIP_LENGTH!".format(self.center.lane_id, (self.end_s - self.s))
 
-  def process_lane(self, reference_line):
-    left_boundary = reference_line.copy()
+    sampling_length = global_var.get_element_value("sampling_length")
+    points = geometry.sampling_for_lane(sampling_length, self.s, self.end_s)
+    self.reference_line.extend(points)
+
+  def process_lane(self):
+    left_boundary = self.reference_line.copy()
     left_boundary_type = self.center.generate_boundary_type(None)
     # The left lane is opposite to the reference line
     left_boundary.reverse()
     for lane in self.left[::-1]:
-      left_boundary = lane.generate_boundary(left_boundary)
+      left_boundary = lane.generate_boundary(left_boundary, self.s)
       left_boundary_type = lane.generate_boundary_type(left_boundary_type)
 
-    left_boundary = reference_line.copy()
+    left_boundary = self.reference_line.copy()
     left_boundary_type = self.center.generate_boundary_type(None)
     for lane in self.right:
-      left_boundary = lane.generate_boundary(left_boundary)
+      left_boundary = lane.generate_boundary(left_boundary, self.s)
       left_boundary_type = lane.generate_boundary_type(left_boundary_type)
 
   def get_cross_section(self, direction):
@@ -420,10 +429,13 @@ class Lanes:
     ds = s - self.lane_offsets[idx].s
     return a + b*ds + c*ds**2 + d*ds**3
 
-
-  def process_lane_sections(self, reference_line):
+  def generate_reference_line(self, geometry):
     for lane_section in self.lane_sections:
-      lane_section.process_lane(reference_line)
+      lane_section.generate_reference_line(geometry)
+
+  def process_lane_sections(self):
+    for lane_section in self.lane_sections:
+      lane_section.process_lane()
 
   def get_cross_section(self, relation):
     if relation == "predecessor":
