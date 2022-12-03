@@ -25,7 +25,6 @@ import imap.global_var as global_var
 
 from imap.lib.draw import add_editor, show_map
 from imap.lib.convertor import Opendrive2Apollo, set_z_axis
-from imap.lib.opendrive.plan_view import set_z_origin
 
 
 def convert_map_format(input_path, output_path):
@@ -108,5 +107,4 @@ def main(args=sys.argv):
             logging.error("File not exist! '{}'".format(args.input))
             return
         set_z_axis(args.z_axis)
-        set_z_origin(args.z_origin)
         convert_map_format(args.input, args.output)
