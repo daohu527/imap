@@ -211,6 +211,33 @@ class ParamPoly3(Geometry):
       point3d.set_rotate(self.hdg + theta)
       points.append(point3d)
     return points
+  
+  def sampling_for_lane(self, delta_s, start_s, end_s):
+    sample_count = math.ceil((end_s - start_s) / delta_s) + 1
+    tf = Transform(self.x, self.y, 0, self.hdg, 0, 0)
+
+    points = []
+    for i in range(sample_count):
+      local_s = min(i * delta_s + start_s, end_s)
+      if self.pRange == "arcLength":
+        s, t, theta = parametric_cubic_curve(
+          self.aU, self.bU, self.cU, self.dU,
+          self.aV, self.bV, self.cV, self.dV, local_s)
+      elif self.pRange == "normalized":
+        s, t, theta = parametric_cubic_curve(
+          self.aU, self.bU, self.cU, self.dU,
+          self.aV, self.bV, self.cV, self.dV, local_s/self.length)
+      else:
+        print("Unsupported pRange type: {}".format(self.pRange))
+        return []
+      x, y, z = tf.transform(s, t, 0.0)
+
+      absolute_s = self.s + local_s
+
+      point3d = Point3d(x, y, z, absolute_s)
+      point3d.set_rotate(self.hdg + theta)
+      points.append(point3d)
+    return points
 
 
 class PlanView:
