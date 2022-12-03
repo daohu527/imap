@@ -27,7 +27,6 @@ Z_ORIGIN = 0
 def set_z_origin(z_origin):
   global Z_ORIGIN
   Z_ORIGIN = z_origin
-  print(Z_ORIGIN)
 
 class Geometry:
   def __init__(self, s = None, x = None, y = None, hdg = None, length = None):
