@@ -22,6 +22,8 @@ from imap.lib.odr_spiral import odr_spiral, odr_arc
 from imap.lib.polynoms import cubic_polynoms, parametric_cubic_curve
 from imap.lib.transform import Transform
 
+ORIGINAL_Z = 25
+
 class Geometry:
   def __init__(self, s = None, x = None, y = None, hdg = None, length = None):
     self.s = s
@@ -103,13 +105,15 @@ class Arc(Geometry):
 
   def sampling(self, delta_s):
     sample_count = math.ceil(self.length / delta_s) + 1
-    tf = Transform(self.x, self.y, 0, self.hdg, 0, 0)
+    tf = Transform(self.x, self.y, ORIGINAL_Z, self.hdg, 0, 0)
 
     points = []
     for i in range(sample_count):
       local_s = min(i * delta_s, self.length)
       s, t, theta = odr_arc(local_s, self.curvature)
-      x, y, z = tf.transform(s, t, 0.0)
+      # lhd 2022/12/03 for 3D view
+      # x, y, z = tf.transform(s, t, 0.0)
+      x, y, z = tf.transform(s, t, theta) 
 
       # get elevation
       absolute_s = self.s + local_s
@@ -140,13 +144,15 @@ class Poly3(Geometry):
 
   def sampling(self, delta_s):
     sample_count = math.ceil(self.length / delta_s) + 1
-    tf = Transform(self.x, self.y, 0, self.hdg, 0, 0)
+    tf = Transform(self.x, self.y, ORIGINAL_Z, self.hdg, 0, 0)
 
     points = []
     for i in range(sample_count):
       local_s = min(i * delta_s, self.length)
       s, t, theta = cubic_polynoms(self.a, self.b, self.c, self.d, local_s)
-      x, y, z = tf.transform(s, t, 0.0)
+      # lhd 2022/12/03 for 3D view
+      # x, y, z = tf.transform(s, t, 0.0)
+      x, y, z = tf.transform(s, t, theta) 
 
       absolute_s = self.s + local_s
 
@@ -187,7 +193,7 @@ class ParamPoly3(Geometry):
 
   def sampling(self, delta_s):
     sample_count = math.ceil(self.length / delta_s) + 1
-    tf = Transform(self.x, self.y, 0, self.hdg, 0, 0)
+    tf = Transform(self.x, self.y, ORIGINAL_Z, self.hdg, 0, 0)
 
     points = []
     for i in range(sample_count):
@@ -203,7 +209,9 @@ class ParamPoly3(Geometry):
       else:
         print("Unsupported pRange type: {}".format(self.pRange))
         return []
-      x, y, z = tf.transform(s, t, 0.0)
+      # lhd 2022/12/03 for 3D view
+      # x, y, z = tf.transform(s, t, 0.0)
+      x, y, z = tf.transform(s, t, theta) 
 
       absolute_s = self.s + local_s
 

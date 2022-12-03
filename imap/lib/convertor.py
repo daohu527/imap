@@ -177,7 +177,9 @@ class Opendrive2Apollo(Convertor):
     segment = pb_lane.left_boundary.curve.segment.add()
     for point3d in lane.left_boundary:
       point = segment.line_segment.point.add()
-      point.x, point.y = point3d.x, point3d.y
+      # lhd 2022/12/03 for 3D view
+      # point.x, point.y = point3d.x, point3d.y
+      point.x, point.y, point.z = point3d.x, point3d.y, point3d.z
     segment.s = 0
     segment.start_position.x = lane.left_boundary[0].x
     segment.start_position.y = lane.left_boundary[0].y
@@ -193,7 +195,9 @@ class Opendrive2Apollo(Convertor):
     segment = pb_lane.central_curve.segment.add()
     for point3d in lane.center_line:
       point = segment.line_segment.point.add()
-      point.x, point.y = point3d.x, point3d.y
+      # lhd 2022/12/03 for 3D view
+      # point.x, point.y = point3d.x, point3d.y
+      point.x, point.y, point.z = point3d.x, point3d.y, point3d.z
     segment.s = 0
     segment.start_position.x = lane.center_line[0].x
     segment.start_position.y = lane.center_line[0].y
@@ -204,7 +208,9 @@ class Opendrive2Apollo(Convertor):
     segment = pb_lane.right_boundary.curve.segment.add()
     for point3d in lane.right_boundary:
       point = segment.line_segment.point.add()
-      point.x, point.y = point3d.x, point3d.y
+      # lhd 2022/12/03 for 3D view
+      # point.x, point.y = point3d.x, point3d.y
+      point.x, point.y, point.z = point3d.x, point3d.y, point3d.z
     segment.s = 0
     segment.start_position.x = lane.right_boundary[0].x
     segment.start_position.y = lane.right_boundary[0].y
@@ -382,7 +388,9 @@ class Opendrive2Apollo(Convertor):
     segment = pb_boundary_edge.curve.segment.add()
     for point3d in boundary:
       point = segment.line_segment.point.add()
-      point.x, point.y = point3d.x, point3d.y
+      # lhd 2022/12/03 for 3D view
+      # point.x, point.y = point3d.x, point3d.y
+      point.x, point.y, point.z = point3d.x, point3d.y, point3d.z
     segment.s = 0
     segment.start_position.x = boundary[0].x
     segment.start_position.y = boundary[0].y
