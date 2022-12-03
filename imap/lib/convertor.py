@@ -37,6 +37,12 @@ from imap.lib.convex_hull import convex_hull, aabb_box
 # Distance between stop line and pedestrian crossing
 STOP_LINE_DISTANCE = 1.0
 
+Z_AXIS = False
+
+def set_z_axis(z_axis):
+  global Z_AXIS
+  Z_AXIS = z_axis
+
 
 def to_pb_lane_type(open_drive_type):
   lower_type = open_drive_type.lower()
@@ -178,8 +184,10 @@ class Opendrive2Apollo(Convertor):
     for point3d in lane.left_boundary:
       point = segment.line_segment.point.add()
       # lhd 2022/12/03 for 3D view
-      # point.x, point.y = point3d.x, point3d.y
-      point.x, point.y, point.z = point3d.x, point3d.y, point3d.z
+      if Z_AXIS:
+        point.x, point.y, point.z = point3d.x, point3d.y, point3d.z
+      else:
+        point.x, point.y = point3d.x, point3d.y
     segment.s = 0
     segment.start_position.x = lane.left_boundary[0].x
     segment.start_position.y = lane.left_boundary[0].y
@@ -196,8 +204,10 @@ class Opendrive2Apollo(Convertor):
     for point3d in lane.center_line:
       point = segment.line_segment.point.add()
       # lhd 2022/12/03 for 3D view
-      # point.x, point.y = point3d.x, point3d.y
-      point.x, point.y, point.z = point3d.x, point3d.y, point3d.z
+      if Z_AXIS:
+        point.x, point.y, point.z = point3d.x, point3d.y, point3d.z
+      else:
+        point.x, point.y = point3d.x, point3d.y
     segment.s = 0
     segment.start_position.x = lane.center_line[0].x
     segment.start_position.y = lane.center_line[0].y
@@ -209,8 +219,10 @@ class Opendrive2Apollo(Convertor):
     for point3d in lane.right_boundary:
       point = segment.line_segment.point.add()
       # lhd 2022/12/03 for 3D view
-      # point.x, point.y = point3d.x, point3d.y
-      point.x, point.y, point.z = point3d.x, point3d.y, point3d.z
+      if Z_AXIS:
+        point.x, point.y, point.z = point3d.x, point3d.y, point3d.z
+      else:
+        point.x, point.y = point3d.x, point3d.y
     segment.s = 0
     segment.start_position.x = lane.right_boundary[0].x
     segment.start_position.y = lane.right_boundary[0].y
