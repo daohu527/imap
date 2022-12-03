@@ -24,7 +24,7 @@ class Elevation:
     self.d = d
 
   def parse_from(self, raw_elevation):
-    self.s = float(raw_elevation.attrib.get('a'))
+    self.s = float(raw_elevation.attrib.get('s'))
     self.a = float(raw_elevation.attrib.get('a'))
     self.b = float(raw_elevation.attrib.get('b'))
     self.c = float(raw_elevation.attrib.get('c'))
@@ -47,7 +47,7 @@ class ElevationProfile:
       elevation.parse_from(raw_elevation)
       self.add_elevation(elevation)
 
-  def get_elevation_by_s(self):
+  def get_elevation_by_s(self, s):
     i = len(self.elevations) - 1
     while i >= 0:
       elevation = self.elevations[i]
