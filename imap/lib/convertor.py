@@ -572,7 +572,7 @@ class Opendrive2Apollo(Convertor):
 
     # Todo(zero): display xodr map
     if self.output_file_name is None:
-      show(save = save_fig, path = self.input_file_name.replace("xodr/", "images/").replace(".xodr", ".png"))
+      show(save = save_fig, path = self.input_file_name.replace(".xodr", ".png"))
 
 
   def save_map(self):

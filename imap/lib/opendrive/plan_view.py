@@ -22,7 +22,12 @@ from imap.lib.odr_spiral import odr_spiral, odr_arc
 from imap.lib.polynoms import cubic_polynoms, parametric_cubic_curve
 from imap.lib.transform import Transform
 
-ORIGINAL_Z = 0
+Z_ORIGIN = 0
+
+def set_z_origin(z_origin):
+  global Z_ORIGIN
+  Z_ORIGIN = z_origin
+  print(Z_ORIGIN)
 
 class Geometry:
   def __init__(self, s = None, x = None, y = None, hdg = None, length = None):
@@ -105,7 +110,7 @@ class Arc(Geometry):
 
   def sampling(self, delta_s):
     sample_count = math.ceil(self.length / delta_s) + 1
-    tf = Transform(self.x, self.y, ORIGINAL_Z, self.hdg, 0, 0)
+    tf = Transform(self.x, self.y, Z_ORIGIN, self.hdg, 0, 0)
 
     points = []
     for i in range(sample_count):
@@ -144,7 +149,7 @@ class Poly3(Geometry):
 
   def sampling(self, delta_s):
     sample_count = math.ceil(self.length / delta_s) + 1
-    tf = Transform(self.x, self.y, ORIGINAL_Z, self.hdg, 0, 0)
+    tf = Transform(self.x, self.y, Z_ORIGIN, self.hdg, 0, 0)
 
     points = []
     for i in range(sample_count):
@@ -193,7 +198,7 @@ class ParamPoly3(Geometry):
 
   def sampling(self, delta_s):
     sample_count = math.ceil(self.length / delta_s) + 1
-    tf = Transform(self.x, self.y, ORIGINAL_Z, self.hdg, 0, 0)
+    tf = Transform(self.x, self.y, Z_ORIGIN, self.hdg, 0, 0)
 
     points = []
     for i in range(sample_count):
