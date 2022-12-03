@@ -22,7 +22,7 @@ from imap.lib.odr_spiral import odr_spiral, odr_arc
 from imap.lib.polynoms import cubic_polynoms, parametric_cubic_curve
 from imap.lib.transform import Transform
 
-ORIGINAL_Z = 10
+ORIGINAL_Z = 0
 
 class Geometry:
   def __init__(self, s = None, x = None, y = None, hdg = None, length = None):
