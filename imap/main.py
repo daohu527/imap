@@ -24,21 +24,21 @@ from pathlib import Path
 import imap.global_var as global_var
 
 from imap.lib.draw import add_editor, show_map
-from imap.lib.convertor import Opendrive2Apollo, set_z_axis
+from imap.lib.convertor import Opendrive2Apollo
 
 
 def convert_map_format(input_path, output_path):
     opendrive2apollo = Opendrive2Apollo(input_path, output_path)
     # todo(zero): only lane type is driving add relationship!!!
     opendrive2apollo.set_parameters(only_driving=False)
-    opendrive2apollo.convert(save_fig=False)
+    opendrive2apollo.convert()
     opendrive2apollo.save_map()
 
 
-def show_open_drive_map(map_file, save_fig):
+def show_open_drive_map(map_file):
     opendrive2apollo = Opendrive2Apollo(map_file)
     opendrive2apollo.set_parameters(only_driving=False)
-    opendrive2apollo.convert(save_fig)
+    opendrive2apollo.convert()
 
 
 def main(args=sys.argv):
@@ -50,10 +50,10 @@ def main(args=sys.argv):
         "-m", "--map", action="store", type=str, required=False,
         help="Specify the map file in txt or binary format")
     parser.add_argument(
-        "-sf", "--save_figure", action="store", type=bool, required=False,
+        "-save_fig", action="store", type=bool, required=False,
         default=False, help="Whether to save the visualization figure (only for .xodr suffix)")
     parser.add_argument(
-        "-z", "--z_axis", action="store", type=bool, required=False,
+        "-z", "--enable_z_axis", action="store", type=bool, required=False,
         default=False, help="Whether to extract z-axis coordination information to apollo hd-map")
     parser.add_argument(
         "-l", "--lane", action="store", type=str, required=False,
@@ -81,6 +81,7 @@ def main(args=sys.argv):
     global_var._init()
     global_var.set_element_vaule("sampling_length", args.sampling)
     global_var.set_element_vaule("debug_mode", args.debug)
+    global_var.set_element_vaule("enable_z_axis", args.enable_z_axis)
 
     # 2. show map
     if args.map is not None:
@@ -93,7 +94,8 @@ def main(args=sys.argv):
             add_editor()
             show_map(args.map, args.lane)
         elif suffix == "xodr":
-            show_open_drive_map(args.map, args.save_figure)
+            global_var.set_element_vaule("need_save_figure", args.save_fig)
+            show_open_drive_map(args.map)
         else:
             pass
 
@@ -103,5 +105,4 @@ def main(args=sys.argv):
         if not map_file.is_file():
             logging.error("File not exist! '{}'".format(args.input))
             return
-        set_z_axis(args.z_axis)
         convert_map_format(args.input, args.output)

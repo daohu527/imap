@@ -317,16 +317,8 @@ class LaneSection:
       if self.left[-1].lane_type == "driving":
         self.right[0].left_neighbor_reverse.append(self.left[-1].lane_id)
 
-  def generate_reference_line(self, geometry, elevation_profile):
-    assert (self.end_s - self.s) >= imap.lib.opendrive.road.GEOMETRY_SKIP_LENGTH, \
-        "Lane {} length {} < GEOMETRY_SKIP_LENGTH!".format(self.center.lane_id, (self.end_s - self.s))
-
-    sampling_length = global_var.get_element_value("sampling_length")
-    points = geometry.sampling_for_lane(sampling_length, self.s, self.end_s, elevation_profile)
-    self.reference_line.extend(points)
-
-  def process_lane(self):
-    left_boundary = self.reference_line.copy()
+  def process_lane(self, reference_line_in_section):
+    left_boundary = reference_line_in_section.copy()
     left_boundary_type = self.center.generate_boundary_type(None)
     # The left lane is opposite to the reference line
     left_boundary.reverse()
@@ -334,7 +326,7 @@ class LaneSection:
       left_boundary = lane.generate_boundary(left_boundary, self.s)
       left_boundary_type = lane.generate_boundary_type(left_boundary_type)
 
-    left_boundary = self.reference_line.copy()
+    left_boundary = reference_line_in_section.copy()
     left_boundary_type = self.center.generate_boundary_type(None)
     for lane in self.right:
       left_boundary = lane.generate_boundary(left_boundary, self.s)
@@ -433,9 +425,17 @@ class Lanes:
     for lane_section in self.lane_sections:
       lane_section.generate_reference_line(geometry, elevation_profile)
 
-  def process_lane_sections(self):
+  def process_lane_sections(self, reference_line):
     for lane_section in self.lane_sections:
-      lane_section.process_lane()
+      start_s = lane_section.s
+      end_s = lane_section.end_s
+      reference_line_in_section = []
+      for (idx, point3d) in enumerate(reference_line):
+        if start_s <= point3d.s <= end_s or \
+          (point3d.s < start_s and idx + 1 < len(reference_line) and start_s <= reference_line[idx + 1].s <= end_s) or \
+            (end_s < point3d.s and idx - 1 >= 0 and start_s <= reference_line[idx - 1].s <= end_s):
+          reference_line_in_section.append(point3d)
+      lane_section.process_lane(reference_line_in_section)
 
   def get_cross_section(self, relation):
     if relation == "predecessor":

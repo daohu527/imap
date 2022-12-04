@@ -37,12 +37,6 @@ from imap.lib.convex_hull import convex_hull, aabb_box
 # Distance between stop line and pedestrian crossing
 STOP_LINE_DISTANCE = 1.0
 
-Z_AXIS = False
-
-def set_z_axis(z_axis):
-  global Z_AXIS
-  Z_AXIS = z_axis
-
 
 def to_pb_lane_type(open_drive_type):
   lower_type = open_drive_type.lower()
@@ -184,7 +178,7 @@ class Opendrive2Apollo(Convertor):
     for point3d in lane.left_boundary:
       point = segment.line_segment.point.add()
       # lhd 2022/12/03 for 3D view
-      if Z_AXIS:
+      if global_var.get_element_value("enable_z_axis"):
         point.x, point.y, point.z = point3d.x, point3d.y, point3d.z
       else:
         point.x, point.y = point3d.x, point3d.y
@@ -204,7 +198,7 @@ class Opendrive2Apollo(Convertor):
     for point3d in lane.center_line:
       point = segment.line_segment.point.add()
       # lhd 2022/12/03 for 3D view
-      if Z_AXIS:
+      if global_var.get_element_value("enable_z_axis"):
         point.x, point.y, point.z = point3d.x, point3d.y, point3d.z
       else:
         point.x, point.y = point3d.x, point3d.y
@@ -219,7 +213,7 @@ class Opendrive2Apollo(Convertor):
     for point3d in lane.right_boundary:
       point = segment.line_segment.point.add()
       # lhd 2022/12/03 for 3D view
-      if Z_AXIS:
+      if global_var.get_element_value("enable_z_axis"):
         point.x, point.y, point.z = point3d.x, point3d.y, point3d.z
       else:
         point.x, point.y = point3d.x, point3d.y
@@ -401,8 +395,10 @@ class Opendrive2Apollo(Convertor):
     for point3d in boundary:
       point = segment.line_segment.point.add()
       # lhd 2022/12/03 for 3D view
-      # point.x, point.y = point3d.x, point3d.y
-      point.x, point.y, point.z = point3d.x, point3d.y, point3d.z
+      if global_var.get_element_value("enable_z_axis"):
+        point.x, point.y, point.z = point3d.x, point3d.y, point3d.z
+      else:
+        point.x, point.y = point3d.x, point3d.y
     segment.s = 0
     segment.start_position.x = boundary[0].x
     segment.start_position.y = boundary[0].y
@@ -526,7 +522,6 @@ class Opendrive2Apollo(Convertor):
       xodr_road.generate_reference_line()
       xodr_road.add_offset_to_reference_line()
       # Todo(zero):
-      # original: draw_line(xodr_road.reference_line, 'r')
       draw_line(xodr_road.reference_line, 'r', \
         reference_line = True, label = "reference line " + str(pb_road.id.id))
 
@@ -576,7 +571,7 @@ class Opendrive2Apollo(Convertor):
         pb_point = pb_junction.polygon.point.add()
         pb_point.x, pb_point.y, pb_point.z = x, y, 0
 
-  def convert(self, save_fig):
+  def convert(self):
     self.convert_header()
     # Don't change the order. "convert_roads" must before "convert_junctions"
     self.convert_roads()
@@ -584,7 +579,7 @@ class Opendrive2Apollo(Convertor):
 
     # Todo(zero): display xodr map
     if self.output_file_name is None:
-      show(save = save_fig, path = self.input_file_name.replace(".xodr", ".png"))
+      show(need_save=global_var.get_element_value("need_save_figure"), path=self.input_file_name.replace(".xodr", ".png"))
 
 
   def save_map(self):
