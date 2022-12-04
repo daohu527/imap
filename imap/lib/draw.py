@@ -72,6 +72,6 @@ def show(need_save=False, path=None):
   ax.legend()
   ax.axis('equal')
   if need_save: 
-    print(path, "saved")
     plt.savefig(path)
+    print(path, "saved")
   plt.show()
