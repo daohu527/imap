@@ -54,17 +54,12 @@ def add_editor():
   fig.canvas.mpl_connect('motion_notify_event', editor.on_motion)
 
 
-def draw_line(line, color = None, reference_line = False, label= ""):
+def draw_line(line, color=None, reference_line=False, label=""):
   x = [point.x for point in line]
   y = [point.y for point in line]
 
   if reference_line:
-    linewidth = 10
-    alpha = 0.5
-    linestyle = "dashed"
-    color = 'r' if color == None else color
-    ax.plot(x, y, linestyle = linestyle, \
-      linewidth = linewidth, alpha = alpha, label = label)
+    ax.plot(x, y, linestyle="dashed", linewidth=10, alpha=0.5, label=label)
   else:
     if color:
       ax.plot(x, y, color, label = label)
@@ -72,11 +67,11 @@ def draw_line(line, color = None, reference_line = False, label= ""):
       ax.plot(x, y, label = label)
 
 
-def show(save = False, path = None):
+def show(need_save=False, path=None):
   # show map
   ax.legend()
   ax.axis('equal')
-  if save: 
+  if need_save: 
     print(path, "saved")
     plt.savefig(path)
   plt.show()

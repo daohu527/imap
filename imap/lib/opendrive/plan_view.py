@@ -71,7 +71,7 @@ class Spiral(Geometry):
     self.s0_spiral = self.curv_start / self.cdot
     self.s0, self.t0, self.theta0 = odr_spiral(self.s0_spiral, self.cdot)
 
-  def sampling(self, delta_s):
+  def sampling(self, delta_s, elevation_profile):
     sample_count = math.ceil(self.length / delta_s) + 1
 
     tf = Transform(self.x, self.y, 0, self.hdg - self.theta0, 0, 0)
@@ -81,6 +81,7 @@ class Spiral(Geometry):
       local_s = min(i * delta_s, self.length)
       s, t, theta = odr_spiral(local_s + self.s0_spiral, self.cdot)
       x, y, z = tf.transform(s - self.s0, t - self.t0, 0.0)
+      z = elevation_profile.get_elevation_by_s(local_s)
 
       absolute_s = self.s + local_s
 
@@ -101,7 +102,7 @@ class Arc(Geometry):
     raw_arc = raw_geometry.find('arc')
     self.curvature = float(raw_arc.attrib.get('curvature'))
 
-  def sampling(self, delta_s):
+  def sampling(self, delta_s, elevation_profile):
     sample_count = math.ceil(self.length / delta_s) + 1
     tf = Transform(self.x, self.y, 0, self.hdg, 0, 0)
 
@@ -110,6 +111,7 @@ class Arc(Geometry):
       local_s = min(i * delta_s, self.length)
       s, t, theta = odr_arc(local_s, self.curvature)
       x, y, z = tf.transform(s, t, 0.0)
+      z = elevation_profile.get_elevation_by_s(local_s)
 
       # get elevation
       absolute_s = self.s + local_s
@@ -138,7 +140,7 @@ class Poly3(Geometry):
     self.c = float(raw_poly3.attrib.get('c'))
     self.d = float(raw_poly3.attrib.get('d'))
 
-  def sampling(self, delta_s):
+  def sampling(self, delta_s, elevation_profile):
     sample_count = math.ceil(self.length / delta_s) + 1
     tf = Transform(self.x, self.y, 0, self.hdg, 0, 0)
 
@@ -147,6 +149,7 @@ class Poly3(Geometry):
       local_s = min(i * delta_s, self.length)
       s, t, theta = cubic_polynoms(self.a, self.b, self.c, self.d, local_s)
       x, y, z = tf.transform(s, t, 0.0)
+      z = elevation_profile.get_elevation_by_s(local_s)
 
       absolute_s = self.s + local_s
 
@@ -185,40 +188,13 @@ class ParamPoly3(Geometry):
     self.dV = float(raw_param_poly3.attrib.get('dV'))
     self.pRange = raw_param_poly3.attrib.get('pRange')
 
-  def sampling(self, delta_s):
+  def sampling(self, delta_s, elevation_profile):
     sample_count = math.ceil(self.length / delta_s) + 1
     tf = Transform(self.x, self.y, 0, self.hdg, 0, 0)
 
     points = []
     for i in range(sample_count):
       local_s = min(i * delta_s, self.length)
-      if self.pRange == "arcLength":
-        s, t, theta = parametric_cubic_curve(
-          self.aU, self.bU, self.cU, self.dU,
-          self.aV, self.bV, self.cV, self.dV, local_s)
-      elif self.pRange == "normalized":
-        s, t, theta = parametric_cubic_curve(
-          self.aU, self.bU, self.cU, self.dU,
-          self.aV, self.bV, self.cV, self.dV, local_s/self.length)
-      else:
-        print("Unsupported pRange type: {}".format(self.pRange))
-        return []
-      x, y, z = tf.transform(s, t, 0.0)
-
-      absolute_s = self.s + local_s
-
-      point3d = Point3d(x, y, z, absolute_s)
-      point3d.set_rotate(self.hdg + theta)
-      points.append(point3d)
-    return points
-  
-  def sampling_for_lane(self, delta_s, start_s, end_s, elevation_profile):
-    sample_count = math.ceil((end_s - start_s) / delta_s) + 1
-    tf = Transform(self.x, self.y, 0, self.hdg, 0, 0)
-
-    points = []
-    for i in range(sample_count):
-      local_s = min(i * delta_s + start_s, end_s)
       if self.pRange == "arcLength":
         s, t, theta = parametric_cubic_curve(
           self.aU, self.bU, self.cU, self.dU,
