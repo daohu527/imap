@@ -76,7 +76,7 @@ class LateralProfile:
       elevation.parse_from(raw_elevation)
       self.add_elevation(elevation)
 
-  def get_superelevation_by_s(self):
+  def get_superelevation_by_s(self, s):
     i = len(self.superelevations) - 1
     while i >= 0:
       superelevation = self.superelevations[i]

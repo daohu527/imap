@@ -187,8 +187,7 @@ class Road:
       sampling_length = global_var.get_element_value("sampling_length")
       points = geometry.sampling(sampling_length)
       self.reference_line.extend(points)
-      self.lanes.generate_reference_line(geometry)
-      self.lanes.generate_elevation(self.elevation_profile)
+      self.lanes.generate_reference_line(geometry, self.elevation_profile)
 
     assert len(self.reference_line) != 0, \
         "Road {} reference line is empty!".format(self.road_id)

@@ -212,7 +212,7 @@ class ParamPoly3(Geometry):
       points.append(point3d)
     return points
   
-  def sampling_for_lane(self, delta_s, start_s, end_s):
+  def sampling_for_lane(self, delta_s, start_s, end_s, elevation_profile):
     sample_count = math.ceil((end_s - start_s) / delta_s) + 1
     tf = Transform(self.x, self.y, 0, self.hdg, 0, 0)
 
@@ -231,6 +231,7 @@ class ParamPoly3(Geometry):
         print("Unsupported pRange type: {}".format(self.pRange))
         return []
       x, y, z = tf.transform(s, t, 0.0)
+      z = elevation_profile.get_elevation_by_s(local_s)
 
       absolute_s = self.s + local_s
 
