@@ -255,7 +255,6 @@ class LaneSection:
 
     # private
     self.end_s = None
-    self.reference_line = []
 
   def add_left_lane(self, lane):
     self.left.append(lane)
