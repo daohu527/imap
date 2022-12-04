@@ -317,12 +317,12 @@ class LaneSection:
       if self.left[-1].lane_type == "driving":
         self.right[0].left_neighbor_reverse.append(self.left[-1].lane_id)
 
-  def generate_reference_line(self, geometry):
+  def generate_reference_line(self, geometry, elevation_profile):
     assert (self.end_s - self.s) >= imap.lib.opendrive.road.GEOMETRY_SKIP_LENGTH, \
         "Lane {} length {} < GEOMETRY_SKIP_LENGTH!".format(self.center.lane_id, (self.end_s - self.s))
 
     sampling_length = global_var.get_element_value("sampling_length")
-    points = geometry.sampling_for_lane(sampling_length, self.s, self.end_s)
+    points = geometry.sampling_for_lane(sampling_length, self.s, self.end_s, elevation_profile)
     self.reference_line.extend(points)
 
   def process_lane(self):
@@ -339,22 +339,6 @@ class LaneSection:
     for lane in self.right:
       left_boundary = lane.generate_boundary(left_boundary, self.s)
       left_boundary_type = lane.generate_boundary_type(left_boundary_type)
-
-  def generate_elevation(self, elevation_profile):
-    assert (self.end_s - self.s) >= imap.lib.opendrive.road.GEOMETRY_SKIP_LENGTH, \
-        "Lane {} length {} < GEOMETRY_SKIP_LENGTH!".format(self.center.lane_id, (self.end_s - self.s))
-
-    sampling_length = global_var.get_element_value("sampling_length")
-    sample_count = math.ceil((self.end_s - self.s) / sampling_length) + 1
-    points_z = []
-    for i in range(sample_count):
-      local_s = min(i * sampling_length + self.s, self.end_s)
-      points_z.append(elevation_profile.get_elevation_by_s(local_s))
-    # update z axis values of reference_line
-    assert len(points_z) == len(self.reference_line), \
-        "Length of z-axis values {} != Length of reference_line!".format(len(points_z), len(self.reference_line))
-    for (idx, point) in enumerate(self.reference_line):
-      point.z = points_z[idx]
 
   def get_cross_section(self, direction):
     if direction == "start":
@@ -445,17 +429,13 @@ class Lanes:
     ds = s - self.lane_offsets[idx].s
     return a + b*ds + c*ds**2 + d*ds**3
 
-  def generate_reference_line(self, geometry):
+  def generate_reference_line(self, geometry, elevation_profile):
     for lane_section in self.lane_sections:
-      lane_section.generate_reference_line(geometry)
+      lane_section.generate_reference_line(geometry, elevation_profile)
 
   def process_lane_sections(self):
     for lane_section in self.lane_sections:
       lane_section.process_lane()
-  
-  def generate_elevation(self, elevation_profile):
-    for lane_section in self.lane_sections:
-      lane_section.generate_elevation(elevation_profile)
 
   def get_cross_section(self, relation):
     if relation == "predecessor":
