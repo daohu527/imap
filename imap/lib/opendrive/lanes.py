@@ -419,10 +419,6 @@ class Lanes:
     ds = s - self.lane_offsets[idx].s
     return a + b*ds + c*ds**2 + d*ds**3
 
-  def generate_reference_line(self, geometry, elevation_profile):
-    for lane_section in self.lane_sections:
-      lane_section.generate_reference_line(geometry, elevation_profile)
-
   def process_lane_sections(self, reference_line):
     for lane_section in self.lane_sections:
       start_s = lane_section.s
