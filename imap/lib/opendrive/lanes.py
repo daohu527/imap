@@ -23,7 +23,6 @@ from imap.lib.common import shift_t
 from imap.lib.draw import draw_line
 
 from imap.lib.opendrive.common import convert_speed
-import imap.lib.opendrive.road
 
 
 def binary_search(arr, val):
