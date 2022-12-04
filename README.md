@@ -1,6 +1,8 @@
 ## Imap
 Imap is a tool for visualize and convert format of the hd-map. This project was inspired by Apollo.
 
+![example](doc/img/example.png)
+
 **Supported features**:
 1. Visualize the hd-map, supported formats: Apollo, OpenDrive.
 2. Find lane by id
