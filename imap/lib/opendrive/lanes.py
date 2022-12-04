@@ -219,7 +219,7 @@ class Lane:
   def generate_boundary(self, left_boundary, start_s):
     self.left_boundary = left_boundary
     for point3d in left_boundary:
-      width = self.get_width_by_s((point3d.s - start_s))
+      width = self.get_width_by_s(point3d.s - start_s)
 
       rpoint3d = shift_t(point3d, width * self.direction)
       self.right_boundary.append(rpoint3d)

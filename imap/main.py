@@ -50,7 +50,7 @@ def main(args=sys.argv):
         "-m", "--map", action="store", type=str, required=False,
         help="Specify the map file in txt or binary format")
     parser.add_argument(
-        "-save_fig", action="store", type=bool, required=False,
+        "--save_fig", action="store", type=bool, required=False,
         default=False, help="Whether to save the visualization figure (only for .xodr suffix)")
     parser.add_argument(
         "-z", "--enable_z_axis", action="store", type=bool, required=False,
