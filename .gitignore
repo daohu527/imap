@@ -6,17 +6,6 @@ __pycache__/
 # C extensions
 *.so
 
-# lhd
-.vscode/
-xodr/
-online/
-images/
-apollo_map/
-*.zip
-temp/
-run.py
-run_xodr.sh
-
 # Distribution / packaging
 .Python
 imap/data/
