@@ -37,7 +37,7 @@ class Geometry:
     self.hdg = float(raw_geometry.attrib.get('hdg'))
     self.length = float(raw_geometry.attrib.get('length'))
 
-  def sampling(self, delta_s):
+  def sampling(self, delta_s, elevation_profile):
     sample_count = math.ceil(self.length / delta_s) + 1
 
     tf = Transform(self.x, self.y, 0, self.hdg, 0, 0)
