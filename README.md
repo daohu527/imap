@@ -8,6 +8,12 @@ Imap is a tool for visualize and convert format of the hd-map. This project was 
 2. Find lane by id
 3. Convert format: Opendrive to Apollo format.
 
+| os      | support                 | remark |
+|---------|-------------------------|--------|
+| ubuntu  | :heavy_check_mark:      |        |
+| mac     | :heavy_check_mark:      |        |
+| windows | :heavy_check_mark:      |        |
+
 ## Related work
 - [odrviewer.io](https://odrviewer.io/) is an excellent interactive online OpenDRIVE viewer.
 - [esmini](https://github.com/esmini/esmini) is a basic OpenSCENARIO player.
