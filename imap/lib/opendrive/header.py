@@ -63,8 +63,3 @@ class Header:
 
     raw_geo_reference = raw_header.find("geoReference")
     self.geo_reference.parse_from(raw_geo_reference)
-
-  def parse_geo_reference(self):
-    if self.geo_reference is not None:
-      # TODO(zero): proj
-      print("parse_geo_reference is {}: ".format(self.geo_reference.text))
