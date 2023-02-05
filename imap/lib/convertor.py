@@ -136,13 +136,12 @@ class Opendrive2Apollo(Convertor):
       self.pb_map.header.version = self.xodr_map.header.version
     if self.xodr_map.header.date:
       self.pb_map.header.date = self.xodr_map.header.date
-    proj = self.xodr_map.header.parse_geo_reference()
-    if proj is not None:
-      self.pb_map.header.projection.proj = proj
+
+    if '+proj=utm' not in self.xodr_map.header.geo_reference.text:
+      proj = pyproj.Proj(self.xodr_map.header.geo_reference.text)
+      # Todo(daohu527): lat\lon to utm
     else:
-      zone_id = 0
-      self.pb_map.header.projection.proj = "+proj=utm +zone={} +ellps=WGS84 " \
-          "+datum=WGS84 +units=m +no_defs".format(zone_id)
+      self.pb_map.header.projection.proj = proj
 
     # TODO(zero): Inconsistent definitions
     # self.pb_map.header.district = self.xodr_map.header.name
