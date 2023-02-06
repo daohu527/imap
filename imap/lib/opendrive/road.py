@@ -14,9 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-import math
-
 import imap.global_var as global_var
 
 from imap.lib.opendrive.common import convert_speed
@@ -196,6 +193,11 @@ class Road:
       if self.lanes.have_offset():
         offset = self.lanes.get_offset_by_s(self.reference_line[idx].s)
         self.reference_line[idx].shift_t(offset)
+
+  def add_origin_to_reference_line(self, origin_x, origin_y):
+    for idx in range(len(self.reference_line)):
+      self.reference_line[idx].x += origin_x
+      self.reference_line[idx].y += origin_y
 
   def process_lanes(self):
     # generate boundary

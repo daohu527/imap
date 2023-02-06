@@ -32,6 +32,7 @@ from imap.lib.proto_utils import (
 
 from imap.lib.draw import draw_line, show
 from imap.lib.convex_hull import convex_hull, aabb_box
+from imap.lib.proj_helper import latlon2utm
 
 
 # Distance between stop line and pedestrian crossing
@@ -122,6 +123,9 @@ class Opendrive2Apollo(Convertor):
     self.pb_map = map_pb2.Map()
 
     self.output_file_name = self._get_file_name(output_file_name)
+    # UTM coordinate
+    self.origin_x = 0.0
+    self.origin_y = 0.0
 
   def _get_file_name(self, file_name):
     if file_name and file_name.endswith((".txt", ".bin")):
@@ -137,11 +141,20 @@ class Opendrive2Apollo(Convertor):
     if self.xodr_map.header.date:
       self.pb_map.header.date = self.xodr_map.header.date
 
-    if '+proj=utm' not in self.xodr_map.header.geo_reference.text:
-      proj = pyproj.Proj(self.xodr_map.header.geo_reference.text)
-      # Todo(daohu527): lat\lon to utm
+    proj_txt = self.xodr_map.header.geo_reference.text
+    if '+proj=tmerc' in proj_txt:
+      for p in proj_txt.split():
+        if p.startswith('+lat_0'):
+          lat = float(p.split('=')[1])
+        elif p.startswith('+lon_0'):
+          lon = float(p.split('=')[1])
+      self.origin_x, self.origin_y, zone_id = latlon2utm(lat, lon)
+      self.pb_map.header.projection.proj = "+proj=utm +zone={} +ellps=WGS84 " \
+          "+datum=WGS84 +units=m +no_defs".format(zone_id)
+    elif '+proj=utm' in proj_txt:
+      self.pb_map.header.projection.proj = proj_txt
     else:
-      self.pb_map.header.projection.proj = proj
+      logging.ERROR("Not supported proj! {}".format(proj_txt))
 
     # TODO(zero): Inconsistent definitions
     # self.pb_map.header.district = self.xodr_map.header.name
@@ -520,6 +533,7 @@ class Opendrive2Apollo(Convertor):
 
       xodr_road.generate_reference_line()
       xodr_road.add_offset_to_reference_line()
+      xodr_road.add_origin_to_reference_line(self.origin_x, self.origin_y)
       # Todo(zero):
       draw_line(xodr_road.reference_line, 'r', \
         reference_line = True, label = "reference line " + str(pb_road.id.id))

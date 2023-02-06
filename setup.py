@@ -25,6 +25,7 @@ setuptools.setup(
     install_requires=[
         'protobuf<=3.19.4',
         'matplotlib',
+        'pyproj',
         'record_msg',
     ],
     entry_points={
