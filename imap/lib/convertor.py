@@ -142,19 +142,22 @@ class Opendrive2Apollo(Convertor):
       self.pb_map.header.date = self.xodr_map.header.date
 
     proj_txt = self.xodr_map.header.geo_reference.text
-    if '+proj=tmerc' in proj_txt:
+    if '+proj=utm' in proj_txt:
+      self.pb_map.header.projection.proj = proj_txt
+    else:
+      # We want just support +proj=tmerc, but some do not contain this parameter
       for p in proj_txt.split():
         if p.startswith('+lat_0'):
           lat = float(p.split('=')[1])
         elif p.startswith('+lon_0'):
           lon = float(p.split('=')[1])
-      self.origin_x, self.origin_y, zone_id = latlon2utm(lat, lon)
-      self.pb_map.header.projection.proj = "+proj=utm +zone={} +ellps=WGS84 " \
+      if lat is None or lon is None:
+        self.pb_map.header.projection.proj = "+proj=utm +zone={} +ellps=WGS84 " \
+          "+datum=WGS84 +units=m +no_defs".format(0)
+      else:
+        self.origin_x, self.origin_y, zone_id = latlon2utm(lat, lon)
+        self.pb_map.header.projection.proj = "+proj=utm +zone={} +ellps=WGS84 " \
           "+datum=WGS84 +units=m +no_defs".format(zone_id)
-    elif '+proj=utm' in proj_txt:
-      self.pb_map.header.projection.proj = proj_txt
-    else:
-      logging.ERROR("Not supported proj! {}".format(proj_txt))
 
     # TODO(zero): Inconsistent definitions
     # self.pb_map.header.district = self.xodr_map.header.name
