@@ -29,6 +29,7 @@ def draw(hdmap, lane_id):
     junction_ids = []
     hdmap.draw_lanes(ax, lane_id)
     hdmap.draw_junctions(ax, junction_ids)
+    hdmap.draw_signals(ax)
     hdmap.draw_crosswalks(ax)
     hdmap.draw_stop_signs(ax)
     hdmap.draw_yields(ax)
@@ -71,7 +72,7 @@ def show(need_save=False, path=None):
   # show map
   ax.legend()
   ax.axis('equal')
-  if need_save: 
+  if need_save:
     plt.savefig(path)
     print(path, "saved")
   plt.show()

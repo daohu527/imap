@@ -447,14 +447,15 @@ class Opendrive2Apollo(Convertor):
       pb_road_section.id.id = str(idx)
       self.add_road_section_boundary(pb_road_section, lane_section)
 
-      pb_last_section = []
       for lane in lane_section.left:
         pb_lane = self.create_lane(xodr_road, lane_section, idx, lane)
         # Not driving road is None
         if pb_lane is not None:
           pb_road_section.lane_id.add().id = pb_lane.id.id
-          pb_last_section.append(pb_lane)
 
+      # The last section of road, which used to generate stop lines for
+      # traffic lights
+      pb_last_section = []
       for lane in lane_section.right:
         pb_lane = self.create_lane(xodr_road, lane_section, idx, lane)
         if pb_lane is not None:
