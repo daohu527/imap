@@ -105,6 +105,15 @@ def shift_t(point3d, offset):
 
   return npoint
 
+def calc_length(points):
+  length = 0
+  for p, q in zip(points, points[1:]):
+    x = q.x - p.x
+    y = q.y - p.y
+    z = q.z - p.z
+    length += math.sqrt(x**2 + y**2 + z**2)
+  return length
+
 
 if __name__ == '__main__':
   vec_x = Vector3d(0.9201668879354276, -0.3915263699257437, 0)

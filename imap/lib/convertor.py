@@ -135,13 +135,12 @@ class Opendrive2Apollo(Convertor):
   def set_parameters(self, only_driving = True):
     self.only_driving = only_driving
 
-  def convert_header(self):
-    if self.xodr_map.header.version:
-      self.pb_map.header.version = self.xodr_map.header.version
-    if self.xodr_map.header.date:
-      self.pb_map.header.date = self.xodr_map.header.date
+  def convert_proj_txt(self, proj_txt):
+    if proj_txt is None:
+      self.pb_map.header.projection.proj = "+proj=utm +zone={} +ellps=WGS84 " \
+        "+datum=WGS84 +units=m +no_defs".format(0)
+      return
 
-    proj_txt = self.xodr_map.header.geo_reference.text
     if '+proj=utm' in proj_txt:
       self.pb_map.header.projection.proj = proj_txt
     else:
@@ -158,6 +157,15 @@ class Opendrive2Apollo(Convertor):
         self.origin_x, self.origin_y, zone_id = latlon2utm(lat, lon)
         self.pb_map.header.projection.proj = "+proj=utm +zone={} +ellps=WGS84 " \
           "+datum=WGS84 +units=m +no_defs".format(zone_id)
+
+  def convert_header(self):
+    if self.xodr_map.header.version:
+      self.pb_map.header.version = self.xodr_map.header.version
+    if self.xodr_map.header.date:
+      self.pb_map.header.date = self.xodr_map.header.date
+
+    proj_txt = self.xodr_map.header.geo_reference.text
+    self.convert_proj_txt(proj_txt)
 
     # TODO(zero): Inconsistent definitions
     # self.pb_map.header.district = self.xodr_map.header.name

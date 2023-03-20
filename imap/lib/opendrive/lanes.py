@@ -19,7 +19,7 @@ import math
 
 import imap.global_var as global_var
 
-from imap.lib.common import shift_t
+from imap.lib.common import shift_t, calc_length
 from imap.lib.draw import draw_line
 
 from imap.lib.opendrive.common import convert_speed
@@ -226,6 +226,9 @@ class Lane:
 
       cpoint3d = shift_t(point3d, width * self.direction / 2)
       self.center_line.append(cpoint3d)
+
+    # todo(zero): cacl lane length, skip straight line!!!
+    self.length = calc_length(self.center_line)
 
     debug_mode = global_var.get_element_value("debug_mode")
     if not debug_mode:
