@@ -107,11 +107,19 @@ def shift_t(point3d, offset):
 
 def calc_length(points):
   length = 0
-  for p, q in zip(points, points[1:]):
+  if math.fabs(points[0].yaw - points[-1].yaw) < 0.01:
+    # straight line
+    p, q = points[0], points[-1]
     x = q.x - p.x
     y = q.y - p.y
     z = q.z - p.z
-    length += math.sqrt(x**2 + y**2 + z**2)
+    length = math.sqrt(x**2 + y**2 + z**2)
+  else:
+    for p, q in zip(points, points[1:]):
+      x = q.x - p.x
+      y = q.y - p.y
+      z = q.z - p.z
+      length += math.sqrt(x**2 + y**2 + z**2)
   return length
 
 
