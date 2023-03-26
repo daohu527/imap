@@ -222,6 +222,7 @@ class Lane:
       self.right_boundary.append(rpoint3d)
 
       cpoint3d = shift_t(point3d, width * self.direction / 2)
+      # todo(daohu527): need update point.s?
       self.center_line.append(cpoint3d)
 
     # cacl lane length
