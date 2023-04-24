@@ -186,7 +186,7 @@ class Road:
     for idx in range(len(self.reference_line)):
       if self.lanes.have_offset():
         offset = self.lanes.get_offset_by_s(self.reference_line[idx].s)
-        self.reference_line[idx].shift_t(offset)
+        self.reference_line[idx].shift_t(-offset)
 
   def add_origin_to_reference_line(self, origin_x, origin_y):
     for idx in range(len(self.reference_line)):

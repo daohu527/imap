@@ -21,10 +21,12 @@ import logging
 import sys
 from pathlib import Path
 
-import imap.global_var as global_var
+import matplotlib.pyplot as plt
 
+import imap.global_var as global_var
 from imap.lib.draw import add_editor, show_map
 from imap.lib.convertor import Opendrive2Apollo
+from imap.lib.opendrive.map import Map as XodrMap
 
 
 def convert_map_format(input_path, output_path):
@@ -39,6 +41,31 @@ def show_open_drive_map(map_file):
     opendrive2apollo = Opendrive2Apollo(map_file)
     opendrive2apollo.set_parameters(only_driving=False)
     opendrive2apollo.convert()
+
+
+def show_open_drive_map_lane_boundaries(map_file, only_driving=False):
+    suffix = map_file.split(".")[-1]
+    assert suffix == "xodr"
+    xodr_map = XodrMap()
+    xodr_map.load(map_file)
+    for road_id, road in xodr_map.roads.items():
+        road.generate_reference_line()
+        road.add_offset_to_reference_line()
+        road.add_origin_to_reference_line(0.0, 0.0)
+        road.process_lanes()
+        for lane_section in road.lanes.lane_sections:
+            for lane in lane_section.left + lane_section.right:
+                if only_driving and lane.lane_type != 'driving':
+                    continue
+                left_x = [p.x for p in lane.left_boundary]
+                left_y = [p.y for p in lane.left_boundary]
+                right_x = [p.x for p in lane.right_boundary]
+                right_y = [p.y for p in lane.right_boundary]
+                polygon_x = left_x + right_x[::-1] + left_x[0:1]
+                polygon_y = left_y + right_y[::-1] + left_y[0:1]
+                plt.plot(polygon_x, polygon_y)
+    plt.grid(True)
+    plt.show()
 
 
 def main(args=sys.argv):
@@ -96,6 +123,7 @@ def main(args=sys.argv):
         elif suffix == "xodr":
             global_var.set_element_vaule("need_save_figure", args.save_fig)
             show_open_drive_map(args.map)
+            show_open_drive_map_lane_boundaries(args.map)
         else:
             pass
 
@@ -106,3 +134,7 @@ def main(args=sys.argv):
             logging.error("File not exist! '{}'".format(args.input))
             return
         convert_map_format(args.input, args.output)
+
+
+if __name__ == '__main__':
+    main()
