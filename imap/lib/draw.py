@@ -70,7 +70,8 @@ def draw_line(line, color=None, reference_line=False, label=""):
 
 def show(need_save=False, path=None):
   # show map
-  ax.legend()
+  # ax.legend()
+  ax.grid(True)
   ax.axis('equal')
   if need_save:
     plt.savefig(path)
