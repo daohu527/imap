@@ -270,7 +270,7 @@ class LaneSection:
     left = raw_lane_section.find("left")
     if left is not None:
       for raw_lane in left.iter('lane'):
-        lane = Lane(direction = -1)
+        lane = Lane(direction = 1)
         lane.parse_from(raw_lane)
         self.add_left_lane(lane)
 
@@ -283,7 +283,7 @@ class LaneSection:
     right = raw_lane_section.find("right")
     if right is not None:
       for raw_lane in right.iter('lane'):
-        lane = Lane(direction = 1)
+        lane = Lane(direction = -1)
         lane.parse_from(raw_lane)
         self.add_right_lane(lane)
 

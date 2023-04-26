@@ -69,6 +69,12 @@ class Vector3d:
     self.z /= ratio
     return self
 
+  def __neg__(self):
+    self.x = -self.x
+    self.y = -self.y
+    self.z = -self.z
+    return self
+
   def __str__(self):
     return "Vector3d x: {}, y: {}, z: {}".format(self.x, self.y, self.z)
 
@@ -88,7 +94,7 @@ class Point3d:
     vec_x = Vector3d(math.cos(self.yaw), math.sin(self.yaw), 0)
     vec_z = Vector3d(0, math.sin(self.roll), math.cos(self.roll))
     normal_xz = vec_x.cross_product(vec_z)
-    vec_y = normal_xz.normalize() * offset
+    vec_y = -normal_xz.normalize() * offset
 
     self.x += vec_y.x
     self.y += vec_y.y

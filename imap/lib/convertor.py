@@ -40,6 +40,9 @@ STOP_LINE_DISTANCE = 1.0
 
 
 def to_pb_lane_type(open_drive_type):
+  if open_drive_type is None:
+    return map_lane_pb2.Lane.NONE
+
   lower_type = open_drive_type.lower()
   if lower_type == 'none':
     return map_lane_pb2.Lane.NONE
@@ -72,6 +75,9 @@ def to_pb_lane_type(open_drive_type):
   elif lower_type == 'offRamp':    # not support
     return map_lane_pb2.Lane.NONE
   elif lower_type == 'connectingRamp': # not support
+    return map_lane_pb2.Lane.NONE
+  else:
+    logging.info("Unsupported lane type: {}".format(open_drive_type))
     return map_lane_pb2.Lane.NONE
 
 def to_pb_boundary_type(opendrive_boundary_type):
