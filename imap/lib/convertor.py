@@ -141,13 +141,12 @@ class Opendrive2Apollo(Convertor):
   def set_parameters(self, only_driving = True):
     self.only_driving = only_driving
 
-  def convert_header(self):
-    if self.xodr_map.header.version:
-      self.pb_map.header.version = self.xodr_map.header.version
-    if self.xodr_map.header.date:
-      self.pb_map.header.date = self.xodr_map.header.date
+  def convert_proj_txt(self, proj_txt):
+    if proj_txt is None:
+      self.pb_map.header.projection.proj = "+proj=utm +zone={} +ellps=WGS84 " \
+        "+datum=WGS84 +units=m +no_defs".format(0)
+      return
 
-    proj_txt = self.xodr_map.header.geo_reference.text
     if '+proj=utm' in proj_txt:
       self.pb_map.header.projection.proj = proj_txt
     else:
@@ -164,6 +163,15 @@ class Opendrive2Apollo(Convertor):
         self.origin_x, self.origin_y, zone_id = latlon2utm(lat, lon)
         self.pb_map.header.projection.proj = "+proj=utm +zone={} +ellps=WGS84 " \
           "+datum=WGS84 +units=m +no_defs".format(zone_id)
+
+  def convert_header(self):
+    if self.xodr_map.header.version:
+      self.pb_map.header.version = self.xodr_map.header.version
+    if self.xodr_map.header.date:
+      self.pb_map.header.date = self.xodr_map.header.date
+
+    proj_txt = self.xodr_map.header.geo_reference.text
+    self.convert_proj_txt(proj_txt)
 
     # TODO(zero): Inconsistent definitions
     # self.pb_map.header.district = self.xodr_map.header.name
@@ -459,14 +467,16 @@ class Opendrive2Apollo(Convertor):
         if pb_lane is not None:
           pb_road_section.lane_id.add().id = pb_lane.id.id
 
-      pb_last_right_section = []
+      # The last section of road, which used to generate stop lines for
+      # traffic lights
+      pb_last_section = []
       for lane in lane_section.right:
         pb_lane = self.create_lane(xodr_road, lane_section, idx, lane)
         if pb_lane is not None:
           pb_road_section.lane_id.add().id = pb_lane.id.id
-          # add right lane
-          pb_last_right_section.append(pb_lane)
-    return pb_last_right_section
+          pb_last_section.append(pb_lane)
+    return pb_last_section
+
 
   def construct_signal_overlap(self, pb_lane, pb_signal):
     # lane_overlap_info
@@ -491,10 +501,7 @@ class Opendrive2Apollo(Convertor):
     pb_signal_overlap_id.id = pb_overlap.id.id
 
   def _construct_signal_stopline(self, last_section_lanes, pb_signal):
-    if len(last_section_lanes) == 1:
-      pb_left_lane = pb_right_lane = last_section_lanes[0]
-    else:
-      pb_left_lane, pb_right_lane = last_section_lanes[0], last_section_lanes[-1]
+    pb_left_lane, pb_right_lane = last_section_lanes[0], last_section_lanes[-1]
     left_segment = pb_left_lane.left_boundary.curve.segment[-1].line_segment
     right_segment = pb_right_lane.right_boundary.curve.segment[-1].line_segment
 
@@ -514,20 +521,23 @@ class Opendrive2Apollo(Convertor):
       point = pb_segment.line_segment.point.add()
       point.CopyFrom(right_segment.point[-index])
 
-  def convert_signal(self, xodr_road, pb_last_right_section):
-    if not pb_last_right_section:
-      return
+
+  def convert_signal(self, xodr_road, pb_last_section):
+    for signal_reference in xodr_road.signals.signal_references:
+      # todo(zero): need implement
+      pass
 
     for signal in xodr_road.signals.signals:
-      # todo(zero): ref 2.3.7. Specific examples of OpenDRIVE objects
-      # need to check 'signal.type'
-      pb_signal = self.pb_map.signal.add()
-      # add road_id to avoid duplication
-      pb_signal.id.id = "signal_{}_{}".format(xodr_road.road_id, signal.id)
-      # todo(zero): needs to be completed(boundary\subsignal\type)
-      self._construct_signal_stopline(pb_last_right_section, pb_signal)
-      for pb_lane in pb_last_right_section:
-        self.construct_signal_overlap(pb_lane, pb_signal)
+      if signal.is_traffic_light() and pb_last_section:
+        # print(signal)
+        pb_signal = self.pb_map.signal.add()
+        # add road_id to avoid duplication
+        pb_signal.id.id = "signal_{}_{}".format(xodr_road.road_id, signal.id)
+        # todo(zero): needs to be completed(boundary\subsignal\type)
+        self._construct_signal_stopline(pb_last_section, pb_signal)
+        for pb_lane in pb_last_section:
+          self.construct_signal_overlap(pb_lane, pb_signal)
+
 
   def convert_roads(self):
     for _, xodr_road in self.xodr_map.roads.items():
@@ -549,9 +559,9 @@ class Opendrive2Apollo(Convertor):
 
       xodr_road.process_lanes()
 
-      pb_last_right_section = self.convert_lane(xodr_road, pb_road)
+      pb_last_section = self.convert_lane(xodr_road, pb_road)
       # Todo(zero): need to complete signal
-      # self.convert_signal(xodr_road, pb_last_right_section)
+      self.convert_signal(xodr_road, pb_last_section)
 
   def _is_valid_junction(self, xodr_junction):
     connecting_roads = set()
@@ -605,5 +615,8 @@ class Opendrive2Apollo(Convertor):
 
 
   def save_map(self):
-    write_pb_to_text_file(self.pb_map, self.output_file_name)
-    write_pb_to_bin_file(self.pb_map, self.output_file_name)
+    output_file_name = self.output_file_name
+    if output_file_name is None:
+      output_file_name = "default"
+    write_pb_to_text_file(self.pb_map, output_file_name)
+    write_pb_to_bin_file(self.pb_map, output_file_name)

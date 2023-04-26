@@ -89,6 +89,13 @@ class Signal():
     raw_dependency = raw_signal.find("dependency")
     self.dependency.parse_from(raw_dependency)
 
+  def is_traffic_light(self):
+    # Todo(zero): Need add more country code, ref to "12. Signals"
+    if self.country == "OpenDRIVE":
+      if self.type == "1000001" and self.subtype == "-1":
+        return True
+    return False
+
 class SignalReference():
   def __init__(self, id = None, orientation = None, s = None, t = None):
     self.id = id

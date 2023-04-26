@@ -49,7 +49,10 @@ class Map:
         # self._draw_polygon(junction.polygon, ax, 'c')
 
   def draw_signals(self, ax):
-    pass
+    for signal in self.map_pb.signal:
+      for stop_line in signal.stop_line:
+        for curve in stop_line.segment:
+          self._draw_stop_line(curve.line_segment, ax, "tomato")
 
   def draw_crosswalks(self, ax):
     for crosswalk in self.map_pb.crosswalk:

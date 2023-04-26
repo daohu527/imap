@@ -19,7 +19,7 @@ import math
 
 import imap.global_var as global_var
 
-from imap.lib.common import shift_t
+from imap.lib.common import shift_t, calc_length
 from imap.lib.draw import draw_line
 
 from imap.lib.opendrive.common import convert_speed
@@ -175,9 +175,6 @@ class Lane:
   def add_width(self, width):
     self.widths.append(width)
 
-  def set_length(self, length):
-    self.length = length
-
   def add_road_mark(self, road_mark):
     self.road_marks.append(road_mark)
 
@@ -225,7 +222,11 @@ class Lane:
       self.right_boundary.append(rpoint3d)
 
       cpoint3d = shift_t(point3d, width * self.direction / 2)
+      # todo(daohu527): need update point.s?
       self.center_line.append(cpoint3d)
+
+    # cacl lane length
+    self.length = calc_length(self.center_line)
 
     debug_mode = global_var.get_element_value("debug_mode")
     if not debug_mode:
@@ -286,13 +287,6 @@ class LaneSection:
         lane = Lane(direction = -1)
         lane.parse_from(raw_lane)
         self.add_right_lane(lane)
-
-  def set_lane_length(self, length):
-    for lane in self.left:
-      lane.set_length(length)
-    for lane in self.right:
-      lane.set_length(length)
-    self.center.set_length(length)
 
   def add_neighbors(self):
     n = len(self.left)

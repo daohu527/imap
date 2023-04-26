@@ -127,12 +127,6 @@ class Road:
       self.lanes.lane_sections[idx].end_s = self.lanes.lane_sections[idx+1].s
     self.lanes.lane_sections[-1].end_s = self.length
 
-    for idx, lane_section in enumerate(self.lanes.lane_sections):
-      length = lane_section.end_s - lane_section.s
-      assert length > 0, "Road_{}_Section_{} length is below zero".format( \
-          self.road_id, idx)
-      lane_section.set_lane_length(length)
-
     # add neighbor
     for lane_section in self.lanes.lane_sections:
       lane_section.add_neighbors()
