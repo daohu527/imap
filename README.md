@@ -1,7 +1,7 @@
 ## Imap
 Imap is a tool for visualize and convert format of the hd-map. This project was inspired by Apollo.
 
-![example](docs/img/example.png)
+![example](docs/_static/example.png)
 
 **Supported features**:
 1. Visualize the hd-map, supported formats: Apollo, OpenDrive.
@@ -53,7 +53,7 @@ imap -f -i data/town.xodr -o data/apollo_map.txt
 
 The following is the display of the hd-map in `data\borregas_ave.txt`.You can click on the lane you want to display more detail info, which will display the current lane's id, as well as the predecessor and successor lane's id in the upper left corner.
 
-![map_show](docs/img/map_show.jpg)
+![map_show](docs/_static/map_show.jpg)
 
 
 ## Questions

@@ -4,30 +4,37 @@
    contain the root `toctree` directive.
 
 imap
-----
+==================
 
 **imap** is a tool for visualize and convert format of the hd-map. This
 project was inspired by Apollo.
 
-.. figure:: docs/img/example.png
+.. figure:: /_static/example.png
    :alt: example
 
-   example
 
-**Supported features**: 1. Visualize the hd-map, supported formats:
-Apollo, OpenDrive. 2. Find lane by id 3. Convert format: Opendrive to
-Apollo format.
+**Supported features**:
 
-======= ================== ======
-os      support            remark
-======= ================== ======
-ubuntu  :heavy_check_mark:
-mac     :heavy_check_mark:
-windows :heavy_check_mark:
-======= ================== ======
+-  Visualize the hd-map, supported formats: Apollo, OpenDrive.
+-  Convert format: Opendrive to Apollo format.
+-  Find lane by id
+
+======= ========================= ======
+os      support                   remark
+======= ========================= ======
+ubuntu  yes
+mac     yes
+windows yes
+======= ========================= ======
+
+.. toctree::
+   :caption: Contents:
+   :numbered: 3
+   :maxdepth: 4
+   :hidden:
 
 Related work
-------------
+==================
 
 -  `odrviewer.io <https://odrviewer.io/>`__ is an excellent interactive
    online OpenDRIVE viewer.
@@ -37,7 +44,7 @@ Related work
    map to apollo
 
 Quick start
------------
+==================
 
 Install
 ^^^^^^^
@@ -49,7 +56,7 @@ You can install imap by following cmd.
    pip3 install imap_box
 
 Example
--------
+==================
 
 1. Visualization
 ^^^^^^^^^^^^^^^^
@@ -63,7 +70,9 @@ following command.
    // or
    imap -m data/town.xodr
 
-Currently supported formats: \* Apollo map \* OpenDrive map
+Currently supported formats:
+-  Apollo map
+-  OpenDrive map
 
 2. Find lane by id
 ^^^^^^^^^^^^^^^^^^
@@ -89,24 +98,26 @@ The following is the display of the hd-map in
 more detail info, which will display the current lane’s id, as well as
 the predecessor and successor lane’s id in the upper left corner.
 
-.. figure:: docs/img/map_show.jpg
+.. figure:: /_static/map_show.jpg
    :alt: map_show
 
-   map_show
 
 Questions
----------
+==================
 
-1. After running the command ``imap -m data/your_map_file``, nothing
-   display and no errors!!!
+Q: After running the command ``imap -m data/your_map_file``, nothing display and no errors!!!
 
-A: Check the permissions of the map file, if the current user does not
-have permissions, modify the permissions with the following commands.
+A: Check the permissions of the map file, if the current user does not have
+permissions, modify the permissions with the following commands.
 
 .. code:: shell
 
    sudo chmod 777 data/your_map_file
 
+
+
+Indices and tables
+==================
 
 * :ref:`genindex`
 * :ref:`modindex`
