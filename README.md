@@ -1,5 +1,8 @@
-## Imap [![Documentation Status](https://readthedocs.org/projects/imap/badge/?version=latest)](https://imap.readthedocs.io/en/latest/?badge=latest)
-Imap is a tool for visualize and convert format of the hd-map. This project was inspired by Apollo.
+# imap
+
+[![Documentation Status](https://readthedocs.org/projects/imap/badge/?version=latest)](https://imap.readthedocs.io/en/latest/?badge=latest)
+
+**[imap](https://imap.readthedocs.io/en/latest/)** is a tool for visualize and convert format of the hd-map. This project was inspired by Apollo.
 
 ![example](docs/_static/example.png)
 
