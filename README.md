@@ -67,4 +67,4 @@ A: Check the permissions of the map file, if the current user does not have perm
 sudo chmod 777 data/your_map_file
 ```
 2. Map data permission checking has no problem, still nothing display and no errors!
-A: It's better to install imap_box by running "sudo install imap_box", then run "imap -m xxx.txt".
+A: It's better to install imap_box by running "sudo pip3 install imap_box", then run "imap -m xxx.txt".
