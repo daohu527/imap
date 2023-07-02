@@ -198,6 +198,8 @@ class Opendrive2Apollo(Convertor):
     pb_lane.length = lane.length
     if lane.speed.max_v:
       pb_lane.speed_limit = lane.speed.max_v
+    else:
+      pb_lane.speed_limit = 33.3
     pb_lane.direction = map_lane_pb2.Lane.FORWARD
 
 
