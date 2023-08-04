@@ -196,8 +196,11 @@ class Opendrive2Apollo(Convertor):
         idx, lane.lane_id)
     pb_lane.type = to_pb_lane_type(lane.lane_type)
     pb_lane.length = lane.length
+    # Lane speed first, then road, and finally the default 120km/h
     if lane.speed.max_v:
       pb_lane.speed_limit = lane.speed.max_v
+    elif xodr_road.road_type.speed.max_speed:
+      pb_lane.speed_limit = xodr_road.road_type.speed.max_speed
     else:
       pb_lane.speed_limit = 33.3
     pb_lane.direction = map_lane_pb2.Lane.FORWARD

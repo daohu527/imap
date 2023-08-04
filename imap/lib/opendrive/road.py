@@ -47,9 +47,7 @@ class RoadType:
   def __init__(self, s = None, road_type = None):
     self.s = s
     self.road_type = road_type
-
-  def add_speed(self, speed):
-    self.speed = speed
+    self.speed = Speed()
 
   def parse_from(self, raw_road_type):
     if raw_road_type is not None:
@@ -57,9 +55,7 @@ class RoadType:
       self.road_type = raw_road_type.attrib.get('type')
 
       raw_speed = raw_road_type.find('speed')
-      speed = Speed()
-      speed.parse_from(raw_speed)
-      self.add_speed(speed)
+      self.speed.parse_from(raw_speed)
 
 # Link
 class RoadLink:
