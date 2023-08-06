@@ -483,16 +483,17 @@ class Opendrive2Apollo(Convertor):
     return pb_last_section
 
 
-  def construct_signal_overlap(self, pb_lane, pb_signal):
+  def construct_signal_overlap(self, pb_lane, pb_signal, start_s):
     # lane_overlap_info
     pb_overlap = self.pb_map.overlap.add()
     pb_overlap.id.id = "{}_{}".format(pb_lane.id.id, pb_signal.id.id)
     # lane_overlap_info
     pb_object = pb_overlap.object.add()
     pb_object.id.id = pb_lane.id.id
-    # todo(zero): need to complete
-    # pb_object.lane_overlap_info.start_s
-    # pb_object.lane_overlap_info.end_s
+    # Only end_s is used to specify the distance of stopline,
+    # So we set start_s and end_s same
+    pb_object.lane_overlap_info.start_s = start_s
+    pb_object.lane_overlap_info.end_s = start_s
 
     # signal_overlap_info
     pb_object = pb_overlap.object.add()
@@ -515,6 +516,7 @@ class Opendrive2Apollo(Convertor):
     pb_stop_line = pb_signal.stop_line.add()
     pb_segment = pb_stop_line.segment.add()
 
+    start_s = (pb_left_lane.length + pb_right_lane.length) / 2
     if len(left_segment.point) < index:
       point = pb_segment.line_segment.point.add()
       point.CopyFrom(left_segment.point[-1])
@@ -525,23 +527,38 @@ class Opendrive2Apollo(Convertor):
       point.CopyFrom(left_segment.point[-index])
       point = pb_segment.line_segment.point.add()
       point.CopyFrom(right_segment.point[-index])
+      start_s = start_s - STOP_LINE_DISTANCE
+    return start_s
 
+  def _filter_lane(self, pb_last_section):
+    pb_last_section_n = []
+    for pb_lane in pb_last_section:
+      if pb_lane.type == map_lane_pb2.Lane.CITY_DRIVING:
+        pb_last_section_n.append(pb_lane)
+    return pb_last_section_n
 
   def convert_signal(self, xodr_road, pb_last_section):
+    if pb_last_section is None:
+      return
+
     for signal_reference in xodr_road.signals.signal_references:
       # todo(zero): need implement
       pass
 
+    pb_last_section = self._filter_lane(pb_last_section)
+    if not pb_last_section:
+      return
+
     for signal in xodr_road.signals.signals:
-      if signal.is_traffic_light() and pb_last_section:
+      if signal.is_traffic_light():
         # print(signal)
         pb_signal = self.pb_map.signal.add()
         # add road_id to avoid duplication
         pb_signal.id.id = "signal_{}_{}".format(xodr_road.road_id, signal.id)
         # todo(zero): needs to be completed(boundary\subsignal\type)
-        self._construct_signal_stopline(pb_last_section, pb_signal)
+        start_s = self._construct_signal_stopline(pb_last_section, pb_signal)
         for pb_lane in pb_last_section:
-          self.construct_signal_overlap(pb_lane, pb_signal)
+          self.construct_signal_overlap(pb_lane, pb_signal, start_s)
 
 
   def convert_roads(self):
