@@ -461,6 +461,8 @@ class Opendrive2Apollo(Convertor):
 
 
   def convert_lane(self, xodr_road, pb_road):
+    pb_first_section_left, pb_last_section_right = [], []
+    length = len(xodr_road.lanes.lane_sections)
     for idx, lane_section in enumerate(xodr_road.lanes.lane_sections):
       pb_road_section = pb_road.section.add()
       pb_road_section.id.id = str(idx)
@@ -471,16 +473,18 @@ class Opendrive2Apollo(Convertor):
         # Not driving road is None
         if pb_lane is not None:
           pb_road_section.lane_id.add().id = pb_lane.id.id
+          if idx == 0:
+            pb_first_section_left.append(pb_lane)
 
       # The last section of road, which used to generate stop lines for
       # traffic lights
-      pb_last_section = []
       for lane in lane_section.right:
         pb_lane = self.create_lane(xodr_road, lane_section, idx, lane)
         if pb_lane is not None:
           pb_road_section.lane_id.add().id = pb_lane.id.id
-          pb_last_section.append(pb_lane)
-    return pb_last_section
+          if idx == length - 1:
+            pb_last_section_right.append(pb_lane)
+    return pb_first_section_left, pb_last_section_right
 
 
   def construct_signal_overlap(self, pb_lane, pb_signal, start_s):
@@ -581,9 +585,10 @@ class Opendrive2Apollo(Convertor):
 
       xodr_road.process_lanes()
 
-      pb_last_section = self.convert_lane(xodr_road, pb_road)
+      pb_left_section, pb_right_section = self.convert_lane(xodr_road, pb_road)
       # Todo(zero): need to complete signal
-      self.convert_signal(xodr_road, pb_last_section)
+      self.convert_signal(xodr_road, pb_left_section)
+      self.convert_signal(xodr_road, pb_right_section)
 
   def _is_valid_junction(self, xodr_junction):
     connecting_roads = set()
