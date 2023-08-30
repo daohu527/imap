@@ -583,9 +583,11 @@ class Opendrive2Apollo(Convertor):
 
     points = []
     for road, relation in xodr_junction.connected_roads:
-      start, end = road.get_cross_section(relation)
-      points.append([start.x, start.y])
-      points.append([end.x, end.y])
+      cross_section = road.get_cross_section(relation)
+      if cross_section:
+        start, end = cross_section
+        points.append([start.x, start.y])
+        points.append([end.x, end.y])
 
     # when point <= 4 convex_hull will not fully covered, so we change to aabb_box
     if len(points) <= 4:
