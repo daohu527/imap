@@ -112,6 +112,9 @@ def shift_t(point3d, offset):
   return npoint
 
 def calc_length(points):
+  if len(points) < 2:
+    return
+
   length = 0
   if math.fabs(points[0].yaw - points[-1].yaw) < 0.01:
     # straight line
