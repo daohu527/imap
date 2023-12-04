@@ -419,9 +419,10 @@ class Lanes:
       end_s = lane_section.end_s
       reference_line_in_section = []
       for (idx, point3d) in enumerate(reference_line):
-        if start_s <= point3d.s <= end_s or \
-          (point3d.s < start_s and idx + 1 < len(reference_line) and start_s <= reference_line[idx + 1].s <= end_s) or \
-            (end_s < point3d.s and idx - 1 >= 0 and start_s <= reference_line[idx - 1].s <= end_s):
+        # Todo(zero): Remove judgment because there may be exceptions? For example, judge the last 2 points instead of 1
+        # if start_s <= point3d.s <= end_s or \
+        #   (point3d.s < start_s and idx + 1 < len(reference_line) and start_s <= reference_line[idx + 1].s <= end_s) or \
+        #     (end_s < point3d.s and idx - 1 >= 0 and start_s <= reference_line[idx - 1].s <= end_s):
           reference_line_in_section.append(point3d)
       lane_section.process_lane(reference_line_in_section)
 
