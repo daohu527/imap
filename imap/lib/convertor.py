@@ -156,11 +156,19 @@ class Opendrive2Apollo(Convertor):
           lat = float(p.split('=')[1])
         elif p.startswith('+lon_0'):
           lon = float(p.split('=')[1])
+        elif p.startswith('+x_0'):
+          x_0 = float(p.split('=')[1])
+        elif p.startswith('+y_0'):
+          y_0 = float(p.split('=')[1])
       if lat is None or lon is None:
         self.pb_map.header.projection.proj = "+proj=utm +zone={} +ellps=WGS84 " \
           "+datum=WGS84 +units=m +no_defs".format(0)
       else:
         self.origin_x, self.origin_y, zone_id = latlon2utm(lat, lon)
+        if x_0:
+          self.origin_x = self.origin_x - x_0
+        if y_0:
+          self.origin_y = self.origin_y - y_0
         self.pb_map.header.projection.proj = "+proj=utm +zone={} +ellps=WGS84 " \
           "+datum=WGS84 +units=m +no_defs".format(zone_id)
 
