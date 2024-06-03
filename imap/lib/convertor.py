@@ -151,6 +151,7 @@ class Opendrive2Apollo(Convertor):
       self.pb_map.header.projection.proj = proj_txt
     else:
       # We want just support +proj=tmerc, but some do not contain this parameter
+      lat, lon, x_0, y_0 = None, None, None, None
       for p in proj_txt.split():
         if p.startswith('+lat_0'):
           lat = float(p.split('=')[1])
