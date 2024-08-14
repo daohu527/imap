@@ -34,45 +34,47 @@ def draw(hdmap, lane_id):
     hdmap.draw_stop_signs(ax)
     hdmap.draw_yields(ax)
 
+
 def show_map(map_path, lane_id):
-    hdmap=Map()
+    hdmap = Map()
     hdmap.load(map_path)
     draw(hdmap, lane_id)
-    # max windows
+    #  max windows
     # manager=plt.get_current_fig_manager()
     # manager.window.showMaximized()
-    # tight layout
+    #  tight layout
     # todo(zero): why tight layout not work?
     plt.tight_layout()
     plt.axis('equal')
     plt.show()
 
+
 def add_editor():
-  fig.canvas.mpl_connect('button_press_event', editor.on_click)
-  fig.canvas.mpl_connect('button_press_event', editor.on_press)
-  fig.canvas.mpl_connect('button_release_event', editor.on_release)
-  fig.canvas.mpl_connect('pick_event', editor.on_pick)
-  fig.canvas.mpl_connect('motion_notify_event', editor.on_motion)
+    fig.canvas.mpl_connect('button_press_event', editor.on_click)
+    fig.canvas.mpl_connect('button_press_event', editor.on_press)
+    fig.canvas.mpl_connect('button_release_event', editor.on_release)
+    fig.canvas.mpl_connect('pick_event', editor.on_pick)
+    fig.canvas.mpl_connect('motion_notify_event', editor.on_motion)
 
 
 def draw_line(line, color=None, reference_line=False, label=""):
-  x = [point.x for point in line]
-  y = [point.y for point in line]
+    x = [point.x for point in line]
+    y = [point.y for point in line]
 
-  if reference_line:
-    ax.plot(x, y, linestyle="dashed", linewidth=10, alpha=0.5, label=label)
-  else:
-    if color:
-      ax.plot(x, y, color, label = label)
+    if reference_line:
+        ax.plot(x, y, linestyle="dashed", linewidth=10, alpha=0.5, label=label)
     else:
-      ax.plot(x, y, label = label)
+        if color:
+            ax.plot(x, y, color, label=label)
+        else:
+            ax.plot(x, y, label=label)
 
 
 def show(need_save=False, path=None):
-  # show map
-  ax.legend()
-  ax.axis('equal')
-  if need_save:
-    plt.savefig(path)
-    print(path, "saved")
-  plt.show()
+    # show map
+    ax.legend()
+    ax.axis('equal')
+    if need_save:
+        plt.savefig(path)
+        print(path, "saved")
+    plt.show()

@@ -15,51 +15,50 @@
 # limitations under the License.
 
 
-
 class GeoReference:
-  def __init__(self):
-    self.text = None
+    def __init__(self):
+        self.text = None
 
-  def parse_from(self, raw_geo_reference):
-    if raw_geo_reference is not None:
-      self.text = raw_geo_reference.text
+    def parse_from(self, raw_geo_reference):
+        if raw_geo_reference is not None:
+            self.text = raw_geo_reference.text
 
 
 class Header:
-  def __init__(self, rev_major = None, rev_minor = None, name = None,
-               version = None, date = None, north = None, south = None, \
-               east = None, west = None, vendor = None):
-    self.rev_major = rev_major
-    self.rev_minor = rev_minor
-    self.name = name
-    self.version = version
-    self.date = date
-    self.north = north
-    self.south = south
-    self.east = east
-    self.west = west
-    self.vendor = vendor
-    self.geo_reference = GeoReference()
+    def __init__(self, rev_major=None, rev_minor=None, name=None,
+                 version=None, date=None, north=None, south=None,
+                 east=None, west=None, vendor=None):
+        self.rev_major = rev_major
+        self.rev_minor = rev_minor
+        self.name = name
+        self.version = version
+        self.date = date
+        self.north = north
+        self.south = south
+        self.east = east
+        self.west = west
+        self.vendor = vendor
+        self.geo_reference = GeoReference()
 
-  def parse_from(self, raw_header):
-    self.rev_major = raw_header.attrib.get('revMajor').encode()
-    self.rev_minor = raw_header.attrib.get('revMinor').encode()
-    if raw_header.attrib.get('name') is not None:
-      self.name = raw_header.attrib.get('name').encode()
-    if raw_header.attrib.get('version') is not None:
-      self.version = raw_header.attrib.get('version').encode()
-    if raw_header.attrib.get('date') is not None:
-      self.date = raw_header.attrib.get('date').encode()
-    if raw_header.attrib.get('east') is not None:
-      self.east = float(raw_header.attrib.get('east'))
-    if raw_header.attrib.get('west') is not None:
-      self.west = float(raw_header.attrib.get('west'))
-    if raw_header.attrib.get('south') is not None:
-      self.south = float(raw_header.attrib.get('south'))
-    if raw_header.attrib.get('north') is not None:
-      self.north = float(raw_header.attrib.get('north'))
-    if raw_header.attrib.get('vendor') is not None:
-      self.vendor = raw_header.attrib.get('vendor').encode()
+    def parse_from(self, raw_header):
+        self.rev_major = raw_header.attrib.get('revMajor').encode()
+        self.rev_minor = raw_header.attrib.get('revMinor').encode()
+        if raw_header.attrib.get('name') is not None:
+            self.name = raw_header.attrib.get('name').encode()
+        if raw_header.attrib.get('version') is not None:
+            self.version = raw_header.attrib.get('version').encode()
+        if raw_header.attrib.get('date') is not None:
+            self.date = raw_header.attrib.get('date').encode()
+        if raw_header.attrib.get('east') is not None:
+            self.east = float(raw_header.attrib.get('east'))
+        if raw_header.attrib.get('west') is not None:
+            self.west = float(raw_header.attrib.get('west'))
+        if raw_header.attrib.get('south') is not None:
+            self.south = float(raw_header.attrib.get('south'))
+        if raw_header.attrib.get('north') is not None:
+            self.north = float(raw_header.attrib.get('north'))
+        if raw_header.attrib.get('vendor') is not None:
+            self.vendor = raw_header.attrib.get('vendor').encode()
 
-    raw_geo_reference = raw_header.find("geoReference")
-    self.geo_reference.parse_from(raw_geo_reference)
+        raw_geo_reference = raw_header.find("geoReference")
+        self.geo_reference.parse_from(raw_geo_reference)

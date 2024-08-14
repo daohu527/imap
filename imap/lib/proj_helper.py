@@ -33,33 +33,34 @@
 import pyproj
 import math
 
+
 def utm2latlon(x, y, zone):
-  """utm to latlon"""
-  proj = pyproj.Proj(proj='utm', zone=zone, ellps='WGS84')
-  lon, lat = proj(x, y, inverse=True)
-  return lat, lon
+    """utm to latlon"""
+    proj = pyproj.Proj(proj='utm', zone=zone, ellps='WGS84')
+    lon, lat = proj(x, y, inverse=True)
+    return lat, lon
 
 
 def latlon2utm(lat, lon):
-  """latlon to utm"""
-  zone = latlon2utmzone(lat, lon)
-  projector2 = pyproj.Proj(proj='utm', zone=zone, ellps='WGS84')
-  x, y = projector2(lon, lat)
-  return x, y, zone
+    """latlon to utm"""
+    zone = latlon2utmzone(lat, lon)
+    projector2 = pyproj.Proj(proj='utm', zone=zone, ellps='WGS84')
+    x, y = projector2(lon, lat)
+    return x, y, zone
 
 
 def latlon2utmzone(lat, lon):
-  """latlon to utm zone"""
-  zone_num = math.floor((lon + 180) / 6) + 1
-  if 56.0 <= lat < 64.0 and 3.0 <= lon < 12.0:
-    zone_num = 32
-  if 72.0 <= lat < 84.0:
-    if 0.0 <= lon < 9.0:
-      zone_num = 31
-    elif 9.0 <= lon < 21.0:
-      zone_num = 33
-    elif 21.0 <= lon < 33.0:
-      zone_num = 35
-    elif 33.0 <= lon < 42.0:
-      zone_num = 37
-  return zone_num
+    """latlon to utm zone"""
+    zone_num = math.floor((lon + 180) / 6) + 1
+    if 56.0 <= lat < 64.0 and 3.0 <= lon < 12.0:
+        zone_num = 32
+    if 72.0 <= lat < 84.0:
+        if 0.0 <= lon < 9.0:
+            zone_num = 31
+        elif 9.0 <= lon < 21.0:
+            zone_num = 33
+        elif 21.0 <= lon < 33.0:
+            zone_num = 35
+        elif 33.0 <= lon < 42.0:
+            zone_num = 37
+    return zone_num

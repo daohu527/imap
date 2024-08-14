@@ -15,11 +15,11 @@
 # limitations under the License.
 
 
-
 class VectorLane:
-  def __init__(self, travel_dir):
-    self.travel_dir = travel_dir
+    def __init__(self, travel_dir):
+        self.travel_dir = travel_dir
+
 
 class UserData:
-  def __init__(self):
-    self.vector_lane = None
+    def __init__(self):
+        self.vector_lane = None

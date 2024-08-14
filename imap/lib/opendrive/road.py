@@ -28,171 +28,173 @@ GEOMETRY_SKIP_LENGTH = 0.01
 
 # Type
 class Speed:
-  def __init__(self, max_speed = None, unit = None):
-    self.max_speed = max_speed
-    self.unit = unit
+    def __init__(self, max_speed=None, unit=None):
+        self.max_speed = max_speed
+        self.unit = unit
 
-  def parse_from(self, raw_speed):
-    if raw_speed is None:
-      return
-    raw_max_speed = raw_speed.attrib.get('max')
-    self.unit = raw_speed.attrib.get('unit')
-    if raw_max_speed == 'no limit' or raw_max_speed == 'undefined':
-      self.max_speed = 0
-    else:
-      self.max_speed = convert_speed(raw_max_speed, self.unit)
+    def parse_from(self, raw_speed):
+        if raw_speed is None:
+            return
+        raw_max_speed = raw_speed.attrib.get('max')
+        self.unit = raw_speed.attrib.get('unit')
+        if raw_max_speed == 'no limit' or raw_max_speed == 'undefined':
+            self.max_speed = 0
+        else:
+            self.max_speed = convert_speed(raw_max_speed, self.unit)
 
 
 class RoadType:
-  def __init__(self, s = None, road_type = None):
-    self.s = s
-    self.road_type = road_type
-    self.speed = Speed()
+    def __init__(self, s=None, road_type=None):
+        self.s = s
+        self.road_type = road_type
+        self.speed = Speed()
 
-  def parse_from(self, raw_road_type):
-    if raw_road_type is not None:
-      self.s = raw_road_type.attrib.get('s')
-      self.road_type = raw_road_type.attrib.get('type')
+    def parse_from(self, raw_road_type):
+        if raw_road_type is not None:
+            self.s = raw_road_type.attrib.get('s')
+            self.road_type = raw_road_type.attrib.get('type')
 
-      raw_speed = raw_road_type.find('speed')
-      self.speed.parse_from(raw_speed)
+            raw_speed = raw_road_type.find('speed')
+            self.speed.parse_from(raw_speed)
 
 # Link
-class RoadLink:
-  def __init__(self, element_type = None, element_id = None, \
-               contact_point = None):
-    self.element_type = element_type
-    self.element_id = element_id
-    self.contact_point = contact_point
 
-  def parse_from(self, raw_data):
-    if raw_data is not None:
-      self.element_type = raw_data.attrib.get('elementType')
-      self.element_id = raw_data.attrib.get('elementId')
-      self.contact_point = raw_data.attrib.get('contactPoint')
+
+class RoadLink:
+    def __init__(self, element_type=None, element_id=None,
+                 contact_point=None):
+        self.element_type = element_type
+        self.element_id = element_id
+        self.contact_point = contact_point
+
+    def parse_from(self, raw_data):
+        if raw_data is not None:
+            self.element_type = raw_data.attrib.get('elementType')
+            self.element_id = raw_data.attrib.get('elementId')
+            self.contact_point = raw_data.attrib.get('contactPoint')
+
 
 class Link:
-  def __init__(self, predecessor = None, successor = None):
-    self.predecessor = RoadLink()
-    self.successor = RoadLink()
+    def __init__(self, predecessor=None, successor=None):
+        self.predecessor = RoadLink()
+        self.successor = RoadLink()
 
-    # private
-    self.predecessor_road = None
-    self.successor_road = None
-    self.predecessor_junction = None
-    self.successor_junction = None
+        # private
+        self.predecessor_road = None
+        self.successor_road = None
+        self.predecessor_junction = None
+        self.successor_junction = None
 
-  def parse_from(self, raw_link):
-    if raw_link is not None:
-      raw_predecessor = raw_link.find('predecessor')
-      self.predecessor.parse_from(raw_predecessor)
+    def parse_from(self, raw_link):
+        if raw_link is not None:
+            raw_predecessor = raw_link.find('predecessor')
+            self.predecessor.parse_from(raw_predecessor)
 
-      raw_successor = raw_link.find('successor')
-      self.successor.parse_from(raw_successor)
+            raw_successor = raw_link.find('successor')
+            self.successor.parse_from(raw_successor)
 
 # Road
+
+
 class Road:
-  def __init__(self, name = None, length = None, road_id = None, \
-               junction_id = None):
-    self.name = name
-    self.length = length
-    self.road_id = road_id
-    self.junction_id = junction_id
+    def __init__(self, name=None, length=None, road_id=None,
+                 junction_id=None):
+        self.name = name
+        self.length = length
+        self.road_id = road_id
+        self.junction_id = junction_id
 
-    self.link = Link()
-    self.road_type = RoadType()
-    self.plan_view = PlanView()
-    self.elevation_profile = ElevationProfile()
-    self.lateral_profile = LateralProfile()
-    self.lanes = Lanes()
-    self.signals = Signals()
+        self.link = Link()
+        self.road_type = RoadType()
+        self.plan_view = PlanView()
+        self.elevation_profile = ElevationProfile()
+        self.lateral_profile = LateralProfile()
+        self.lanes = Lanes()
+        self.signals = Signals()
 
-    # private
-    self.reference_line = []
+        # private
+        self.reference_line = []
 
+    def generate_lane_boundary(self):
+        for lane_section in self.lanes.lane_sections:
+            lane_section.left
+            lane_section.right
 
-  def generate_lane_boundary(self):
-    for lane_section in self.lanes.lane_sections:
-      lane_section.left
-      lane_section.right
+    def post_processing(self):
+        # add length
+        for idx in range(len(self.lanes.lane_sections) - 1):
+            self.lanes.lane_sections[idx].end_s = self.lanes.lane_sections[idx+1].s
+        self.lanes.lane_sections[-1].end_s = self.length
 
+        # add neighbor
+        for lane_section in self.lanes.lane_sections:
+            lane_section.add_neighbors()
 
-  def post_processing(self):
-    # add length
-    for idx in range(len(self.lanes.lane_sections) - 1):
-      self.lanes.lane_sections[idx].end_s = self.lanes.lane_sections[idx+1].s
-    self.lanes.lane_sections[-1].end_s = self.length
+    def parse_from(self, raw_road):
+        self.name = raw_road.attrib.get('name')
+        self.length = float(raw_road.attrib.get('length'))
+        self.road_id = raw_road.attrib.get('id')
+        self.junction_id = raw_road.attrib.get('junction')
 
-    # add neighbor
-    for lane_section in self.lanes.lane_sections:
-      lane_section.add_neighbors()
+        raw_link = raw_road.find('link')
+        self.link.parse_from(raw_link)
 
+        raw_road_type = raw_road.find('type')
+        self.road_type.parse_from(raw_road_type)
 
-  def parse_from(self, raw_road):
-    self.name = raw_road.attrib.get('name')
-    self.length = float(raw_road.attrib.get('length'))
-    self.road_id = raw_road.attrib.get('id')
-    self.junction_id = raw_road.attrib.get('junction')
+        # reference line
+        raw_plan_view = raw_road.find('planView')
+        assert raw_plan_view is not None, \
+            "Road {} has no reference line!".format(self.road_id)
+        self.plan_view.parse_from(raw_plan_view)
 
-    raw_link = raw_road.find('link')
-    self.link.parse_from(raw_link)
+        # elevationProfile
+        raw_elevation_profile = raw_road.find('elevationProfile')
+        self.elevation_profile.parse_from(raw_elevation_profile)
 
-    raw_road_type = raw_road.find('type')
-    self.road_type.parse_from(raw_road_type)
+        # lateralProfile
+        raw_lateral_profile = raw_road.find('lateralProfile')
+        self.lateral_profile.parse_from(raw_lateral_profile)
 
-    # reference line
-    raw_plan_view = raw_road.find('planView')
-    assert raw_plan_view is not None, \
-        "Road {} has no reference line!".format(self.road_id)
-    self.plan_view.parse_from(raw_plan_view)
+        # lanes
+        raw_lanes = raw_road.find('lanes')
+        assert raw_lanes is not None, "Road {} has no lanes!".format(
+            self.road_id)
+        self.lanes.parse_from(raw_lanes)
 
-    # elevationProfile
-    raw_elevation_profile = raw_road.find('elevationProfile')
-    self.elevation_profile.parse_from(raw_elevation_profile)
+        # signals
+        raw_signals = raw_road.find('signals')
+        self.signals.parse_from(raw_signals)
 
-    # lateralProfile
-    raw_lateral_profile = raw_road.find('lateralProfile')
-    self.lateral_profile.parse_from(raw_lateral_profile)
+        # post processing
+        self.post_processing()
 
-    # lanes
-    raw_lanes = raw_road.find('lanes')
-    assert raw_lanes is not None, "Road {} has no lanes!".format(self.road_id)
-    self.lanes.parse_from(raw_lanes)
+    def generate_reference_line(self):
+        for geometry in self.plan_view.geometrys:
+            if geometry.length < GEOMETRY_SKIP_LENGTH:
+                continue
 
-    # signals
-    raw_signals = raw_road.find('signals')
-    self.signals.parse_from(raw_signals)
+            sampling_length = global_var.get_element_value("sampling_length")
+            points = geometry.sampling(sampling_length, self.elevation_profile)
+            self.reference_line.extend(points)
 
-    # post processing
-    self.post_processing()
+        assert len(self.reference_line) != 0, \
+            "Road {} reference line is empty!".format(self.road_id)
 
-  def generate_reference_line(self):
-    for geometry in self.plan_view.geometrys:
-      if geometry.length < GEOMETRY_SKIP_LENGTH:
-        continue
+    def add_offset_to_reference_line(self):
+        for idx in range(len(self.reference_line)):
+            if self.lanes.have_offset():
+                offset = self.lanes.get_offset_by_s(self.reference_line[idx].s)
+                self.reference_line[idx].shift_t(offset)
 
-      sampling_length = global_var.get_element_value("sampling_length")
-      points = geometry.sampling(sampling_length, self.elevation_profile)
-      self.reference_line.extend(points)
+    def add_origin_to_reference_line(self, origin_x, origin_y):
+        for idx in range(len(self.reference_line)):
+            self.reference_line[idx].x += origin_x
+            self.reference_line[idx].y += origin_y
 
-    assert len(self.reference_line) != 0, \
-        "Road {} reference line is empty!".format(self.road_id)
+    def process_lanes(self):
+        # generate boundary
+        self.lanes.process_lane_sections(self.reference_line)
 
-  def add_offset_to_reference_line(self):
-    for idx in range(len(self.reference_line)):
-      if self.lanes.have_offset():
-        offset = self.lanes.get_offset_by_s(self.reference_line[idx].s)
-        self.reference_line[idx].shift_t(offset)
-
-  def add_origin_to_reference_line(self, origin_x, origin_y):
-    for idx in range(len(self.reference_line)):
-      self.reference_line[idx].x += origin_x
-      self.reference_line[idx].y += origin_y
-
-  def process_lanes(self):
-    # generate boundary
-    self.lanes.process_lane_sections(self.reference_line)
-
-
-  def get_cross_section(self, relation):
-    return self.lanes.get_cross_section(relation)
+    def get_cross_section(self, relation):
+        return self.lanes.get_cross_section(relation)

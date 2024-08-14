@@ -16,12 +16,12 @@
 
 
 def convert_speed(speed_limit, speed_unit) -> float:
-  if speed_unit == 'm/s':
-    return float(speed_limit)
-  elif speed_unit == 'km/h':
-    return float(speed_limit) * 0.277778
-  elif speed_unit == 'mph':
-    return float(speed_limit) * 0.44704
-  else:
-    print("Unsupported speed unit: {}".format(speed_unit))
-    return float(speed_limit)
+    if speed_unit == 'm/s':
+        return float(speed_limit)
+    elif speed_unit == 'km/h':
+        return float(speed_limit) * 0.277778
+    elif speed_unit == 'mph':
+        return float(speed_limit) * 0.44704
+    else:
+        print("Unsupported speed unit: {}".format(speed_unit))
+        return float(speed_limit)

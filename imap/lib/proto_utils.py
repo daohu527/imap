@@ -43,6 +43,7 @@ def write_pb_to_text_file(topic_pb, file_path):
         f.write(str(topic_pb))
         print("File success saved in: {}".format(file_name))
 
+
 def write_pb_to_bin_file(topic_pb, file_path):
     """write pb message to file
 

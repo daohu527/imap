@@ -16,13 +16,15 @@
 
 import math
 
+
 def cubic_polynoms(a, b, c, d, u):
-  v = a + b*u + c*u**2 + d*u**3
-  theta = math.atan(b + 2*c*u + 3*d*u**2)
-  return u, v, theta
+    v = a + b*u + c*u**2 + d*u**3
+    theta = math.atan(b + 2*c*u + 3*d*u**2)
+    return u, v, theta
+
 
 def parametric_cubic_curve(aU, bU, cU, dU, aV, bV, cV, dV, p):
-  u = aU + bU*p + cU*p**2 + dU*p**3
-  v = aV + bV*p + cV*p**2 + dV*p**3
-  theta = math.atan2(bV + 2*cV*p + 3*dV*p**2, bU + 2*cU*p + 3*dU*p**2)
-  return u, v, theta
+    u = aU + bU*p + cU*p**2 + dU*p**3
+    v = aV + bV*p + cV*p**2 + dV*p**3
+    theta = math.atan2(bV + 2*cV*p + 3*dV*p**2, bU + 2*cU*p + 3*dU*p**2)
+    return u, v, theta
