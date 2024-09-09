@@ -533,7 +533,7 @@ class Opendrive2Apollo(Convertor):
             point = pb_segment.line_segment.point.add()
             point.CopyFrom(right_segment.point[-index])
 
-    def convert_signal(self, xodr_road, pb_last_section):
+    def convert_signals(self, xodr_road, pb_last_section):
         for signal_reference in xodr_road.signals.signal_references:
             # todo(zero): need implement
             pass
@@ -550,6 +550,11 @@ class Opendrive2Apollo(Convertor):
                 for pb_lane in pb_last_section:
                     self.construct_signal_overlap(pb_lane, pb_signal)
 
+    def convert_objects(self):
+        # xodr_road.reference_line
+        # pb_parking_space = self.pb_map.parking_space.add()
+        pass
+
     def convert_roads(self):
         for _, xodr_road in self.xodr_map.roads.items():
             pb_road = self.pb_map.road.add()
@@ -561,19 +566,25 @@ class Opendrive2Apollo(Convertor):
             if xodr_road.road_type.road_type is None:
                 pb_road.type = map_road_pb2.Road.CITY_ROAD
 
+            # Generate reference line, Note that most objects rely on reference_line!!!
             xodr_road.generate_reference_line()
             xodr_road.add_offset_to_reference_line()
             xodr_road.add_origin_to_reference_line(
                 self.origin_x, self.origin_y)
-            # Todo(zero):
+
             draw_line(xodr_road.reference_line, 'r',
                       reference_line=True, label="reference line " + str(pb_road.id.id))
 
+            # Generate Lanes
             xodr_road.process_lanes()
-
             pb_last_section = self.convert_lane(xodr_road, pb_road)
+
             # Todo(zero): need to complete signal
-            self.convert_signal(xodr_road, pb_last_section)
+            # Generate Signals
+            self.convert_signals(xodr_road, pb_last_section)
+
+            self.convert_objects(xodr_road)
+
 
     def _is_valid_junction(self, xodr_junction):
         connecting_roads = set()

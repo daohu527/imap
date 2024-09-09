@@ -21,6 +21,7 @@ from imap.lib.opendrive.plan_view import PlanView
 from imap.lib.opendrive.profile import ElevationProfile, LateralProfile
 from imap.lib.opendrive.lanes import Lanes
 from imap.lib.opendrive.signals import Signals
+from imap.lib.opendrive.objects import Objects
 
 
 GEOMETRY_SKIP_LENGTH = 0.01
@@ -44,9 +45,13 @@ class Speed:
 
 
 class RoadType:
-    def __init__(self, s=None, road_type=None):
+    def __init__(self, s=None, road_type=None, country=None):
+        # required
         self.s = s
         self.road_type = road_type
+        # optional
+        self.country = country
+
         self.speed = Speed()
 
     def parse_from(self, raw_road_type):
@@ -104,13 +109,15 @@ class Road:
         self.road_id = road_id
         self.junction_id = junction_id
 
-        self.link = Link()
         self.road_type = RoadType()
+
+        self.link = Link()
+        self.lanes = Lanes()
+        self.objects = Objects()
+        self.signals = Signals()
         self.plan_view = PlanView()
         self.elevation_profile = ElevationProfile()
         self.lateral_profile = LateralProfile()
-        self.lanes = Lanes()
-        self.signals = Signals()
 
         # private
         self.reference_line = []
@@ -165,6 +172,10 @@ class Road:
         # signals
         raw_signals = raw_road.find('signals')
         self.signals.parse_from(raw_signals)
+
+        # objects
+        raw_objects = raw_road.find('objects')
+        self.objects.parse_from(raw_objects)
 
         # post processing
         self.post_processing()
