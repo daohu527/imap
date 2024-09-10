@@ -17,6 +17,7 @@
 import abc
 from enum import Enum
 
+from imap.lib.common import shift_t, binary_search
 
 class ObjectType(Enum):
     BARRIER = "barrier"
@@ -82,6 +83,16 @@ class Obstacle(Object):
 class ParkingSpace(Object):
     def __init__(self) -> None:
         pass
+
+    def process_corners(self, reference_line):
+        # Find the point closest to s, considering adding interpolation
+        idx = binary_search([point3d.s for point3d in reference_line], self.s)
+        reference_point3d = reference_line[idx]
+        inertial_point3d = shift_t(point3d, self.t * self.direction)
+        center = [inertial_point3d.x, inertial_point3d.y]
+        corners = get_rotated_rectangle_points(center, self.hdg, self.height, self.width)
+        return corners
+
 
 class Pole(Object):
     def __init__(self) -> None:

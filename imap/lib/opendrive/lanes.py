@@ -19,21 +19,10 @@ import math
 
 import imap.global_var as global_var
 
-from imap.lib.common import shift_t, calc_length
+from imap.lib.common import shift_t, calc_length, binary_search
 from imap.lib.draw import draw_line
 
 from imap.lib.opendrive.common import convert_speed
-
-
-def binary_search(arr, val):
-    left, right = 0, len(arr) - 1
-    while left <= right:
-        mid = math.floor((left + right)/2)
-        if arr[mid] <= val:
-            left = mid + 1
-        else:
-            right = mid - 1
-    return left - 1
 
 
 def is_adjacent(road_marks) -> bool:

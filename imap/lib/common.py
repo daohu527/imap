@@ -106,6 +106,17 @@ class Point3d:
                                                                         self.y, self.z, self.s, self.yaw)
 
 
+def binary_search(arr, val):
+    left, right = 0, len(arr) - 1
+    while left <= right:
+        mid = math.floor((left + right)/2)
+        if arr[mid] <= val:
+            left = mid + 1
+        else:
+            right = mid - 1
+    return left - 1
+
+
 def shift_t(point3d, offset):
     npoint = copy.deepcopy(point3d)
     npoint.shift_t(offset)
@@ -133,6 +144,25 @@ def calc_length(points):
             length += math.sqrt(x**2 + y**2 + z**2)
     return length
 
+
+def get_rotated_rectangle_points(center, hdg, height, width):
+    cx, cy = center
+    half_height, half_width = height / 2, width / 2
+
+    # Rectangle's 4 corners relative to the center
+    corners = [
+        (-half_width, -half_height),  # bottom-left
+        (half_width, -half_height),   # bottom-right
+        (half_width, half_height),    # top-right
+        (-half_width, half_height)    # top-left
+    ]
+
+    # Rotate each corner and translate by the center
+    return [
+        (cx + x * math.cos(hdg) - y * math.sin(hdg),
+         cy + x * math.sin(hdg) + y * math.cos(hdg))
+        for x, y in corners
+    ]
 
 if __name__ == '__main__':
     vec_x = Vector3d(0.9201668879354276, -0.3915263699257437, 0)

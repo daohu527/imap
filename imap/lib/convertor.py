@@ -550,10 +550,16 @@ class Opendrive2Apollo(Convertor):
                 for pb_lane in pb_last_section:
                     self.construct_signal_overlap(pb_lane, pb_signal)
 
-    def convert_objects(self):
-        # xodr_road.reference_line
-        # pb_parking_space = self.pb_map.parking_space.add()
-        pass
+    def convert_objects(self, xodr_road):
+        reference_line = xodr_road.reference_line
+        for obj in xodr_road.objects.objects:
+            pb_parking_space = self.pb_map.parking_space.add()
+            # Not sure if this is correct, need to pay attention to the units
+            pb_parking_space.heading = obj.hdg
+            for corner in obj.process_corners(reference_line):
+                point = pb_parking_space.polygon.point.add()
+                point.x, point.y = corner
+
 
     def convert_roads(self):
         for _, xodr_road in self.xodr_map.roads.items():
