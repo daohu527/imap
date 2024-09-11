@@ -145,16 +145,16 @@ def calc_length(points):
     return length
 
 
-def get_rotated_rectangle_points(center, hdg, height, width):
+def get_rotated_rectangle_points(center, hdg, length, width):
     cx, cy = center
-    half_height, half_width = height / 2, width / 2
+    half_length, half_width = length / 2, width / 2
 
     # Rectangle's 4 corners relative to the center
     corners = [
-        (-half_width, -half_height),  # bottom-left
-        (half_width, -half_height),   # bottom-right
-        (half_width, half_height),    # top-right
-        (-half_width, half_height)    # top-left
+        (-half_length, -half_width),  # bottom-left
+        (half_length, -half_width),   # bottom-right
+        (half_length, half_width),    # top-right
+        (-half_length, half_width)    # top-left
     ]
 
     # Rotate each corner and translate by the center

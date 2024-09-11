@@ -50,7 +50,7 @@ class Object(metaclass=abc.ABCMeta):
         self.hdg = float(raw_object.attrib.get('hdg'))
         self.pitch = float(raw_object.attrib.get('pitch'))
         self.roll = float(raw_object.attrib.get('roll'))
-        self.radius = float(raw_object.attrib.get('radius'))
+        self.radius = raw_object.attrib.get('radius')
         self.validLength = float(raw_object.attrib.get('validLength'))
         self.dynamic = raw_object.attrib.get('dynamic')
         self.perpToRoad = raw_object.attrib.get('perpToRoad')
@@ -91,8 +91,11 @@ class ParkingSpace(Object):
         reference_point3d = reference_line[idx]
         inertial_point3d = shift_t(reference_point3d, self.t)
         center = [inertial_point3d.x, inertial_point3d.y]
+        # todo(zero): Because the object's angle is relative to the road,
+        # the road's angle needs to be added 'self.hdg + reference_point3d.yaw',
+        # but do we need to consider the inclination of the road?
         corners = get_rotated_rectangle_points(
-            center, self.hdg, self.height, self.width)
+            center, self.hdg + reference_point3d.yaw, self.length, self.width)
         return corners
 
 
