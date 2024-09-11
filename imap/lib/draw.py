@@ -30,6 +30,7 @@ def draw(hdmap, lane_id):
     hdmap.draw_lanes(ax, lane_id)
     hdmap.draw_junctions(ax, junction_ids)
     hdmap.draw_signals(ax)
+    hdmap.draw_parking_spaces(ax)
     hdmap.draw_crosswalks(ax)
     hdmap.draw_stop_signs(ax)
     hdmap.draw_yields(ax)

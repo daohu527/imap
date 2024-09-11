@@ -83,7 +83,8 @@ class Map:
         pass
 
     def draw_parking_spaces(self, ax):
-        pass
+        for parking_space in self.map_pb.parking_space:
+            self._draw_polygon_boundary(parking_space.polygon, ax, 'c')
 
     def draw_pnc_junctions(self, ax):
         pass

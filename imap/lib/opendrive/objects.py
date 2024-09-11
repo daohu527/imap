@@ -17,7 +17,8 @@
 import abc
 from enum import Enum
 
-from imap.lib.common import shift_t, binary_search
+from imap.lib.common import shift_t, binary_search, get_rotated_rectangle_points
+
 
 class ObjectType(Enum):
     BARRIER = "barrier"
@@ -39,18 +40,18 @@ class Object(metaclass=abc.ABCMeta):
         self.name = raw_object.attrib.get('name')
         self.type = raw_object.attrib.get('type')
         self.subtype = raw_object.attrib.get('subtype')
-        self.s = raw_object.attrib.get('s')
-        self.t = raw_object.attrib.get('t')
-        self.zOffset = raw_object.attrib.get('zOffset')
+        self.s = float(raw_object.attrib.get('s'))
+        self.t = float(raw_object.attrib.get('t'))
+        self.zOffset = float(raw_object.attrib.get('zOffset'))
         self.orientation = raw_object.attrib.get('orientation')
-        self.length = raw_object.attrib.get('length')
-        self.width = raw_object.attrib.get('width')
-        self.height = raw_object.attrib.get('height')
-        self.hdg = raw_object.attrib.get('hdg')
-        self.pitch = raw_object.attrib.get('pitch')
-        self.roll = raw_object.attrib.get('roll')
-        self.radius = raw_object.attrib.get('radius')
-        self.validLength = raw_object.attrib.get('validLength')
+        self.length = float(raw_object.attrib.get('length'))
+        self.width = float(raw_object.attrib.get('width'))
+        self.height = float(raw_object.attrib.get('height'))
+        self.hdg = float(raw_object.attrib.get('hdg'))
+        self.pitch = float(raw_object.attrib.get('pitch'))
+        self.roll = float(raw_object.attrib.get('roll'))
+        self.radius = float(raw_object.attrib.get('radius'))
+        self.validLength = float(raw_object.attrib.get('validLength'))
         self.dynamic = raw_object.attrib.get('dynamic')
         self.perpToRoad = raw_object.attrib.get('perpToRoad')
 
@@ -88,9 +89,10 @@ class ParkingSpace(Object):
         # Find the point closest to s, considering adding interpolation
         idx = binary_search([point3d.s for point3d in reference_line], self.s)
         reference_point3d = reference_line[idx]
-        inertial_point3d = shift_t(point3d, self.t * self.direction)
+        inertial_point3d = shift_t(reference_point3d, self.t)
         center = [inertial_point3d.x, inertial_point3d.y]
-        corners = get_rotated_rectangle_points(center, self.hdg, self.height, self.width)
+        corners = get_rotated_rectangle_points(
+            center, self.hdg, self.height, self.width)
         return corners
 
 
@@ -124,8 +126,11 @@ class Objects:
         self.objects = []
 
     def parse_from(self, raw_objects):
-        for _, xodr_object in raw_objects.items():
-            object_type = xodr_object.attrib.get('type')
+        if raw_objects is None:
+            return
+
+        for raw_object in raw_objects.iter('object'):
+            object_type = ObjectType(raw_object.attrib.get('type'))
             if object_type == ObjectType.BARRIER:
                 obj = Barrier()
             elif object_type == ObjectType.BUILDING:
@@ -151,5 +156,5 @@ class Objects:
             else:
                 raise NotImplementedError(f"{object_type}")
 
-            obj.parse_from(xodr_object)
+            obj.parse_from(raw_object)
             self.objects.append(obj)
