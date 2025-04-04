@@ -141,12 +141,11 @@ class Map:
 
     @staticmethod
     def _draw_polygon(polygon, ax, color_val):
-        # todo(zero): need to fix
         pxy = []
         for point in polygon.point:
             pxy.append([point.x, point.y])
-        polygon = Polygon(pxy, True)
-        ax.add_patch(polygon)
+        patch = Polygon(pxy, closed=True, edgecolor=color_val)
+        ax.add_patch(patch)
 
     @staticmethod
     def _draw_stop_line(line_segment, ax, color_val):
