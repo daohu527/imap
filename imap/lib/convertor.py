@@ -32,7 +32,7 @@ from imap.lib.proto_utils import (
 
 from imap.lib.draw import draw_line, show
 from imap.lib.convex_hull import convex_hull, aabb_box
-from imap.lib.proj_helper import latlon2utm
+from imap.lib.proj_helper import latlon2projected
 
 
 # Distance between stop line and pedestrian crossing
@@ -167,8 +167,9 @@ class Opendrive2Apollo(Convertor):
                 self.pb_map.header.projection.proj = "+proj=utm +zone={} +ellps=WGS84 " \
                     "+datum=WGS84 +units=m +no_defs".format(0)
             else:
-                # use projTxt run latlon2utm                                                                                                                                                                                                                                                          
-                self.origin_x, self.origin_y, zone_id = latlon2utm(lat, lon, self.xodr_map.header.geo_reference.text)                                                                                                                                                               
+                # use projTxt run latlon2projected
+                self.origin_x, self.origin_y, zone_id = latlon2projected(
+                    lat, lon, self.xodr_map.header.geo_reference.text)
                 if x_0:
                     self.origin_x = self.origin_x - x_0
                 if y_0:
