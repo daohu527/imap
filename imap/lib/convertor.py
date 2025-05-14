@@ -167,7 +167,8 @@ class Opendrive2Apollo(Convertor):
                 self.pb_map.header.projection.proj = "+proj=utm +zone={} +ellps=WGS84 " \
                     "+datum=WGS84 +units=m +no_defs".format(0)
             else:
-                self.origin_x, self.origin_y, zone_id = latlon2utm(lat, lon)
+                # use projTxt run latlon2utm                                                                                                                                                                                                                                                          
+                self.origin_x, self.origin_y, zone_id = latlon2utm(lat, lon, self.xodr_map.header.geo_reference.text)                                                                                                                                                               
                 if x_0:
                     self.origin_x = self.origin_x - x_0
                 if y_0:

@@ -41,12 +41,13 @@ def utm2latlon(x, y, zone):
     return lat, lon
 
 
-def latlon2utm(lat, lon):
-    """latlon to utm"""
-    zone = latlon2utmzone(lat, lon)
-    projector2 = pyproj.Proj(proj='utm', zone=zone, ellps='WGS84')
-    x, y = projector2(lon, lat)
-    return x, y, zone
+def latlon2utm(lat, lon, projTxt):                                                                                                                                                                                                                                          
+    """latlon to utm use proj info"""                                                                                                                                                                                                                                                       
+    zone = latlon2utmzone(lat, lon)                                                                                                                                                                                                                                           
+    print(f"origin_lat: {lat} | origin_lon: {lon}")                                                                                                                                                                                                                           
+    projector2 = pyproj.Proj(projTxt)                                                                                                                                                                                                                                         
+    x, y = projector2(lon, lat)                                                                                                                                                                                                                                               
+    return x, y, zone    
 
 
 def latlon2utmzone(lat, lon):
