@@ -36,7 +36,7 @@ import math
 
 def projected2latlon(x, y, zone_id=None, proj_txt=None):
     """utm to latlon"""
-    if proj_txt is None:
+    if proj_txt is None or '+proj' not in proj_txt:
         # Default: Inverse Standard UTM
         if zone_id is None:
             raise ValueError(
@@ -51,7 +51,7 @@ def projected2latlon(x, y, zone_id=None, proj_txt=None):
 def latlon2projected(lat, lon, proj_txt=None):
     """latlon to utm use proj info"""
     zone_id = latlon2utmzone(lat, lon)
-    if proj_txt is None:
+    if proj_txt is None or '+proj' not in proj_txt:
         # Default: Standard UTM
         proj = pyproj.Proj(proj='utm', zone=zone_id, ellps='WGS84')
     else:

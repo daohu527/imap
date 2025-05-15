@@ -15,23 +15,20 @@ license = { text = "Apache Software License" }
 authors = [
     { name = "daohu527", email = "daohu527@gmail.com" }
 ]
-home-page = "https://github.com/daohu527/imap"
 keywords = ["imap", "mapping", "visualization"]
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent"
 ]
-dynamic = []
+dependencies = [
+    "protobuf<=3.19.4",
+    "matplotlib",
+    "pyproj",
+    "record_msg<=0.1.1"
+]
+scripts = { imap = "imap.main:main" }
 
 [project.urls]
+Homepage = "https://github.com/daohu527/imap"
 "Bug Tracker" = "https://github.com/daohu527/imap/issues"
-
-[project.dependencies]
-protobuf <= "3.19.4"
-matplotlib
-pyproj
-record_msg <= "0.1.1"
-
-[project.scripts]
-imap = "imap.main:main"
