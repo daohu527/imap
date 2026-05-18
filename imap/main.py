@@ -106,3 +106,7 @@ def main(args=sys.argv):
             logging.error("File not exist! '{}'".format(args.input))
             return
         convert_map_format(args.input, args.output)
+
+
+if __name__ == '__main__':
+    main()

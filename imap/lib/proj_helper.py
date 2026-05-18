@@ -34,6 +34,24 @@ import pyproj
 import math
 
 
+_UNSUPPORTED_VERTICAL_PROJ_ARGS = {
+    '+geoid_crs',
+    '+geoidgrids',
+    '+vunits',
+}
+
+
+def _sanitize_proj_txt(proj_txt):
+    if proj_txt is None:
+        return None
+    tokens = []
+    for token in proj_txt.split():
+        if token.split('=')[0] in _UNSUPPORTED_VERTICAL_PROJ_ARGS:
+            continue
+        tokens.append(token)
+    return ' '.join(tokens)
+
+
 def projected2latlon(x, y, zone_id=None, proj_txt=None):
     """utm to latlon"""
     if proj_txt is None or '+proj' not in proj_txt:
@@ -43,7 +61,7 @@ def projected2latlon(x, y, zone_id=None, proj_txt=None):
                 "For default inverse UTM, 'zone_id' parameter is required.")
         proj = pyproj.Proj(proj='utm', zone=zone_id, ellps='WGS84')
     else:
-        proj = pyproj.Proj(proj_txt)
+        proj = pyproj.Proj(_sanitize_proj_txt(proj_txt))
     lon, lat = proj(x, y, inverse=True)
     return lat, lon
 
@@ -55,7 +73,7 @@ def latlon2projected(lat, lon, proj_txt=None):
         # Default: Standard UTM
         proj = pyproj.Proj(proj='utm', zone=zone_id, ellps='WGS84')
     else:
-        proj = pyproj.Proj(proj_txt)
+        proj = pyproj.Proj(_sanitize_proj_txt(proj_txt))
     x, y = proj(lon, lat)
     return x, y, zone_id
 
