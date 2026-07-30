@@ -93,6 +93,9 @@ Now you can convert OpenDrive map to Apollo map by following command.
 
    imap -f -i data/town.xodr -o data/apollo_map.txt
 
+The converter writes a conversion report to
+``data/apollo_map_conversion_report.json``.
+
 The following is the display of the hd-map in
 ``data\borregas_ave.txt``.You can click on the lane you want to display
 more detail info, which will display the current lane’s id, as well as

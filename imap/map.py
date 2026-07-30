@@ -67,11 +67,19 @@ class Map:
                     self._draw_stop_line(curve.line_segment, ax, "tomato")
 
     def draw_yields(self, ax):
-        pass
-        # for yield_sign in self.map_pb.yield:
-        #   for stop_line in yield_sign.stop_line:
-        #     for curve in stop_line.segment:
-        #       self._draw_stop_line(curve.line_segment, ax, "yellow")
+        yield_container = None
+        if hasattr(self.map_pb, "yield_sign"):
+            yield_container = self.map_pb.yield_sign
+        elif "yield" in [field.name for field in self.map_pb.DESCRIPTOR.fields]:
+            yield_container = getattr(self.map_pb, "yield")
+
+        if yield_container is None:
+            return
+
+        for yield_sign in yield_container:
+            for stop_line in yield_sign.stop_line:
+                for curve in stop_line.segment:
+                    self._draw_stop_line(curve.line_segment, ax, "yellow")
 
     def draw_clear_areas(self, ax):
         pass
@@ -83,7 +91,10 @@ class Map:
         pass
 
     def draw_parking_spaces(self, ax):
-        pass
+        if not hasattr(self.map_pb, "parking_space"):
+            return
+        for parking_space in self.map_pb.parking_space:
+            self._draw_polygon(parking_space.polygon, ax, 'm')
 
     def draw_pnc_junctions(self, ax):
         pass
